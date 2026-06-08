@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CYBERWATCH — Global Threat Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<!-- Three.js removed: globe now uses raw WebGL (no external dependencies) -->
+<style>
+:root{
+  --bg:#02040a;--c1:#29e0ff;--c2:#9b6dff;--ok:#00ffa3;--warn:#ffb020;--crit:#ff3b6b;
+  --g1:rgba(10,18,36,.7);--g2:rgba(5,10,20,.85);--e1:rgba(100,180,255,.16);
+  --txt:#cce8ff;--dim:#3a5870;--net:#29e0ff;--sec:#00ffa3;--id:#ff3b6b;--you:#ffb020;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Rajdhani',sans-serif;overflow:hidden}
+/* LAYOUT */
+#topbar{position:fixed;top:0;left:0;right:0;height:52px;z-index:20;background:var(--g2);
+  backdrop-filter:blur(20px);border-bottom:1px solid var(--e1);display:flex;align-items:center;gap:10px;padding:0 14px}
+#layout{position:fixed;top:52px;left:0;right:0;bottom:0;display:grid;
+  grid-template-columns:310px 1fr;grid-template-rows:1fr 220px}
+#sidebar{grid-column:1;grid-row:1/3;border-right:1px solid var(--e1);overflow:hidden;display:flex;flex-direction:column;background:var(--g2)}
+#globe-area{grid-column:2;grid-row:1;position:relative;overflow:hidden;background:#010308}
+#opslog{grid-column:2;grid-row:2;border-top:1px solid var(--e1);display:flex;flex-direction:column;background:var(--g2)}
+/* TOP BAR */
+.logo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:14px;letter-spacing:3px;
+  background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;background-clip:text;color:transparent;flex-shrink:0}
+.logo small{display:block;font-size:7px;letter-spacing:3px;-webkit-text-fill-color:var(--dim);color:var(--dim);font-family:'Rajdhani'}
+.vd{width:1px;height:28px;background:var(--e1);flex-shrink:0}
+.hb{flex-shrink:0;display:flex;flex-direction:column;justify-content:center}
+.hbl{font-size:7.5px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;font-weight:600}
+.hbv{font-family:'Orbitron',sans-serif;font-weight:700;font-size:14px;line-height:1.1}
+#def-ring{position:relative;width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+#def-ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+#def-num{font-family:'Orbitron';font-weight:900;font-size:14px;color:var(--ok);text-shadow:0 0 10px currentColor}
+#miss-t{font-size:18px;color:#fff}#ops-t{font-size:12px;color:var(--c1)}#ops-d{font-size:7.5px;color:var(--c2);letter-spacing:1px}
+#score-v{font-size:16px;color:var(--ok);text-shadow:0 0 8px rgba(0,255,163,.35)}
+#tick-w{flex:1;overflow:hidden;display:flex;align-items:center;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 30px,#000 calc(100% - 30px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 30px,#000 calc(100% - 30px),transparent)}
+#ticker{white-space:nowrap;font-size:10px;color:var(--dim);animation:tick 80s linear infinite}
+@keyframes tick{0%{transform:translateX(100vw)}100%{transform:translateX(-200%)}}
+input#dur{background:rgba(0,0,0,.4);color:var(--c1);border:1px solid var(--e1);border-radius:7px;
+  font-family:'Rajdhani';font-weight:700;font-size:12px;padding:3px 5px;width:40px;text-align:center}
+.tb{background:transparent;color:var(--c1);border:1px solid var(--e1);border-radius:8px;
+  font-family:'Rajdhani';font-weight:700;font-size:10px;padding:5px 10px;cursor:pointer;letter-spacing:1px;transition:all .18s;flex-shrink:0}
+.tb:hover:not(:disabled){background:rgba(41,224,255,.12);border-color:var(--c1)}
+.tb:disabled{opacity:.2;cursor:not-allowed}
+.tb.r{color:var(--crit)}.tb.r:hover:not(:disabled){border-color:var(--crit);background:rgba(255,59,107,.1)}
+.tb.y{color:var(--warn)}.tb.y:hover:not(:disabled){border-color:var(--warn);background:rgba(255,176,32,.1)}
+.tb.g{color:var(--ok)}.tb.g:hover:not(:disabled){border-color:var(--ok);background:rgba(0,255,163,.1)}
+/* SIDEBAR */
+.sh{padding:8px 13px;border-bottom:1px solid var(--e1);font-family:'Orbitron',sans-serif;font-size:9px;
+  letter-spacing:2px;color:var(--c1);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.sh .ct{font-family:'Rajdhani';font-size:10px;color:var(--dim);font-weight:600}
+/* TEAM DASHBOARD */
+#team-dash{flex-shrink:0;border-bottom:1px solid var(--e1)}
+.team-row{padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03);position:relative}
+.team-row:last-child{border-bottom:none}
+.team-top{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+.t-icon{font-size:14px;flex-shrink:0}
+.t-name{font-size:12px;font-weight:700;flex:1;color:#deeeff}
+.t-status{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;flex-shrink:0}
+.ts-free{background:rgba(0,255,163,.1);color:var(--ok);border:1px solid rgba(0,255,163,.2)}
+.ts-busy{background:rgba(255,176,32,.1);color:var(--warn);border:1px solid rgba(255,176,32,.2)}
+.ts-you{background:rgba(255,176,32,.15);color:var(--you);border:1px solid rgba(255,176,32,.25)}
+.t-task{font-size:10px;color:var(--dim);margin-bottom:3px;font-weight:500}
+.t-prog-bar{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-bottom:3px}
+.t-prog-bar>i{display:block;height:100%;border-radius:2px;transition:width .5s}
+.t-meta{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--dim);font-weight:500}
+.t-btn-row{display:flex;gap:6px;margin-top:4px}
+.sm-btn{font-size:9px;font-weight:700;padding:3px 8px;border-radius:5px;border:1px solid;cursor:pointer;font-family:'Rajdhani';letter-spacing:.5px;transition:all .15s}
+.sm-btn.pause{color:var(--warn);border-color:rgba(255,176,32,.3);background:rgba(255,176,32,.06)}
+.sm-btn.pause:hover{background:rgba(255,176,32,.18)}
+.sm-btn.resume{color:var(--ok);border-color:rgba(0,255,163,.3);background:rgba(0,255,163,.06)}
+.sm-btn.resume:hover{background:rgba(0,255,163,.18)}
+.t-complication{font-size:9px;color:var(--crit);margin-top:2px;animation:flash .8s infinite}
+@keyframes flash{0%,100%{opacity:1}50%{opacity:.4}}
+/* INCIDENTS */
+#inc-scroll{overflow-y:auto;flex:1 1 0}
+.ic{margin:6px;border-radius:10px;cursor:pointer;background:rgba(255,255,255,.02);
+  border:1px solid rgba(255,255,255,.04);border-left:3px solid var(--dim);transition:all .16s}
+.ic:hover{background:rgba(41,224,255,.05);transform:translateX(2px)}
+.ic.s1{border-left-color:var(--ok)}.ic.s2{border-left-color:var(--warn)}
+.ic.s3{border-left-color:var(--crit);box-shadow:0 0 12px rgba(255,59,107,.12)}
+.ic.res{opacity:.2;filter:grayscale(.7);pointer-events:none}
+.ic-head{display:flex;align-items:center;gap:7px;padding:8px 10px 4px}
+.ic-ico{font-size:14px}.ic-nm{font-size:13px;font-weight:700;flex:1;color:#e4f4ff;line-height:1.2}
+.ic-sev{font-family:'Orbitron';font-size:7px;font-weight:700;padding:2px 6px;border-radius:20px}
+.sv1{background:rgba(0,255,163,.1);color:var(--ok)}.sv2{background:rgba(255,176,32,.12);color:var(--warn)}
+.sv3{background:rgba(255,59,107,.14);color:var(--crit)}.svr{background:rgba(58,88,112,.12);color:var(--dim)}
+.ic-sub{font-size:10px;color:var(--dim);padding:0 10px 4px;font-weight:500}
+.ic-tasks{padding:4px 10px 7px}
+.task-strip{display:flex;align-items:center;gap:6px;margin-bottom:5px;padding:5px 7px;
+  background:rgba(255,255,255,.025);border-radius:7px;border:1px solid rgba(255,255,255,.04)}
+.ts-team{font-size:12px;flex-shrink:0}
+.ts-info{flex:1;min-width:0}
+.ts-name{font-size:10px;color:#aaccee;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ts-bar{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:2px}
+.ts-bar>i{display:block;height:100%;border-radius:2px;transition:width .4s}
+.ts-eta{font-size:9px;color:var(--dim);flex-shrink:0;text-align:right;min-width:36px}
+.ic-respond-btn{display:flex;align-items:center;gap:6px;margin:0 10px 8px;padding:6px 10px;
+  background:rgba(41,224,255,.07);border:1px solid rgba(41,224,255,.25);border-radius:8px;cursor:pointer;transition:all .15s}
+.ic-respond-btn:hover{background:rgba(41,224,255,.16);box-shadow:0 0 10px rgba(41,224,255,.2)}
+.ic-respond-btn span{font-size:11px;font-weight:700;color:var(--c1);letter-spacing:.5px}
+.ic-esc{font-size:10px;padding:0 10px 6px;font-weight:600}
+/* GLOBE */
+#globe-area canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#c2d{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.alabel{position:absolute;transform:translate(-50%,-130%);pointer-events:none;white-space:nowrap;
+  font-family:'Rajdhani';font-weight:700;font-size:11px;padding:3px 8px;border-radius:7px;
+  background:rgba(3,8,20,.7);backdrop-filter:blur(4px);border:1px solid;letter-spacing:.4px}
+.alabel .sml{font-size:9px;opacity:.7}
+/* OPS LOG */
+.ol-hdr{padding:7px 14px;border-bottom:1px solid var(--e1);font-family:'Orbitron',sans-serif;font-size:9px;
+  letter-spacing:2px;color:var(--c1);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+#opsout{flex:1 1 0;overflow-y:auto;padding:7px 14px;font-family:'Share Tech Mono',monospace;font-size:11.5px;line-height:1.5;min-height:0}
+.ti{color:#7fe9c8;display:block}.ts{color:var(--ok);display:block;font-weight:bold}
+.te{color:var(--crit);display:block}.tw{color:var(--warn);display:block}
+.tnt{color:#6699ff;display:block;font-style:italic}.td{color:var(--dim);display:block}
+.tc{color:#fff;display:block;margin-top:2px}.th{color:var(--c1);display:block;font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:1px;margin:4px 0 2px}
+.tcomp{color:var(--crit);display:block;font-weight:bold}.tearly{color:var(--ok);display:block;font-weight:bold}
+#in-row{display:flex;align-items:center;padding:6px 14px;border-top:1px solid var(--e1);flex-shrink:0}
+#prompt{color:var(--c1);font-family:'Share Tech Mono';font-size:11.5px;margin-right:6px;white-space:nowrap;user-select:none;text-shadow:0 0 6px rgba(41,224,255,.4)}
+#cmdin{flex:1;background:transparent;border:none;outline:none;color:#fff;font-family:'Share Tech Mono',monospace;font-size:11.5px;caret-color:var(--c1)}
+/* RESPONSE PANEL */
+#resp-panel{position:fixed;top:52px;right:-420px;width:400px;bottom:0;z-index:30;
+  background:var(--g2);backdrop-filter:blur(20px);border-left:1px solid var(--e1);
+  transition:right .35s cubic-bezier(.4,0,.2,1);overflow-y:auto}
+#resp-panel.open{right:0}
+.rp-hdr{padding:14px 16px;border-bottom:1px solid var(--e1);position:sticky;top:0;background:var(--g2);z-index:1}
+.rp-close{position:absolute;right:14px;top:14px;background:rgba(255,255,255,.06);border:1px solid var(--e1);color:var(--dim);border-radius:7px;font-family:'Rajdhani';font-weight:700;font-size:11px;padding:4px 10px;cursor:pointer}
+.rp-close:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+.rp-inc{font-family:'Orbitron';font-size:10px;letter-spacing:1px;color:var(--c1);margin-bottom:3px}
+.rp-name{font-size:18px;font-weight:700;color:#fff;margin-bottom:2px}
+.rp-sub{font-size:11px;color:var(--dim);font-weight:500}
+.rp-section{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04)}
+.rp-sh{font-family:'Orbitron';font-size:8px;letter-spacing:2px;color:var(--c2);margin-bottom:10px;text-transform:uppercase}
+.resp-opt{border-radius:10px;border:1px solid rgba(255,255,255,.07);margin-bottom:10px;overflow:hidden;cursor:pointer;transition:all .18s;background:rgba(255,255,255,.02)}
+.resp-opt:hover{border-color:rgba(41,224,255,.3);background:rgba(41,224,255,.04)}
+.resp-opt.analyst-req{border-color:rgba(255,176,32,.25)}
+.resp-opt.analyst-req:hover{border-color:var(--you);background:rgba(255,176,32,.06)}
+.resp-opt.team-busy{opacity:.55;cursor:default}
+.ro-head{display:flex;align-items:center;gap:8px;padding:10px 12px 8px}
+.ro-team{font-size:14px;flex-shrink:0}
+.ro-info{flex:1}
+.ro-name{font-size:13px;font-weight:700;color:#e8f5ff}
+.ro-team-lbl{font-size:10px;color:var(--dim);font-weight:500}
+.ro-time{text-align:right;flex-shrink:0}
+.ro-dur{font-family:'Orbitron';font-size:13px;font-weight:700;color:#fff}
+.ro-dur-lbl{font-size:8px;color:var(--dim);letter-spacing:1px}
+.ro-body{padding:0 12px 10px;font-size:11px;color:var(--dim);line-height:1.55;font-weight:500}
+.ro-tags{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 10px}
+.ro-tag{padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:.5px}
+.eff-high{background:rgba(0,255,163,.1);color:var(--ok);border:1px solid rgba(0,255,163,.2)}
+.eff-med{background:rgba(255,176,32,.1);color:var(--warn);border:1px solid rgba(255,176,32,.2)}
+.ocr-tag{background:rgba(155,109,255,.1);color:var(--c2);border:1px solid rgba(155,109,255,.2)}
+.you-tag{background:rgba(255,176,32,.12);color:var(--you);border:1px solid rgba(255,176,32,.25)}
+.busy-tag{background:rgba(255,59,107,.1);color:var(--crit);border:1px solid rgba(255,59,107,.2)}
+.ro-risk{padding:0 12px 10px;font-size:10px;color:rgba(255,176,32,.7);font-weight:500;font-style:italic}
+.ro-assign{margin:0 12px 12px;padding:8px 12px;text-align:center;border-radius:8px;font-family:'Rajdhani';font-weight:700;font-size:12px;letter-spacing:1px;cursor:pointer;transition:all .15s;border:none}
+.ra-go{background:linear-gradient(90deg,var(--c1),var(--c2));color:#02040a}
+.ra-go:hover{filter:brightness(1.12)}
+.ra-busy{background:rgba(255,59,107,.15);color:var(--crit);border:1px solid rgba(255,59,107,.3);cursor:pointer}
+.ra-busy:hover{background:rgba(255,59,107,.28)}
+.ra-you{background:linear-gradient(90deg,var(--warn),#ff8a20);color:#02040a}
+.ra-you:hover{filter:brightness(1.1)}
+/* ANALYST PANEL */
+#analyst-panel{display:none;position:fixed;inset:0;z-index:40;background:rgba(0,2,8,.95);backdrop-filter:blur(8px);flex-direction:column}
+#analyst-panel.show{display:flex}
+#ap-top{padding:12px 20px;border-bottom:1px solid var(--e1);display:flex;align-items:center;gap:14px;flex-shrink:0;background:var(--g2)}
+.ap-title{font-family:'Orbitron';font-size:13px;font-weight:700;color:var(--you);letter-spacing:1px;flex:1}
+.ap-warn{font-size:11px;color:var(--crit);font-weight:600;animation:flash .8s infinite}
+#ap-body{flex:1 1 0;display:grid;grid-template-columns:1fr 1fr;gap:0;overflow:hidden}
+#ap-left{padding:24px;overflow-y:auto;border-right:1px solid var(--e1)}
+#ap-right{padding:24px;overflow-y:auto;background:rgba(155,109,255,.03)}
+.ap-sec-h{font-family:'Orbitron';font-size:9px;letter-spacing:2px;color:var(--c2);margin-bottom:10px;text-transform:uppercase}
+.ap-context{font-size:13px;color:var(--txt);line-height:1.7;font-weight:500;margin-bottom:16px}
+.challenge-box{background:rgba(255,255,255,.03);border:1px solid var(--e1);border-radius:12px;padding:18px;margin-bottom:16px}
+.cb-label{font-size:11px;color:var(--dim);font-weight:600;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase}
+.cb-text{font-size:14px;color:#fff;font-weight:600;line-height:1.5;margin-bottom:12px}
+.cb-input-row{display:flex;gap:8px;align-items:center}
+#analyst-input{flex:1;background:rgba(0,0,0,.4);border:2px solid var(--e1);border-radius:9px;
+  color:#fff;font-family:'Share Tech Mono';font-size:14px;padding:10px 14px;outline:none;transition:border .2s}
+#analyst-input:focus{border-color:var(--you)}
+#analyst-submit{padding:10px 18px;background:var(--you);color:#02040a;border:none;border-radius:9px;
+  font-family:'Rajdhani';font-weight:700;font-size:13px;cursor:pointer;transition:all .15s}
+#analyst-submit:hover{filter:brightness(1.1)}
+.cb-feedback{margin-top:8px;font-size:12px;font-weight:600;min-height:20px}
+.ap-ocr{background:rgba(155,109,255,.06);border:1px solid rgba(155,109,255,.2);border-radius:10px;padding:14px;margin-bottom:14px}
+.ap-ocr-ref{font-family:'Orbitron';font-size:8px;letter-spacing:2px;color:var(--c2);margin-bottom:6px}
+.ap-ocr-text{font-size:12px;color:var(--txt);line-height:1.7;font-weight:500}
+#scaffold-area{margin-top:6px}
+.scaffold-btn{display:flex;align-items:center;gap:8px;width:100%;margin-bottom:8px;padding:9px 13px;
+  background:rgba(255,255,255,.03);border:1px solid var(--e1);border-radius:9px;cursor:pointer;
+  font-family:'Rajdhani';font-size:12px;font-weight:600;color:var(--dim);transition:all .15s;text-align:left}
+.scaffold-btn:hover{background:rgba(255,255,255,.07);color:var(--txt)}
+.scaffold-btn.hint{border-color:rgba(41,224,255,.2);color:var(--c1)}
+.scaffold-btn.hint:hover{background:rgba(41,224,255,.08)}
+.scaffold-btn.penalty{border-color:rgba(255,59,107,.2);color:var(--crit)}
+.scaffold-btn.penalty:hover{background:rgba(255,59,107,.08)}
+.scaffold-content{background:rgba(255,255,255,.025);border-radius:8px;padding:12px;margin-bottom:8px;font-size:12px;color:var(--txt);line-height:1.6;border-left:3px solid var(--c1)}
+/* OVERLAYS */
+.overlay{display:none;position:fixed;inset:0;z-index:60;align-items:center;justify-content:center;
+  padding:20px;background:radial-gradient(circle at 50% 40%,rgba(20,30,60,.4),rgba(0,2,8,.94))}
+.overlay.show{display:flex}
+.ov-card{max-width:680px;width:100%;max-height:90vh;overflow-y:auto;padding:28px 32px;border-radius:18px;
+  background:var(--g2);backdrop-filter:blur(20px);border:1px solid var(--e1)}
+.ov-tag{font-family:'Orbitron';font-size:8px;letter-spacing:4px;color:var(--dim);margin-bottom:5px}
+.ov-title{font-family:'Orbitron';font-weight:900;font-size:26px;letter-spacing:2px;margin-bottom:5px;
+  background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ov-sub{font-size:12px;color:var(--c1);margin-bottom:20px;letter-spacing:1px;font-weight:600}
+.ov-sh{font-family:'Orbitron';font-size:8px;letter-spacing:2px;color:var(--c2);border-bottom:1px solid var(--e1);padding-bottom:5px;margin:14px 0 9px}
+.ov-txt{font-size:13px;color:var(--txt);line-height:1.7;font-weight:500}
+.ov-cmd{display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:start;margin-bottom:7px}
+.ov-cmd code{font-family:'Share Tech Mono';font-size:12px;color:#fff;background:rgba(41,224,255,.1);padding:4px 10px;border-radius:7px;border:1px solid var(--e1)}
+.ov-cmd span{font-size:12px;color:var(--dim);font-weight:500;padding-top:3px}
+.ov-rules{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ov-rule{padding:9px 12px;border-left:3px solid;border-radius:0 8px 8px 0;font-size:12px;line-height:1.5;background:rgba(255,255,255,.02);font-weight:500}
+.ov-rule.r{border-color:var(--crit)}.ov-rule.y{border-color:var(--warn)}.ov-rule.g{border-color:var(--ok)}.ov-rule.w{border-color:var(--c2)}
+.ov-q{font-size:13px;color:#fff;margin-top:14px;padding:14px;border:1px solid var(--e1);border-radius:11px;line-height:1.7;background:rgba(41,224,255,.04)}
+.ov-btn{display:block;width:100%;margin-top:18px;padding:13px;font-family:'Orbitron';font-weight:700;font-size:11px;letter-spacing:3px;color:#02040a;background:linear-gradient(90deg,var(--c1),var(--c2));border:none;border-radius:11px;cursor:pointer}
+.ov-btn:hover{filter:brightness(1.1)}
+/* DEMO MODAL */
+#demo-modal{position:fixed;inset:0;z-index:70;display:none;align-items:flex-end;justify-content:center;padding:0 0 80px}
+#demo-modal.show{display:flex}
+.dm-card{background:var(--g2);border:1px solid var(--e1);border-radius:16px;max-width:520px;width:100%;padding:20px 24px;backdrop-filter:blur(20px)}
+.dm-step{font-family:'Orbitron';font-size:8px;letter-spacing:2px;color:var(--dim);margin-bottom:4px}
+.dm-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:8px}
+.dm-body{font-size:13px;color:var(--txt);line-height:1.65;margin-bottom:14px;font-weight:500}
+.dm-ocr{display:inline-block;font-family:'Orbitron';font-size:8px;letter-spacing:1px;padding:3px 8px;border-radius:5px;background:rgba(155,109,255,.1);color:var(--c2);border:1px solid rgba(155,109,255,.25);margin-bottom:10px}
+.dm-buttons{display:flex;gap:8px;justify-content:flex-end}
+.dm-skip{background:transparent;color:var(--dim);border:1px solid var(--e1);border-radius:8px;font-family:'Rajdhani';font-weight:700;font-size:11px;padding:7px 14px;cursor:pointer}
+.dm-skip:hover{color:var(--txt)}
+.dm-next{background:linear-gradient(90deg,var(--c1),var(--c2));color:#02040a;border:none;border-radius:8px;font-family:'Rajdhani';font-weight:700;font-size:12px;padding:8px 18px;cursor:pointer;letter-spacing:.5px}
+.dm-next:hover{filter:brightness(1.1)}
+#demo-highlight{position:fixed;z-index:65;pointer-events:none;box-shadow:0 0 0 4px var(--c1),0 0 30px rgba(41,224,255,.5);border-radius:12px;transition:all .3s;display:none}
+/* END */
+.grade{font-family:'Orbitron';font-weight:900;font-size:68px;text-align:center;text-shadow:0 0 40px currentColor;line-height:1;margin:8px 0}
+.gtitle{font-family:'Orbitron';font-size:11px;letter-spacing:4px;text-align:center;margin-bottom:14px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin:12px 0}
+.stat{padding:10px 11px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--e1)}
+.stat .l{font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;font-weight:600}
+.stat .v{font-family:'Orbitron';font-size:17px;margin-top:2px}
+.arow{padding:5px 10px;border-left:2px solid;border-radius:0 7px 7px 0;margin-bottom:4px;background:rgba(255,255,255,.02);font-size:11px;display:flex;justify-content:space-between}
+#loading{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:var(--bg)}
+.spin{width:40px;height:40px;border:2px solid var(--e1);border-top-color:var(--c1);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lt{font-family:'Orbitron';font-size:11px;letter-spacing:3px;color:var(--c1);animation:p2 1.4s infinite}
+@keyframes p2{0%,100%{opacity:.3}50%{opacity:1}}
+#edge-flash{position:fixed;inset:0;z-index:5;pointer-events:none}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(41,224,255,.18);border-radius:3px}
+/* PREEMPT DIALOG */
+#preempt-dlg{display:none;position:fixed;inset:0;z-index:45;align-items:center;justify-content:center;background:rgba(0,0,0,.7)}
+#preempt-dlg.show{display:flex}
+.pdlg{background:var(--g2);border:1px solid var(--e1);border-radius:14px;padding:22px 26px;max-width:400px;width:100%}
+.pdlg h3{font-family:'Orbitron';font-size:12px;letter-spacing:1px;color:var(--warn);margin-bottom:10px}
+.pdlg p{font-size:13px;color:var(--txt);line-height:1.6;margin-bottom:14px;font-weight:500}
+.pdlg .btns{display:flex;gap:10px}
+</style>
+</head>
+<body>
+<div id="loading"><div class="spin"></div><div class="lt">INITIALISING</div></div>
+<div id="edge-flash"></div>
+<div id="demo-highlight"></div>
+
+<div id="topbar">
+  <div class="logo">CYBERWATCH<small>THREAT OPS v2</small></div><div class="vd"></div>
+  <div id="def-ring"><svg width="38" height="38"><circle cx="19" cy="19" r="15" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="2.5"/>
+    <circle id="d-arc" cx="19" cy="19" r="15" fill="none" stroke="#00ffa3" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="94" stroke-dashoffset="0"/></svg>
+    <div id="def-num">5</div></div><div class="vd"></div>
+  <div class="hb"><div class="hbl">Mission</div><div class="hbv" id="miss-t">00:00</div></div><div class="vd"></div>
+  <div class="hb"><div class="hbl" id="ops-d">DAY 1 · ×720</div><div class="hbv" id="ops-t" style="font-size:12px">06:00 UTC ☀</div></div><div class="vd"></div>
+  <div class="hb"><div class="hbl">Score</div><div class="hbv" id="score-v">0</div></div><div class="vd"></div>
+  <div id="tick-w"><div id="ticker"></div></div><div class="vd"></div>
+  <div class="hbl" style="flex-shrink:0">DUR</div>
+  <input type="number" id="dur" min="10" max="30" value="10">
+  <button class="tb g" id="btnDemo">▶ DEMO</button>
+  <button class="tb" id="btnStart" disabled>▶ DEPLOY</button>
+  <button class="tb y" id="btnReset" disabled>↺ RESET</button>
+  <button class="tb" id="btnPause" disabled>❚❚</button>
+  <button class="tb r" id="btnAbort" disabled>✕</button>
+  <button class="tb" id="btnTheme" style="font-size:9px">⬛ CLASSIC</button>
+</div>
+
+<div id="layout">
+  <div id="sidebar">
+    <div class="sh"><span>◆ OPERATIONS TEAMS</span></div>
+    <div id="team-dash">
+      <div class="team-row" id="tr-network"></div>
+      <div class="team-row" id="tr-security"></div>
+      <div class="team-row" id="tr-identity"></div>
+      <div class="team-row" id="tr-analyst"></div>
+    </div>
+    <div class="sh" style="border-top:1px solid var(--e1)"><span>◆ ACTIVE INCIDENTS</span><span class="ct" id="inc-count">0</span></div>
+    <div id="inc-scroll"></div>
+  </div>
+  <div id="globe-area">
+    <canvas id="c3d"></canvas><canvas id="c2d"></canvas>
+    <div id="labels"></div>
+  </div>
+  <div id="opslog">
+    <div class="ol-hdr"><span>◆ OPERATIONS LOG</span><span style="font-family:'Rajdhani';font-size:9px;color:var(--dim)">↑↓ history · TAB complete</span></div>
+    <div id="opsout"></div>
+    <div id="in-row"><span id="prompt">ops ▸&nbsp;</span><input id="cmdin" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="type a command or click an incident..."></div>
+  </div>
+</div>
+
+<!-- RESPONSE PANEL -->
+<div id="resp-panel">
+  <div class="rp-hdr">
+    <button class="rp-close" onclick="closeRespPanel()">✕ Close</button>
+    <div class="rp-inc" id="rp-inc-tag">INCIDENT #1</div>
+    <div class="rp-name" id="rp-inc-name">Attack Name</div>
+    <div class="rp-sub" id="rp-inc-sub">Location · Severity</div>
+  </div>
+  <div id="rp-options"></div>
+</div>
+
+<!-- ANALYST PANEL -->
+<div id="analyst-panel">
+  <div id="ap-top">
+    <div class="ap-title" id="ap-title">👤 ANALYST TASK</div>
+    <div class="ap-warn" id="ap-warn">⚠ Incident worsening while you work</div>
+    <button class="tb r" onclick="abandonAnalyst()">ABANDON (-25 pts)</button>
+  </div>
+  <div id="ap-body">
+    <div id="ap-left">
+      <div class="ap-sec-h">YOUR TASK</div>
+      <div class="ap-context" id="ap-context"></div>
+      <div class="challenge-box">
+        <div class="cb-label">CHALLENGE</div>
+        <div class="cb-text" id="ap-question"></div>
+        <div class="cb-input-row">
+          <input id="analyst-input" type="text" placeholder="Your answer..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+          <button id="analyst-submit" onclick="submitAnalyst()">SUBMIT ▸</button>
+        </div>
+        <div class="cb-feedback" id="ap-feedback"></div>
+      </div>
+      <div id="scaffold-area"></div>
+    </div>
+    <div id="ap-right">
+      <div class="ap-sec-h">OCR SPECIFICATION LINK</div>
+      <div class="ap-ocr">
+        <div class="ap-ocr-ref" id="ap-ocr-ref">1.3.3(c)</div>
+        <div class="ap-ocr-text" id="ap-ocr-text"></div>
+      </div>
+      <div class="ap-sec-h" style="margin-top:14px">LIVE INTELLIGENCE</div>
+      <div id="ap-narrative" style="font-size:11.5px;color:var(--dim);line-height:1.7;font-family:'Share Tech Mono'"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PREEMPT DIALOG -->
+<div id="preempt-dlg">
+  <div class="pdlg">
+    <h3>⚠ TEAM CURRENTLY BUSY</h3>
+    <p id="pdlg-msg">The Network Team is currently handling another task. Stopping it now will lose their progress.</p>
+    <div class="btns">
+      <button class="tb r" onclick="confirmPreempt()">STOP & REASSIGN</button>
+      <button class="tb" onclick="cancelPreempt()">KEEP CURRENT TASK</button>
+    </div>
+  </div>
+</div>
+
+<div id="splash" class="overlay show"><div class="ov-card" id="splash-card"></div></div>
+<div id="end" class="overlay"><div class="ov-card" id="ec"></div></div>
+<div id="demo-modal"><div class="dm-card" id="dm-card"></div></div>
+<script>
+// ═══ MODULE LOADER ═══
+window.CW_MODULES={};
+const MODULE_SRCS=['modules/cw_phishing.js','modules/cw_ransomware.js','modules/cw_sqli.js',
+  'modules/cw_ddos.js','modules/cw_brute.js','modules/cw_zeroday.js','modules/cw_social.js',
+  'modules/cw_dns.js','modules/cw_trojan.js','modules/cw_mitm.js','modules/cw_credstuff.js'];
+function loadModules(cb){let p=MODULE_SRCS.length;MODULE_SRCS.forEach(src=>{
+  const s=document.createElement('script');s.src=src+'?v=2';
+  s.onload=()=>{if(--p===0)cb();};s.onerror=()=>{if(--p===0)cb();};document.head.appendChild(s);});}
+function getScenario(inc){const m=window.CW_MODULES[inc.type];return m?(m.scenarios.find(s=>s.id===inc.scenario)||m.scenarios[0]):null;}
+function getResponse(inc){const sc=getScenario(inc);return sc&&inc.responseId?(sc.responses.find(r=>r.id===inc.responseId)):null;}
+
+const FEED=['NCSC: heightened state-sponsored threat against UK CNI','CVE-2026-8841: zero-day in VPN appliance actively exploited',
+  'Cl0p ransomware: new campaign targeting healthcare','APT-29 targeting EU election systems',
+  'CERT-UK: Spear-phishing at FTSE 100 C-suite','Mirai variant: 2.3M IoT devices in DDoS botnet',
+  'LockBit 4.0: AI-adapted payloads bypassing standard AV','Supply chain attack via HR software vendor'];
+const CITY_NODES=[
+  {city:"London",lat:51.507,lon:-0.128,region:"EU"},{city:"Paris",lat:48.856,lon:2.352,region:"EU"},
+  {city:"Amsterdam",lat:52.367,lon:4.904,region:"EU"},{city:"Frankfurt",lat:50.110,lon:8.682,region:"EU"},
+  {city:"Berlin",lat:52.520,lon:13.405,region:"EU"},{city:"Dublin",lat:53.349,lon:-6.260,region:"EU"},
+  {city:"Madrid",lat:40.416,lon:-3.703,region:"EU"},{city:"Warsaw",lat:52.230,lon:21.012,region:"EU"},
+  {city:"New York",lat:40.713,lon:-74.006,region:"NA"},{city:"Toronto",lat:43.653,lon:-79.383,region:"NA"},
+  {city:"Chicago",lat:41.878,lon:-87.630,region:"NA"},{city:"San Francisco",lat:37.774,lon:-122.419,region:"NA"},
+  {city:"São Paulo",lat:-23.550,lon:-46.633,region:"LATAM"},{city:"Cairo",lat:30.044,lon:31.236,region:"MEA"},
+  {city:"Dubai",lat:25.204,lon:55.271,region:"MEA"},{city:"Singapore",lat:1.352,lon:103.820,region:"APAC"},
+  {city:"Tokyo",lat:35.676,lon:139.650,region:"APAC"},{city:"Sydney",lat:-33.868,lon:151.209,region:"APAC"},
+  {city:"Mumbai",lat:19.076,lon:72.878,region:"APAC"},{city:"Nairobi",lat:-1.286,lon:36.817,region:"MEA"}];
+
+// ═══ RAW WEBGL EARTH — no external libraries ═══
+const c3d=document.getElementById("c3d");
+const c2d=document.getElementById("c2d"),ctx2=c2d.getContext("2d");
+
+// ── Inline matrix math (column-major, WebGL convention) ──
+const M={
+  mul(a,b){const o=new Float32Array(16);for(let i=0;i<4;i++)for(let j=0;j<4;j++){let s=0;for(let k=0;k<4;k++)s+=a[k*4+i]*b[j*4+k];o[j*4+i]=s;}return o;},
+  persp(fovY,asp,n,f){const t=1/Math.tan(fovY/2),nf=1/(n-f);
+    return new Float32Array([t/asp,0,0,0, 0,t,0,0, 0,0,(f+n)*nf,-1, 0,0,2*f*n*nf,0]);},
+  rotY(a){const c=Math.cos(a),s=Math.sin(a);
+    return new Float32Array([c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1]);},
+  trans(x,y,z){return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1]);}
+};
+
+// ── WebGL state ──
+let gl=null,glProg=null,glBufs=null,glDayTex=null,glNightTex=null;
+let glReady=false;
+
+// ── Shader sources ──
+const VS=`attribute vec3 aPos;attribute vec2 aUV;
+uniform mat4 uMVP;uniform mat4 uMod;
+varying vec2 vUV;varying vec3 vWN;
+void main(){vUV=aUV;vWN=normalize(mat3(uMod[0].xyz,uMod[1].xyz,uMod[2].xyz)*aPos);
+  gl_Position=uMVP*vec4(aPos,1.);}`;
+const FS=`precision mediump float;
+uniform sampler2D uDay,uNight;uniform vec3 uSun;
+varying vec2 vUV;varying vec3 vWN;
+void main(){float c=dot(vWN,normalize(uSun));
+  float d=smoothstep(-.18,.28,c);
+  vec3 day=texture2D(uDay,vUV).rgb,night=texture2D(uNight,vUV).rgb*1.7;
+  float tw=smoothstep(-.18,.05,c)*(1.-smoothstep(.05,.3,c));
+  gl_FragColor=vec4(mix(night,day,d)+vec3(.35,.18,.08)*tw,1.);}`;
+
+function mkShader(src,type){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;}
+function mkProg(vs,fs){const p=gl.createProgram();gl.attachShader(p,mkShader(vs,gl.VERTEX_SHADER));
+  gl.attachShader(p,mkShader(fs,gl.FRAGMENT_SHADER));gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));return p;}
+
+function mkSphere(lat,lon){
+  const pos=[],uv=[],idx=[];
+  for(let i=0;i<=lat;i++){const t=i*Math.PI/lat,st=Math.sin(t),ct=Math.cos(t);
+    for(let j=0;j<=lon;j++){const p=j*2*Math.PI/lon;
+      pos.push(-Math.cos(p)*st,ct,Math.sin(p)*st);uv.push(1-j/lon,1-i/lat);}}
+  for(let i=0;i<lat;i++)for(let j=0;j<lon;j++){
+    const a=i*(lon+1)+j,b=a+lon+1;idx.push(a,b,a+1,b,b+1,a+1);}
+  const pb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,pb);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(pos),gl.STATIC_DRAW);
+  const tb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,tb);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(uv),gl.STATIC_DRAW);
+  const ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(idx),gl.STATIC_DRAW);
+  return{pos:pb,uv:tb,idx:ib,count:idx.length};}
+
+function mkTex(url,fallbackRGB){
+  const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,1,1,0,gl.RGB,gl.UNSIGNED_BYTE,new Uint8Array(fallbackRGB));
+  const img=new Image();img.crossOrigin="anonymous";
+  img.onload=()=>{gl.bindTexture(gl.TEXTURE_2D,t);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,img);
+    gl.generateMipmap(gl.TEXTURE_2D);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);};
+  img.onerror=()=>console.log('CYBERWATCH: earth texture unavailable — using fallback colour');
+  img.src=url;return t;}
+
+function initGL(){
+  gl=c3d.getContext('webgl',{antialias:true,alpha:true})||c3d.getContext('experimental-webgl',{antialias:true,alpha:true});
+  if(!gl)throw new Error('WebGL not supported on this device');
+  glProg=mkProg(VS,FS);
+  glBufs=mkSphere(64,128);
+  const U="https://unpkg.com/three-globe/example/img/";
+  glDayTex=mkTex(U+"earth-blue-marble.jpg",[30,50,100]);
+  glNightTex=mkTex(U+"earth-night.jpg",[10,15,40]);
+  gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);
+  glReady=true;}
+
+// Camera orbit state (matching previous Three.js setup)
+const cs={az:.7,pol:1.3,rad:3.2};
+
+function renderGlobe(rotY){
+  if(!glReady||!gl)return;
+  const w=c3d.width,h=c3d.height;
+  gl.viewport(0,0,w,h);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  gl.useProgram(glProg);
+  // matrices
+  const model=M.rotY(rotY);
+  const camX=cs.rad*Math.sin(cs.pol)*Math.sin(cs.az),camY=cs.rad*Math.cos(cs.pol),camZ=cs.rad*Math.sin(cs.pol)*Math.cos(cs.az);
+  const view=M.trans(-camX,-camY,-camZ);
+  const proj=M.persp(42*Math.PI/180,w/h,.1,100);
+  const mvp=M.mul(proj,M.mul(view,model));
+  const lMVP=gl.getUniformLocation(glProg,'uMVP');gl.uniformMatrix4fv(lMVP,false,mvp);
+  const lMod=gl.getUniformLocation(glProg,'uMod');gl.uniformMatrix4fv(lMod,false,model);
+  gl.uniform3f(gl.getUniformLocation(glProg,'uSun'),1.0,.18,.35);
+  // textures
+  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,glDayTex);gl.uniform1i(gl.getUniformLocation(glProg,'uDay'),0);
+  gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,glNightTex);gl.uniform1i(gl.getUniformLocation(glProg,'uNight'),1);
+  // geometry
+  const aPos=gl.getAttribLocation(glProg,'aPos'),aUV=gl.getAttribLocation(glProg,'aUV');
+  gl.bindBuffer(gl.ARRAY_BUFFER,glBufs.pos);gl.enableVertexAttribArray(aPos);gl.vertexAttribPointer(aPos,3,gl.FLOAT,false,0,0);
+  gl.bindBuffer(gl.ARRAY_BUFFER,glBufs.uv);gl.enableVertexAttribArray(aUV);gl.vertexAttribPointer(aUV,2,gl.FLOAT,false,0,0);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,glBufs.idx);
+  gl.drawElements(gl.TRIANGLES,glBufs.count,gl.UNSIGNED_SHORT,0);}
+
+// ── Attempt WebGL init ──
+let globeMode="neo";
+try{initGL();console.log('CYBERWATCH: WebGL earth ready');}
+catch(e){globeMode="classic";console.warn('CYBERWATCH: WebGL unavailable ('+e.message+') — Classic 2D mode');}
+function is3D(){return globeMode==="neo"&&glReady;}
+
+// ── Unified projection: lat/lon → screen coordinates ──
+// Works for both 3D (WebGL projection matching renderGlobe) and 2D overlay
+function project2D(lat,lon,rotY){
+  const phi=(90-lat)*Math.PI/180,th=(lon+180)*Math.PI/180;
+  const x0=-Math.cos(th)*Math.sin(phi),y0=Math.cos(phi),z0=Math.sin(th)*Math.sin(phi);
+  const c=Math.cos(rotY),s=Math.sin(rotY);
+  const rx=x0*c+z0*s,ry=y0,rz=-x0*s+z0*c;
+  if(!is3D()){// 2D globe projection
+    const cx=c2d.width/2,cy=c2d.height/2,R=Math.min(cx,cy)*.82;
+    if(rz<=0)return null;return{x:cx+R*rx,y:cy-R*ry,visible:true};}
+  if(rz<.12)return null;// back hemisphere
+  const camX=cs.rad*Math.sin(cs.pol)*Math.sin(cs.az),camY=cs.rad*Math.cos(cs.pol),camZ2=cs.rad*Math.sin(cs.pol)*Math.cos(cs.az);
+  const vx=rx-camX,vy=ry-camY,vz=rz-camZ2;
+  if(vz>=-0.05)return null;
+  const fovY=42*Math.PI/180,W=c3d.clientWidth,H=c3d.clientHeight;
+  const f=1/Math.tan(fovY/2),asp=W/H;
+  const ndcX=(vx/(-vz))*f/asp,ndcY=(vy/(-vz))*f;
+  return{x:(ndcX+1)*.5*W,y:(1-ndcY)*.5*H,visible:true};}
+
+// ── Overlay canvas: markers, arcs, stars, city dots ──
+let arcs3=[],st2=[];
+function seed2(){st2=Array.from({length:160},()=>({x:Math.random()*c2d.width,y:Math.random()*c2d.height,a:.04+Math.random()*.1}));}
+function sevHex(s){return s===1?"#00ffa3":s===2?"#ffb020":"#ff3b6b";}
+function sevRGB(s){return s===1?"0,255,163":s===2?"255,176,32":"255,59,107";}
+
+function drawOverlay(rotY){
+  const w=c2d.width,h=c2d.height;
+  ctx2.clearRect(0,0,w,h);
+  if(!is3D()){// Classic 2D mode — draw full globe
+    ctx2.fillStyle="#020804";ctx2.fillRect(0,0,w,h);
+    ctx2.save();ctx2.globalAlpha=.06;ctx2.fillStyle="#00ff88";st2.forEach(s=>ctx2.fillRect(s.x,s.y,1,1));ctx2.restore();
+    const cx=w/2,cy=h/2,R=Math.min(cx,cy)*.82;
+    // continents
+    const fbm2=vN2=>vN2; // placeholder - use existing fbm2 function
+    ctx2.save();ctx2.beginPath();ctx2.arc(cx,cy,R,0,Math.PI*2);ctx2.clip();
+    for(let lat=-88;lat<=88;lat+=2){const φ=lat*Math.PI/180;for(let lon=-178;lon<=178;lon+=2){
+      const λ=(lon+rotY*180/Math.PI)*Math.PI/180,z=Math.cos(φ)*Math.cos(λ);if(z<=0)continue;
+      const x=Math.cos(φ)*Math.sin(λ),y=Math.sin(φ);const n=fbm(x+2.1,y-1.3,z+.7);
+      if(n>.58){ctx2.globalAlpha=.07;ctx2.fillStyle="#00ff88";ctx2.fillRect(cx+R*x,cy-R*y,2,2);}}}
+    ctx2.restore();ctx2.globalAlpha=1;
+    const oc=["#00ff66","#2266ff","#ccaa00","#cc5500","#cc0000"][5-defcon];
+    ctx2.strokeStyle=oc;ctx2.lineWidth=1.5;ctx2.beginPath();ctx2.arc(cx,cy,R,0,Math.PI*2);ctx2.stroke();
+  } else {
+    // 3D mode — overlay only (transparent background, stars)
+    ctx2.save();ctx2.globalAlpha=.07;ctx2.fillStyle="#88aabb";
+    st2.forEach(s=>ctx2.fillRect(s.x,s.y,1.2,1.2));ctx2.restore();
+    // Atmosphere ring
+    const cx=c3d.clientWidth/2,cy=c3d.clientHeight/2;
+    const glbR=Math.min(cx,cy)*.97;
+    const atmoGrad=ctx2.createRadialGradient(cx,cy,glbR*.88,cx,cy,glbR*1.15);
+    const ac=["rgba(41,224,255,","rgba(41,224,255,","rgba(255,224,32,","rgba(255,138,32,","rgba(255,59,107,"][5-defcon];
+    atmoGrad.addColorStop(0,ac+"0)");atmoGrad.addColorStop(.6,ac+".07)");atmoGrad.addColorStop(1,ac+"0)");
+    ctx2.fillStyle=atmoGrad;ctx2.beginPath();ctx2.arc(cx,cy,glbR*1.15,0,Math.PI*2);ctx2.fill();}
+  // City dots
+  CITY_NODES.forEach(city=>{
+    const p=project2D(city.lat,city.lon,rotY);if(!p)return;
+    ctx2.save();ctx2.beginPath();ctx2.arc(p.x,p.y,2,0,Math.PI*2);
+    ctx2.fillStyle="#aaccff";ctx2.globalAlpha=.22;ctx2.fill();ctx2.restore();});
+  // Spread arcs
+  arcs3.forEach(arc=>{
+    arc.age+=.016;
+    const fade=arc.age>2.5?Math.max(0,1-(arc.age-2.5)/1.5):1;
+    if(fade<=0)return;
+    ctx2.save();ctx2.setLineDash([6,5]);ctx2.strokeStyle=`rgba(255,59,107,${.7*fade})`;ctx2.lineWidth=1.5;
+    ctx2.shadowColor="#ff3b6b";ctx2.shadowBlur=5;ctx2.beginPath();let started=false;
+    for(let t=0;t<=1;t+=.025){
+      const la=arc.slat+(arc.dlat-arc.slat)*t,lo=arc.slon+(arc.dlon-arc.slon)*t;
+      const p=project2D(la,lo,rotY);if(!p){started=false;continue;}
+      if(!started){ctx2.moveTo(p.x,p.y);started=true;}else ctx2.lineTo(p.x,p.y);}
+    ctx2.stroke();ctx2.setLineDash([]);ctx2.restore();
+    // Travelling pulse
+    const prog=Math.min(1,arc.age/1.5);
+    const la2=arc.slat+(arc.dlat-arc.slat)*prog,lo2=arc.slon+(arc.dlon-arc.slon)*prog;
+    const pp=project2D(la2,lo2,rotY);
+    if(pp&&arc.age<1.5){ctx2.save();ctx2.beginPath();ctx2.arc(pp.x,pp.y,4,0,Math.PI*2);
+      ctx2.fillStyle=`rgba(255,200,210,${fade})`;ctx2.fill();ctx2.restore();}});
+  arcs3=arcs3.filter(a=>a.age<4.5);
+  // Incident markers
+  const now=performance.now()/1000;
+  incidents.filter(i=>!i.resolved).forEach(inc=>{
+    const p=project2D(inc.lat,inc.lon,rotY);
+    const lab=inc._lab;
+    if(!p){if(lab)lab.style.opacity="0";return;}
+    const rgb=sevRGB(inc.sev),base=inc.sev===1?7:inc.sev===2?10:14;
+    const spd=inc.sev===3?1.8:1.2,maxR=inc.sev===3?5:3.5;
+    // Outer pulse rings
+    for(let i=0;i<inc.sev+1;i++){
+      const f=((now*spd+i/(inc.sev+1))%1);
+      const rs=base+(f*maxR*base);const op=.45*(1-f);
+      ctx2.save();ctx2.beginPath();ctx2.arc(p.x,p.y,rs,0,Math.PI*2);
+      ctx2.strokeStyle=`rgba(${rgb},${op})`;ctx2.lineWidth=1.5;ctx2.stroke();ctx2.restore();}
+    // Core dot
+    const cp=1+Math.sin(now*spd*2)*.2;
+    ctx2.save();ctx2.beginPath();ctx2.arc(p.x,p.y,base*.45*cp,0,Math.PI*2);
+    ctx2.fillStyle=`rgba(${rgb},1)`;ctx2.shadowColor=sevHex(inc.sev);ctx2.shadowBlur=12;ctx2.fill();ctx2.restore();
+    // HUD label
+    if(lab){
+      lab.style.left=p.x+"px";lab.style.top=(p.y-20)+"px";lab.style.opacity="1";
+      const sc=getScenario(inc),mod=window.CW_MODULES[inc.type],hex=sevHex(inc.sev);
+      lab.style.borderColor=hex;lab.style.color=hex;
+      lab.innerHTML=`${mod?mod.icon:""} #${inc.id} ${sc?sc.name:inc.type}<span class="sml"> · ${inc.city}</span>`;}});}
+
+// Marker management (just create/remove the HTML label; drawing is in drawOverlay)
+const labsEl=document.getElementById("labels");
+function makeMarker(inc){const lab=document.createElement("div");lab.className="alabel";labsEl.appendChild(lab);inc._lab=lab;}
+function updateMCol(inc){}// no-op: colour is computed in drawOverlay
+function removeMarker(inc){if(inc._lab){inc._lab.remove();inc._lab=null;}}
+function animMarkers(){}// replaced by drawOverlay
+function makeArc3(s,d){arcs3.push({slat:s.lat,slon:s.lon,dlat:d.lat,dlon:d.lon,age:0});}
+function animArcs(){}// handled in drawOverlay
+
+// ── Camera drag ──
+let drag=false,lx=0,ly=0;
+const cvDrag=is3D()?c3d:c2d;
+c3d.addEventListener("mousedown",e=>{drag=true;lx=e.clientX;ly=e.clientY;});
+c2d.addEventListener("mousedown",e=>{drag=true;lx=e.clientX;ly=e.clientY;});
+window.addEventListener("mouseup",()=>drag=false);
+window.addEventListener("mousemove",e=>{if(!drag)return;
+  if(is3D()){cs.az-=(e.clientX-lx)*.005;cs.pol=Math.max(.25,Math.min(2.9,cs.pol-(e.clientY-ly)*.005));}
+  lx=e.clientX;ly=e.clientY;});
+c3d.addEventListener("wheel",e=>{if(!is3D())return;e.preventDefault();cs.rad=Math.max(1.8,Math.min(6,cs.rad+e.deltaY*.001));},{passive:false});
+
+// Globe click → inspect incident
+c3d.addEventListener("click",e=>{
+  if(drag||!is3D())return;
+  // Find closest visible marker to click position
+  const rect=c3d.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  let best=null,bestD=900;
+  incidents.filter(i=>!i.resolved).forEach(inc=>{
+    const p=project2D(inc.lat,inc.lon,globeRot);if(!p)return;
+    const d=Math.hypot(mx-p.x,my-p.y);if(d<30&&d<bestD){bestD=d;best=inc;}});
+  if(best)openRespPanel(best.id);});
+
+// Resize
+function resizeAll(){
+  const ga=document.getElementById("globe-area");
+  const w=ga.clientWidth||800,h=ga.clientHeight||600;
+  c3d.width=w;c3d.height=h;c2d.width=w;c2d.height=h;seed2();}
+window.addEventListener("resize",resizeAll);
+
+// Noise functions (used by classic 2D globe)
+function h3(x,y,z){const s=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5;return s-Math.floor(s);}
+function sm2(t){return t*t*(3-2*t);}
+function vN2(x,y,z){const xi=Math.floor(x),yi=Math.floor(y),zi=Math.floor(z),u=sm2(x-xi),v=sm2(y-yi),w=sm2(z-zi);
+  const n=(_x,_y,_z)=>h3(_x,_y,_z);
+  return((n(xi,yi,zi)*(1-u)+n(xi+1,yi,zi)*u)*(1-v)+(n(xi,yi+1,zi)*(1-u)+n(xi+1,yi+1,zi)*u)*v)*(1-w)+
+    ((n(xi,yi,zi+1)*(1-u)+n(xi+1,yi,zi+1)*u)*(1-v)+(n(xi,yi+1,zi+1)*(1-u)+n(xi+1,yi+1,zi+1)*u)*v)*w;}
+function fbm(x,y,z){let s=0,a=.55,f=1.15;for(let i=0;i<5;i++){s+=a*vN2(x*f,y*f,z*f);f*=2;a*=.52;}return s;}
+
+// Globe rotation state (drives day/night cycle)
+let globeRot=0;
+function updateDefconVis(){const cs2=["#00ffa3","#29e0ff","#ffe020","#ff8a20","#ff3b6b"][5-defcon];
+  document.getElementById("def-num").textContent=defcon;document.getElementById("def-num").style.color=cs2;
+  document.getElementById("d-arc").style.stroke=cs2;document.getElementById("d-arc").style.strokeDashoffset=String(94*(defcon-1)/4);}
+
+let flashV=0;
+document.getElementById("btnTheme").addEventListener("click",()=>{
+  if(!glReady){alert('WebGL not supported on this device — using Classic 2D mode.');return;}
+  globeMode=globeMode==="neo"?"classic":"neo";
+  document.getElementById("btnTheme").textContent=globeMode==="neo"?"⬛ CLASSIC":"🌍 3D";});
+
+
+
+// ═══ TEAM SYSTEM ═══
+const TEAMS={
+  network: {id:"network",name:"Network Team",icon:"🔵",col:"var(--net)",task:null,paused:[]},
+  security:{id:"security",name:"Security Ops",icon:"🟢",col:"var(--sec)",task:null,paused:[]},
+  identity:{id:"identity",name:"Identity Team",icon:"🔴",col:"var(--id)",task:null,paused:[]},
+  analyst: {id:"analyst",name:"YOU (Analyst)",icon:"👤",col:"var(--you)",task:null,paused:[]}
+};
+function teamFree(tid){return TEAMS[tid].task===null;}
+function teamColor(tid){return tid==="network"?"#29e0ff":tid==="security"?"#00ffa3":tid==="identity"?"#ff3b6b":"#ffb020";}
+
+// ═══ TASK ENGINE ═══
+let tasks=[],taskIdSeq=1;
+
+function createTask(inc,response){
+  const vari=0.65+Math.random()*.75; // 65%–140% of base duration
+  const actual=Math.round(response.baseDuration*vari);
+  return{id:taskIdSeq++,incId:inc.id,incRef:inc,responseId:response.id,responseName:response.name,
+    team:response.team,baseDur:response.baseDuration,actualDur:actual,elapsed:0,progress:0,
+    state:"active",narrativeIdx:0,nextNarrativeTick:0,ocrRef:response.ocrRef,scorePts:response.scorePts||80,
+    complications:[...(response.complications||[])],earlyFinish:response.earlyFinish||null,
+    narrative:response.narrative||[],compApplied:false,earlyApplied:false,
+    varLabel:vari<.8?"⚡ Quick":"",varNote:vari>1.2?"Complexity higher than expected":vari<.75?"Conditions favourable":""};
+}
+
+function assignTask(incId,responseId){
+  const inc=incidents.find(i=>i.id===incId);if(!inc||inc.resolved)return;
+  const sc=getScenario(inc);if(!sc)return;
+  const response=sc.responses.find(r=>r.id===responseId);if(!response)return;
+  const team=TEAMS[response.team];
+  if(response.team==="analyst"){openAnalystPanel(inc,response);return;}
+  if(team.task!==null){pendingPreempt={inc,response};showPreemptDialog(team);return;}
+  startTask(inc,response);}
+
+function startTask(inc,response){
+  const team=TEAMS[response.team];
+  if(team.task)pauseTask(team.task,true); // force pause existing
+  const task=createTask(inc,response);
+  task.state="active";team.task=task;tasks.push(task);
+  inc.responseId=responseId=response.id; // track active response on incident
+  inc.activeTaskId=task.id;
+  sysLog(`${team.icon} ${team.name} → ${response.name} on #${inc.id} ${inc.scenarioName} (est. ${task.actualDur}s)`,task.actualDur>response.baseDuration*1.1?"tw":"tsys");
+  if(task.varNote)sysLog(`  ℹ ${task.varNote}`,"td");
+  renderTeams();renderIncidents();}
+
+function pauseTask(task,silent=false){
+  const team=TEAMS[task.team];team.task=null;task.state="paused";
+  const inc=incidents.find(i=>i.id===task.incId);
+  if(inc&&!inc.pausedTasks)inc.pausedTasks=[];
+  if(inc)inc.pausedTasks.push(task);
+  if(!silent)sysLog(`⏸ ${TEAMS[task.team].name} paused: ${task.responseName} #${task.incId} at ${Math.round(task.progress)}%`,"tw");
+  const idx=tasks.indexOf(task);if(idx>-1)tasks.splice(idx,1);
+  renderTeams();renderIncidents();}
+
+function resumeTask(incId,taskId){
+  const inc=incidents.find(i=>i.id===incId);if(!inc)return;
+  const task=inc.pausedTasks&&inc.pausedTasks.find(t=>t.id===taskId);if(!task)return;
+  const team=TEAMS[task.team];
+  if(team.task){pendingPreempt={inc,task,isResume:true};showPreemptDialog(team);return;}
+  doResumeTask(inc,task);}
+
+function doResumeTask(inc,task){
+  const team=TEAMS[task.team];if(team.task)pauseTask(team.task,true);
+  task.state="active";team.task=task;
+  if(!tasks.includes(task))tasks.push(task);
+  inc.pausedTasks=inc.pausedTasks.filter(t=>t!==task);
+  sysLog(`▶ ${team.icon} ${team.name} resumed: ${task.responseName} #${inc.id} from ${Math.round(task.progress)}%`,"ti");
+  renderTeams();renderIncidents();}
+
+// PREEMPT DIALOG
+let pendingPreempt=null;
+function showPreemptDialog(team){
+  const msg=team.task?`${team.icon} ${team.name} is currently on "${team.task.responseName}" (#${team.task.incId}) at ${Math.round(team.task.progress)}% complete. Stopping it will preserve that progress — you can resume later.`:"Team is busy.";
+  document.getElementById("pdlg-msg").textContent=msg;document.getElementById("preempt-dlg").classList.add("show");}
+function confirmPreempt(){
+  document.getElementById("preempt-dlg").classList.remove("show");
+  if(!pendingPreempt)return;
+  const {inc,response,task,isResume}=pendingPreempt;pendingPreempt=null;
+  const team=TEAMS[isResume?task.team:response.team];if(team.task)pauseTask(team.task,false);
+  if(isResume)doResumeTask(inc,task);else startTask(inc,response);}
+function cancelPreempt(){document.getElementById("preempt-dlg").classList.remove("show");pendingPreempt=null;}
+
+// TASK UPDATE LOOP
+function updateTasks(dt){
+  const toComplete=[];
+  tasks.forEach(task=>{
+    if(task.state!=="active")return;
+    task.elapsed+=dt;task.progress=Math.min(100,(task.elapsed/task.actualDur)*100);
+    // complication check at ~50% progress
+    if(!task.compApplied&&task.progress>=50&&task.complications.length){
+      task.compApplied=true;
+      task.complications.forEach(comp=>{if(Math.random()<comp.chance){
+        const extra=Math.round(task.actualDur*comp.extraTime);task.actualDur+=extra;
+        sysLog(`⚠ COMPLICATION: ${comp.msg} — ${task.responseName} +${extra}s`,"tcomp");
+        document.getElementById("edge-flash").style.boxShadow="inset 0 0 150px rgba(255,176,32,.3)";
+        setTimeout(()=>document.getElementById("edge-flash").style.boxShadow="",700);}});}
+    // early finish check at ~30%
+    if(!task.earlyApplied&&task.progress>=30&&task.earlyFinish&&Math.random()<task.earlyFinish.chance){
+      task.earlyApplied=true;task.actualDur=Math.round(task.elapsed+(task.actualDur-task.elapsed)*.6);
+      sysLog(`⚡ ${task.earlyFinish.msg} — ${task.responseName} finishing ahead of schedule`,"tearly");}
+    // narrative streaming
+    if(task.narrative.length&&task.narrativeIdx<task.narrative.length){
+      const interval=task.actualDur/task.narrative.length;
+      if(task.elapsed>=task.narrativeIdx*interval){sysLog(`  ${task.narrative[task.narrativeIdx]}`,"tnt");task.narrativeIdx++;}
+    }
+    if(task.progress>=100)toComplete.push(task);
+  });
+  if(toComplete.length){toComplete.forEach(task=>completeTask(task));renderTeams();renderIncidents();}}
+
+function completeTask(task){
+  const team=TEAMS[task.team];team.task=null;const idx=tasks.indexOf(task);if(idx>-1)tasks.splice(idx,1);
+  const inc=incidents.find(i=>i.id===task.incId);
+  addScore(task.scorePts);
+  sysLog(`✅ ${team.icon} ${team.name} completed: ${task.responseName} on #${task.incId} (+${task.scorePts} pts)`,"ts");
+  if(inc&&!inc.resolved){
+    inc.resolved=true;inc.activeTaskId=null;resolvedCount++;calcDefcon();renderIncidents();
+    setTimeout(()=>removeMarker(inc),600);
+    setTimeout(()=>{const active=incidents.filter(i=>!i.resolved);if(active.length){
+      const top=active.sort((a,b)=>urgScore(b)-urgScore(a))[0];
+      if(top.sev===3)sysLog(`  ⚡ WARNING: #${top.id} ${top.scenarioName} is Sev 3 — spreads soon. Click to respond.`,"te");
+    }},400);}}
+
+function renderTeams(){
+  Object.values(TEAMS).forEach(team=>{
+    const el=document.getElementById("tr-"+team.id);if(!el)return;
+    const task=team.task;
+    const paused=[];incidents.forEach(inc=>{if(inc.pausedTasks)inc.pausedTasks.forEach(t=>{if(t.team===team.id)paused.push({t,inc});});});
+    let html=`<div class="team-top"><span class="t-icon">${team.icon}</span><span class="t-name">${team.name}</span>`;
+    if(task){const eta=Math.max(0,task.actualDur-task.elapsed);const col=teamColor(team.id);
+      html+=`<span class="t-status ts-busy">${Math.round(task.progress)}%</span></div>
+      <div class="t-task">${task.responseName} · #${task.incId}</div>
+      <div class="t-prog-bar"><i style="width:${task.progress}%;background:${col}"></i></div>
+      <div class="t-meta"><span>ETA ~${Math.round(eta)}s</span><span style="color:${col}">▶ ACTIVE</span></div>
+      <div class="t-btn-row"><button class="sm-btn pause" onclick="pauseTask(TEAMS['${team.id}'].task)">⏸ PAUSE</button></div>`;}
+    else{html+=`<span class="t-status ts-free">AVAILABLE</span></div>`;}
+    if(paused.length){paused.forEach(({t,inc})=>{html+=`<div style="margin-top:5px;padding:4px 0;border-top:1px solid rgba(255,255,255,.04)">
+      <div class="t-task" style="color:var(--warn)">⏸ ${t.responseName} · #${t.incId} · ${Math.round(t.progress)}%</div>
+      <div class="t-prog-bar"><i style="width:${t.progress}%;background:var(--warn)"></i></div>
+      <div class="t-btn-row"><button class="sm-btn resume" onclick="resumeTask(${inc.id},${t.id})">▶ RESUME</button></div>
+    </div>`;});}
+    el.innerHTML=html;});}
+
+// ═══ GAME STATE ═══
+let incidents=[],nextId=1,score=0,wrongCmds=0,hitD1=false;
+let spreadEvts=0,resolvedCount=0,spawnedCount=0,defcon=5;
+let cmdHistory=[],histIdx=-1;
+let simRun=false,simPause=false,simDur=0,simT=0;
+let nextSpawnAt=null,lastTick=performance.now(),flashV=0,idleT=0;
+const ACCEL=720,START_H=6;
+function worldClock(){const tm=START_H*60+(simT*ACCEL)/60,day=Math.floor(tm/(24*60))+1,mod=tm%(24*60);return{day,hh:Math.floor(mod/60),mm:Math.floor(mod%60),frac:mod/(24*60)};}
+function updateClockUI(){if(!simRun)return;const w=worldClock();
+  document.getElementById("ops-t").textContent=`${String(w.hh).padStart(2,"0")}:${String(w.mm).padStart(2,"0")} ${w.hh>=6&&w.hh<18?"☀":"🌙"}`;
+  document.getElementById("ops-d").textContent=`DAY ${w.day} · ×${ACCEL}`;}
+
+// OPS LOG
+const tOut=document.getElementById("opsout"),tIn=document.getElementById("cmdin"),tPr=document.getElementById("prompt");
+function sysLog(msg,cls){const d=document.createElement("div");d.className=cls||"ti";d.textContent=msg;tOut.appendChild(d);tOut.scrollTop=tOut.scrollHeight;}
+function tClear(){tOut.innerHTML="";}
+
+// SCORE / DEFCON
+function addScore(p){score+=p;document.getElementById("score-v").textContent=score.toLocaleString();}
+function calcDefcon(){const active=incidents.filter(i=>!i.resolved),s3=active.filter(i=>i.sev===3).length;
+  let d=5;if(active.length>=1)d=4;if(active.length>=3||s3>=1)d=3;if(active.length>=5||s3>=2)d=2;if(s3>=3||active.length>=8)d=1;
+  defcon=d;if(d===1)hitD1=true;updateDefconVis();}
+function updateDefconVis(){const cs2=["#00ffa3","#29e0ff","#ffe020","#ff8a20","#ff3b6b"][5-defcon];
+  document.getElementById("def-num").textContent=defcon;document.getElementById("def-num").style.color=cs2;
+  document.getElementById("d-arc").style.stroke=cs2;document.getElementById("d-arc").style.strokeDashoffset=String(94*(defcon-1)/4);
+  if(am)am.uniforms.c.value.setHex([0x29e0ff,0x29e0ff,0xffe020,0xff8a20,0xff3b6b][5-defcon]);}
+function urgScore(inc){if(inc.resolved)return -1;const sc=getScenario(inc);
+  const tte=(inc.sev<3&&inc.escRate&&inc.escAge!==undefined)?Math.max(0,inc.escRate-inc.escAge):999;
+  const steps=sc?sc.responses.reduce((mn,r)=>Math.min(mn,r.baseDuration),999):30;
+  return(3-inc.sev)*10+(1/(tte+1))*100+(inc.sev===3&&(inc.spreadTimer||0)>10?50:0)+inc.users/10000;}
+
+// INCIDENT PANEL
+function renderIncidents(){
+  const list=document.getElementById("inc-scroll");
+  const active=incidents.filter(i=>!i.resolved);
+  document.getElementById("inc-count").textContent=active.length+" ACTIVE";
+  if(!incidents.length){list.innerHTML='<div style="padding:16px;color:var(--dim);font-size:11px;text-align:center">Monitoring...</div>';return;}
+  const disp=[...active.sort((a,b)=>b.sev-a.sev||a.escAge-b.escAge),...incidents.filter(i=>i.resolved).slice(-2)];
+  list.innerHTML=disp.map(inc=>{
+    const mod=window.CW_MODULES[inc.type],sc=getScenario(inc);if(!mod||!sc)return"";
+    const pct=inc.escRate?Math.min(100,(inc.escAge/inc.escRate)*100):0;
+    const bc=pct>80?"var(--crit)":pct>55?"var(--warn)":"var(--ok)";
+    const sevCls=inc.resolved?"res":"s"+inc.sev;
+    const hasActTask=inc.activeTaskId&&tasks.find(t=>t.id===inc.activeTaskId);
+    const hasPaused=inc.pausedTasks&&inc.pausedTasks.length>0;
+    const tte=(!inc.resolved&&inc.sev<3&&inc.escRate)?Math.max(0,inc.escRate-inc.escAge):null;
+    const tteStr=inc.resolved?"":inc.sev===3?`<span style="color:var(--crit)">${(inc.spreadTimer||0)>10?"⚡ SPREADING":"⚠ SEV 3 ACTIVE"}</span>`:
+      (tte!==null?`<span style="color:${tte<15?"var(--crit)":tte<30?"var(--warn)":"var(--dim)"}">⏱ ${Math.round(tte)}s to Sev${inc.sev+1}</span>`:"");
+    // active task strips
+    let taskStrips="";
+    if(hasActTask){const t=hasActTask,eta=Math.max(0,t.actualDur-t.elapsed),col=teamColor(t.team);
+      taskStrips+=`<div class="task-strip"><span class="ts-team">${TEAMS[t.team].icon}</span><div class="ts-info"><div class="ts-name">${t.responseName}</div><div class="ts-bar"><i style="width:${t.progress}%;background:${col}"></i></div></div><div class="ts-eta" style="color:${col}">~${Math.round(eta)}s</div></div>`;}
+    if(hasPaused){inc.pausedTasks.forEach(t=>{
+      taskStrips+=`<div class="task-strip" style="opacity:.65"><span class="ts-team">⏸</span><div class="ts-info"><div class="ts-name" style="color:var(--warn)">${t.responseName}</div><div class="ts-bar"><i style="width:${t.progress}%;background:var(--warn)"></i></div></div><div class="ts-eta" style="color:var(--warn)">${Math.round(t.progress)}% done</div></div>`;});}
+    const showRespond=!inc.resolved&&!hasActTask;
+    return`<div class="ic ${sevCls}" id="ic-${inc.id}" data-id="${inc.id}">
+      <div class="ic-head"><span class="ic-ico">${mod.icon}</span><span class="ic-nm">#${inc.id} ${sc.name}</span><span class="ic-sev ${inc.resolved?"svr":"sv"+inc.sev}">${inc.resolved?"✓ DONE":"SEV "+inc.sev}</span></div>
+      <div class="ic-sub">${inc.city} · ${inc.region} · ~${inc.users.toLocaleString()} at risk</div>
+      ${tteStr?`<div class="ic-esc">${tteStr}</div>`:""}
+      ${inc.mutation?`<div class="ic-sub" style="color:var(--c2)">${inc.mutationLabel}</div>`:""}
+      ${taskStrips?`<div class="ic-tasks">${taskStrips}</div>`:""}
+      ${showRespond?`<div class="ic-respond-btn" onclick="openRespPanel(${inc.id})"><span>◆ SEE RESPONSE OPTIONS</span></div>`:""}
+      ${!inc.resolved?`<div class="ic-sub"><div style="height:2px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden;margin-top:3px"><i style="display:block;height:100%;width:${pct}%;background:${bc};border-radius:2px;transition:width .4s"></i></div></div>`:""}
+    </div>`;
+  }).join("");
+  list.querySelectorAll(".ic").forEach(el=>el.addEventListener("click",e=>{
+    if(e.target.closest(".ic-respond-btn")||e.target.closest(".sm-btn")||e.target.closest(".task-strip"))return;
+    const id=parseInt(el.getAttribute("data-id"));if(id&&!el.classList.contains("res"))openRespPanel(id);}));}
+
+// RESPONSE PANEL
+let currentRespIncId=null;
+function openRespPanel(incId){
+  const inc=incidents.find(i=>i.id===incId);if(!inc||inc.resolved)return;
+  const sc=getScenario(inc),mod=window.CW_MODULES[inc.type];if(!sc||!mod)return;
+  currentRespIncId=incId;
+  document.getElementById("rp-inc-tag").textContent=`INCIDENT #${inc.id} · ${mod.cat.toUpperCase()}`;
+  document.getElementById("rp-inc-name").textContent=`${mod.icon} ${sc.name}`;
+  document.getElementById("rp-inc-sub").textContent=`${inc.city} · ${inc.region} · ~${inc.users.toLocaleString()} users · ${inc.mutation?inc.mutationLabel:"No modifiers"}`;
+  const opts=document.getElementById("rp-options");
+  opts.innerHTML=`<div class="rp-section"><div class="rp-sh">WHAT IS THIS ATTACK?</div>
+    <div style="font-size:12px;color:var(--dim);line-height:1.65;font-weight:500">${sc.short}</div></div>
+    <div class="rp-section"><div class="rp-sh">CHOOSE YOUR RESPONSE</div>`+
+    sc.responses.map(r=>{
+      const team=TEAMS[r.team];const busy=!teamFree(r.team)&&team.id!=="analyst";
+      const isYou=r.team==="analyst";
+      const effCls=r.effectiveness>=80?"eff-high":"eff-med";
+      return`<div class="resp-opt ${isYou?"analyst-req":""} ${busy?"team-busy":""}" onclick="${busy?`TEAMS.${r.team}.task?showPreemptForOpt(${incId},'${r.id}'):null`:`assignTask(${incId},'${r.id}')`}">
+        <div class="ro-head">
+          <span class="ro-team">${team.icon}</span>
+          <div class="ro-info"><div class="ro-name">${r.name}</div><div class="ro-team-lbl">${team.name}${busy?" — currently busy":""}</div></div>
+          <div class="ro-time"><div class="ro-dur">~${r.baseDuration}s</div><div class="ro-dur-lbl">EST. TIME</div></div>
+        </div>
+        <div class="ro-body">${r.description}</div>
+        <div class="ro-tags">
+          <span class="ro-tag ${effCls}">${r.effectiveness}% effective</span>
+          <span class="ro-tag ocr-tag">OCR ${r.ocrRef}</span>
+          ${isYou?'<span class="ro-tag you-tag">👤 YOU REQUIRED</span>':""}
+          ${busy?'<span class="ro-tag busy-tag">⚠ TEAM BUSY</span>':""}
+        </div>
+        <div class="ro-risk">⚠ During implementation: ${r.duringRisk}</div>
+        <button class="ro-assign ${busy?"ra-busy":isYou?"ra-you":"ra-go"}" onclick="event.stopPropagation();${busy?`showPreemptForOpt(${incId},'${r.id}')`:`assignTask(${incId},'${r.id}')`}">${busy?"PREEMPT & REASSIGN":isYou?"👤 I WILL HANDLE THIS":"▸ ASSIGN TO "+team.name.toUpperCase()}</button>
+      </div>`}).join("")+"</div>";
+  document.getElementById("resp-panel").classList.add("open");}
+function closeRespPanel(){document.getElementById("resp-panel").classList.remove("open");}
+function showPreemptForOpt(incId,respId){pendingPreempt={incFromPanel:true,incId,respId};const r=getScenario(incidents.find(i=>i.id===incId))?.responses.find(rr=>rr.id===respId);showPreemptDialog(TEAMS[r?.team||"network"]);}
+// Override confirmPreempt for panel use
+const _origConfirm=window.confirmPreempt;
+window.confirmPreempt=function(){
+  document.getElementById("preempt-dlg").classList.remove("show");
+  if(!pendingPreempt)return;
+  if(pendingPreempt.incFromPanel){const {incId,respId}=pendingPreempt;pendingPreempt=null;
+    const inc=incidents.find(i=>i.id===incId),r=getScenario(inc)?.responses.find(rr=>rr.id===respId);
+    if(inc&&r){const team=TEAMS[r.team];if(team.task)pauseTask(team.task,false);startTask(inc,r);}
+    return;}
+  _origConfirm();};
+
+// ═══ SPAWN / ESCALATION / SPREAD ═══
+const SCHED=[{a:0,i:[30,45]},{a:60,i:[20,32]},{a:150,i:[13,22]},{a:300,i:[9,16]},{a:480,i:[5,11]}];
+function getSpawnIv(){const s=SCHED.filter(x=>simT>=x.a).pop()||SCHED[0];const[lo,hi]=s.i;return(lo+Math.random()*(hi-lo))*[1.6,1.3,1,.8,.65][5-defcon];}
+function schedNext(first=false){nextSpawnAt=simT+(first?6+Math.random()*4:getSpawnIv());}
+function minCon(){if(simT<60)return 0;if(simT<150)return 1;if(simT<300)return 2;return 3;}
+
+function spawnIncident(fType=null,fCity=null){
+  const mods=Object.keys(window.CW_MODULES);if(!mods.length)return;
+  const aC=new Set(incidents.filter(i=>!i.resolved).map(i=>i.city));
+  let cands=CITY_NODES.filter(c=>!aC.has(c.city));if(!cands.length)cands=CITY_NODES;
+  const city=fCity||cands[Math.floor(Math.random()*cands.length)];
+  const tn=fType||mods[Math.floor(Math.random()*mods.length)];
+  const mod=window.CW_MODULES[tn];if(!mod||!mod.scenarios)return;
+  const sc=mod.scenarios[Math.floor(Math.random()*mod.scenarios.length)];
+  if(!sc.responses||!sc.responses.length)return; // skip modules not yet updated
+  let mut=null;if(mod.mutations&&mod.mutations.length&&Math.random()<.28)mut=mod.mutations[Math.floor(Math.random()*mod.mutations.length)];
+  const ep=Math.min(.2,.04+simT/simDur*.22),rv=Math.random();
+  const sev=rv<ep?2+Math.floor(Math.random()*2):1;
+  const um=mut?mut.userMult:1,em=mut?mut.escMulti:1;
+  const users=Math.floor((sc.uMin+Math.random()*(sc.uMax-sc.uMin))*um);
+  const inc={id:nextId++,type:tn,scenario:sc.id,scenarioName:sc.name,mutation:mut?mut.name:null,
+    mutationLabel:mut?mut.label:null,city:city.city,lat:city.lat,lon:city.lon,region:city.region,
+    sev,users,escAge:0,escRate:sc.escR*(.7+Math.random()*.6)*em,resolved:false,escMulti:1,
+    spreadTimer:0,spreadMult:mut?mut.spreadMult:1,activeTaskId:null,pausedTasks:[]};
+  incidents.push(inc);spawnedCount++;idleT=0;makeMarker(inc);
+  const w=worldClock();
+  sysLog(`[D${w.day} ${String(w.hh).padStart(2,"0")}:${String(w.mm).padStart(2,"0")}] ${sev===3?"🔴":sev===2?"🟡":"⚠"} #${inc.id} ${sc.name}${mut?` [${mut.label}]`:""} · ${city.city} · Sev ${sev} · ~${users.toLocaleString()} users`,"tw");
+  sysLog(`  → Click incident card to see response options`,"td");
+  calcDefcon();renderIncidents();if(sev===3)flashV=1;}
+
+function doEscalation(dt){const gm=(1+Math.min(1,simT/simDur)*.8)*[1,1.1,1.2,1.35,1.55][5-defcon];
+  let ch=false;incidents.forEach(inc=>{if(inc.resolved||inc.activeTaskId)return;
+    inc.escAge+=dt*inc.escMulti*gm;const sc=getScenario(inc);if(!sc)return;
+    if(inc.escAge>=inc.escRate&&inc.sev<3){inc.sev++;inc.escAge=0;ch=true;updateMCol(inc);
+      const w=worldClock();sysLog(`[D${w.day} ${String(w.hh).padStart(2,"0")}:${String(w.mm).padStart(2,"0")}] ${inc.sev===3?"🔴":"🟡"} #${inc.id} → SEV ${inc.sev}: ${sc.escs[inc.sev-1]}`,"tw");
+      if(inc.sev===3){flashV=1;sysLog(`  ⚡ SEV 3 incidents SPREAD if unresolved. Assign a team immediately.`,"te");}}});
+  if(ch){calcDefcon();renderIncidents();}}
+
+function doSpread(dt){incidents.forEach(inc=>{if(inc.resolved||inc.sev<3)return;
+  inc.spreadTimer=(inc.spreadTimer||0)+dt;const iv=Math.max(8,15-(simT/simDur)*8);
+  if(inc.spreadTimer>=iv){inc.spreadTimer=0;const sc=getScenario(inc);
+    const chance=.25*(inc.spreadMult||1)*(1+simT/simDur*.4);
+    if(Math.random()<chance){const ac=new Set(incidents.filter(i=>!i.resolved).map(i=>i.city));
+      const cands=CITY_NODES.filter(c=>!ac.has(c.city));if(!cands.length)return;
+      const dst=cands[Math.floor(Math.random()*cands.length)];
+      makeArc3({lat:inc.lat,lon:inc.lon},dst);spreadEvts++;addScore(-50);flashV=1;
+      sysLog(`⚡ SPREAD: #${inc.id} ${inc.scenarioName} → ${dst.city} [-50 pts] — assign a team NOW`,"te");
+      document.getElementById("edge-flash").style.boxShadow="inset 0 0 200px rgba(255,59,107,.6)";
+      setTimeout(()=>document.getElementById("edge-flash").style.boxShadow="",800);
+      const st=(sc&&sc.spread&&window.CW_MODULES[sc.spread])?sc.spread:inc.type;spawnIncident(st,dst);}}});}
+
+// ═══ ANALYST PANEL ═══
+let analystState=null;
+let scaffoldShown=0,scaffoldTimer=0;
+
+function openAnalystPanel(inc,response){
+  analystState={inc,response,startT:simT,attempts:0};scaffoldShown=0;scaffoldTimer=0;
+  document.getElementById("ap-title").textContent=`👤 ANALYST TASK: ${response.name}`;
+  document.getElementById("ap-context").textContent=response.analystChallenge?.context||response.description;
+  document.getElementById("ap-question").textContent=response.analystChallenge?.question||response.name;
+  document.getElementById("ap-ocr-ref").textContent=`OCR H446 · ${response.ocrRef}`;
+  document.getElementById("ap-ocr-text").textContent=response.analystChallenge?.ocrLink||"See OCR H446 spec section for details.";
+  document.getElementById("ap-feedback").textContent="";
+  document.getElementById("analyst-input").value="";
+  // narrative panel
+  const narEl=document.getElementById("ap-narrative");narEl.innerHTML="";
+  (response.narrative||[]).slice(0,3).forEach(line=>{const d=document.createElement("div");d.style.cssText="margin-bottom:5px;";d.textContent=line;narEl.appendChild(d);});
+  // scaffolding
+  const sa=document.getElementById("scaffold-area");sa.innerHTML=`
+    <div style="font-size:10px;color:var(--dim);margin-bottom:8px;letter-spacing:1px">NEED HELP? SCAFFOLDING AVAILABLE:</div>`;
+  document.getElementById("analyst-panel").classList.add("show");
+  setTimeout(()=>document.getElementById("analyst-input").focus(),100);
+  sysLog(`👤 YOU are now handling: ${response.name} on #${inc.id} — teams cannot receive new orders until complete`,"tg");
+  closeRespPanel();}
+
+function showScaffold(level){
+  const chal=analystState?.response?.analystChallenge;if(!chal)return;
+  const sa=document.getElementById("scaffold-area");
+  if(level===1&&!sa.querySelector(".sc-1")){const d=document.createElement("div");d.className="scaffold-content sc-1";d.innerHTML=`💡 <b>Hint:</b> ${chal.hint1}`;sa.appendChild(d);}
+  if(level===2&&!sa.querySelector(".sc-2")){const d=document.createElement("div");d.className="scaffold-content sc-2";d.style.borderLeftColor="var(--warn)";d.innerHTML=`📖 <b>More help:</b> ${chal.hint2}`;sa.appendChild(d);}
+  if(level===3&&!sa.querySelector(".sc-3")){const d=document.createElement("div");d.className="scaffold-content sc-3";d.style.borderLeftColor="var(--c2)";d.innerHTML=`💡 <b>Even more detail:</b> ${chal.hint3}`;sa.appendChild(d);}
+  scaffoldShown=Math.max(scaffoldShown,level);}
+
+function buildScaffoldButtons(){
+  const chal=analystState?.response?.analystChallenge;if(!chal)return;
+  const sa=document.getElementById("scaffold-area");
+  sa.innerHTML=`<div style="font-size:10px;color:var(--dim);margin-bottom:8px;font-weight:600;letter-spacing:1px">STUCK? USE SCAFFOLDING:</div>
+    <button class="scaffold-btn hint" onclick="showScaffold(1)">💡 Hint — nudge me in the right direction</button>
+    <button class="scaffold-btn hint" onclick="showScaffold(2)">📖 Explain — give me the concept</button>
+    <button class="scaffold-btn hint" onclick="showScaffold(3)">🔍 Example — show me a worked example</button>
+    <button class="scaffold-btn penalty" onclick="giveAnswer()">🆘 Give Me the Answer (-50 pts) — I just need to move on</button>`;}
+
+function giveAnswer(){
+  const chal=analystState?.response?.analystChallenge;if(!chal)return;
+  addScore(-50);document.getElementById("analyst-input").value=chal.fullAnswer;
+  document.getElementById("ap-feedback").style.color="var(--warn)";
+  document.getElementById("ap-feedback").textContent=`Answer revealed: "${chal.fullAnswer}" (-50 pts). Read the explanation to understand why.`;
+  showScaffold(3);submitAnalyst();}
+
+function submitAnalyst(){
+  const inp=document.getElementById("analyst-input").value.trim().toLowerCase();
+  const chal=analystState?.response?.analystChallenge;if(!chal||!analystState)return;
+  analystState.attempts++;
+  const correct=chal.checkFn?chal.checkFn(inp):(inp===chal.fullAnswer.toLowerCase()||inp.includes(chal.fullAnswer.toLowerCase()));
+  const fb=document.getElementById("ap-feedback");
+  if(correct){fb.style.color="var(--ok)";fb.textContent="✅ Correct! Well done.";
+    setTimeout(()=>{document.getElementById("analyst-panel").classList.remove("show");
+      const {inc,response}=analystState;
+      sysLog(`✅ YOU completed: ${response.name} on #${inc.id} (+${response.scorePts} pts)`,"ts");
+      addScore(response.scorePts);inc.resolved=true;resolvedCount++;calcDefcon();renderIncidents();
+      setTimeout(()=>removeMarker(inc),600);analystState=null;},1200);
+  }else{fb.style.color="var(--crit)";fb.textContent=`❌ Not quite. ${analystState.attempts>=2?"Try the scaffolding below.":"Have another go."}`;
+    if(analystState.attempts>=2)buildScaffoldButtons();
+    document.getElementById("analyst-input").select();}}
+
+function abandonAnalyst(){
+  addScore(-25);const sa=analystState;analystState=null;scaffoldShown=0;
+  document.getElementById("analyst-panel").classList.remove("show");
+  if(sa)sysLog(`↩ You abandoned: ${sa.response.name} on #${sa.inc.id} (-25 pts)`,"tw");}
+
+function updateAnalystPanel(dt){
+  if(!analystState)return;
+  scaffoldTimer+=dt;
+  // auto-reveal hint after 20s
+  if(scaffoldTimer>20&&scaffoldShown===0){showScaffold(1);buildScaffoldButtons();}
+  else if(scaffoldTimer>45&&scaffoldShown<2)showScaffold(2);
+  const inc=analystState.inc;
+  document.getElementById("ap-warn").textContent=`⚠ #${inc.id} escalating while you work · Sev ${inc.sev}`;}
+
+document.getElementById("analyst-input").addEventListener("keydown",e=>{if(e.key==="Enter")submitAnalyst();});
+
+// ═══ DEMO MODE ═══
+let demoActive=false,demoStep=-1,demoWait=null,demoInc=null;
+const DEMO_STEPS=[
+  {title:"Welcome to CYBERWATCH",
+   body:"This simulation puts you in charge of a global threat operations centre. Real-time cyberattacks are incoming. Your job: assign your teams to respond before attacks escalate and spread globally. This demo uses a real phishing scenario to show you how.",
+   ocr:null,highlight:null,wait:null,btn:"Let's go →"},
+  {title:"An Incident Has Been Detected",
+   body:"A Mass Phishing Campaign has hit London — see the card in the left sidebar. Each card shows: attack type and name, city and region, severity (1–3), users at risk, and a live escalation timer. Sev 3 attacks SPREAD to new cities if you ignore them.",
+   ocr:null,highlight:"#inc-scroll",wait:null,btn:"Got it →"},
+  {title:"Meet Your Teams",
+   body:"You have four resources: Network Team 🔵, Security Ops 🟢, Identity Team 🔴, and YOU 👤. Each can only handle one task at a time. If a team is busy when a new incident arrives, you decide whether to stop their current task or wait.",
+   ocr:null,highlight:"#team-dash",wait:null,btn:"Understood →"},
+  {title:"See Your Response Options",
+   body:"Click the incident card now — or the '◆ SEE RESPONSE OPTIONS' button. You'll see 2–3 different ways to handle this phishing attack, with different teams, durations, and effectiveness ratings. Go on — click it.",
+   ocr:null,highlight:"#inc-scroll .ic:first-child",wait:"resp_panel",btn:null},
+  {title:"Choose Your Response",
+   body:"You can see three options. 'Block at Email Gateway' is quick (Network Team, 18s). 'Full Incident Response' is thorough (Identity Team, 55s). 'Personally Trace the Attack' requires YOU — you'll be locked while you work. For this demo, assign it to the Identity Team.",
+   ocr:"OCR 1.3.3(c): Email gateways filter traffic against blacklists of known malicious domains — a key network security defence.",
+   highlight:"#resp-panel",wait:"assign_task",btn:null},
+  {title:"Your Team Is Working",
+   body:"Watch the Identity Team's progress bar fill in the sidebar and on the incident card. The Operations Log (bottom) streams live narrative explaining what they're doing and why it works. This is the OCR theory — shown in context, not as a textbook.",
+   ocr:null,highlight:"#tr-identity",wait:"task_complete",btn:null},
+  {title:"Incident Resolved — Debrief",
+   body:"The phishing campaign has been neutralised. Notice: teams can be paused mid-task and resumed later. Some tasks finish early; some hit complications. More incidents are already incoming. You're ready to play. Press DEPLOY to start your own mission.",
+   ocr:"OCR H446 covers: 1.3.3(c) network security threats & defences · 1.3.1(c) encryption · 1.3.2(d) SQL injection",
+   highlight:null,wait:null,btn:"I'm ready — close demo"}
+];
+function startDemo(){
+  demoActive=true;demoStep=-1;
+  // create demo incident
+  const mod=window.CW_MODULES['Phishing'];if(!mod){sysLog("Phishing module not loaded — demo unavailable.","te");return;}
+  const sc=mod.scenarios[0];
+  demoInc={id:nextId++,type:"Phishing",scenario:sc.id,scenarioName:sc.name,mutation:null,mutationLabel:null,
+    city:"London",lat:51.507,lon:-0.128,region:"EU",sev:1,users:12400,escAge:0,escRate:120,
+    resolved:false,escMulti:1,spreadTimer:0,spreadMult:1,activeTaskId:null,pausedTasks:[]};
+  incidents.push(demoInc);spawnedCount++;makeMarker(demoInc);
+  simRun=true;simPause=false;simT=0;simDur=99999;
+  renderIncidents();calcDefcon();lastTick=performance.now();
+  tClear();sysLog("═══ DEMO MODE ═══","th");sysLog("A phishing campaign has been detected in London. Follow the guided walkthrough.","ti");
+  advanceDemo();}
+function advanceDemo(){
+  demoStep++;if(demoStep>=DEMO_STEPS.length){endDemo();return;}
+  const step=DEMO_STEPS[demoStep],md=document.getElementById("demo-modal"),card=document.getElementById("dm-card");
+  const hl=document.getElementById("demo-highlight");
+  if(step.highlight){const el=document.querySelector(step.highlight);if(el){const r=el.getBoundingClientRect();hl.style.cssText=`display:block;left:${r.left-4}px;top:${r.top-4}px;width:${r.width+8}px;height:${r.height+8}px;`;}}
+  else hl.style.display="none";
+  demoWait=step.wait;
+  card.innerHTML=`<div class="dm-step">STEP ${demoStep+1} of ${DEMO_STEPS.length}</div>
+    <div class="dm-title">${step.title}</div>
+    <div class="dm-body">${step.body}</div>
+    ${step.ocr?`<div class="dm-ocr">${step.ocr}</div>`:""}
+    <div class="dm-buttons">
+      <button class="dm-skip" onclick="endDemo()">Skip Demo</button>
+      ${step.btn?`<button class="dm-next" onclick="advanceDemo()">${step.btn}</button>`:
+        `<div style="font-size:11px;color:var(--c1);font-weight:600">Complete the action above to continue →</div>`}
+    </div>`;
+  md.classList.add("show");}
+function demoCheckAction(action){if(!demoActive||demoWait!==action)return;demoWait=null;setTimeout(advanceDemo,600);}
+function endDemo(){
+  demoActive=false;demoStep=-1;demoWait=null;
+  document.getElementById("demo-modal").classList.remove("show");
+  document.getElementById("demo-highlight").style.display="none";
+  // clean up demo incident
+  if(demoInc){demoInc.resolved=true;setTimeout(()=>removeMarker(demoInc),300);}
+  incidents=incidents.filter(i=>i!==demoInc);demoInc=null;
+  simRun=false;renderIncidents();calcDefcon();
+  sysLog("Demo complete. Press DEPLOY to start your mission.","ts");}
+
+// ═══ SIMPLIFIED COMMAND SYSTEM ═══
+const ALL_CMDS=["help","scan","triage","status","teams","history","clear","pause","resume"];
+function runCommand(raw){
+  raw=raw.trim();if(!raw)return;
+  const sp=raw.indexOf(" ");const cmd=sp===-1?raw.toLowerCase():raw.slice(0,sp).toLowerCase();
+  const arg=sp===-1?"":raw.slice(sp+1).trim();const idN=parseInt(arg);
+  sysLog("▸ "+raw,"tc");cmdHistory.unshift(raw);if(cmdHistory.length>50)cmdHistory.pop();histIdx=-1;tIn.value="";
+  if(cmd==="clear"){tClear();return;}
+  if(cmd==="help"){
+    sysLog("─── MAIN INTERACTION: click incident cards ───","th");
+    sysLog("  Click any incident → see response options","ti");
+    sysLog("  Click a response → assign to team or handle yourself","ti");
+    sysLog("  Click team PAUSE button → pause their task","ti");
+    sysLog("  Click RESUME on paused task → pick it back up","ti");
+    sysLog("─── TERMINAL COMMANDS ───","th");
+    sysLog("  scan    — live threat board with urgency","ti");
+    sysLog("  triage  — what to tackle next and why","ti");
+    sysLog("  teams   — all team statuses","ti");
+    sysLog("  status  — score, time, stats","ti");
+    return;}
+  if(cmd==="scan"){
+    const active=incidents.filter(i=>!i.resolved);if(!active.length){sysLog("No active incidents.","ti");return;}
+    sysLog(`─── ${active.length} Active Incidents · DEFCON ${defcon} ───`,"th");
+    active.sort((a,b)=>urgScore(b)-urgScore(a)).forEach(inc=>{
+      const mod=window.CW_MODULES[inc.type],sc=getScenario(inc);if(!mod||!sc)return;
+      const tte=inc.escRate?Math.max(0,inc.escRate-inc.escAge):null;
+      const hasTask=inc.activeTaskId&&tasks.find(t=>t.id===inc.activeTaskId);
+      const tStr=inc.sev===3?"🔴 SEV3":tte!==null?`⏱${Math.round(tte)}s`:"";
+      const taskStr=hasTask?` [${TEAMS[hasTask.team]?.icon||""} ${Math.round(hasTask.progress)}%]`:" [unassigned]";
+      sysLog(`  #${String(inc.id).padEnd(3)}${mod.icon} ${(sc.name).padEnd(28)} ${inc.city.padEnd(14)} ${tStr}${taskStr}`,inc.sev===3?"te":tte<30?"tw":"ti");});
+    return;}
+  if(cmd==="triage"){
+    const active=incidents.filter(i=>!i.resolved);if(!active.length){sysLog("All clear.","ts");return;}
+    sysLog("─── TRIAGE ASSESSMENT ───","th");
+    active.sort((a,b)=>urgScore(b)-urgScore(a)).slice(0,5).forEach((inc,i)=>{
+      const sc=getScenario(inc),mod=window.CW_MODULES[inc.type];if(!sc||!mod)return;
+      const hasTask=inc.activeTaskId&&tasks.find(t=>t.id===inc.activeTaskId);
+      const tte=inc.escRate?Math.max(0,inc.escRate-inc.escAge):null;
+      const r=inc.sev===3&&(inc.spreadTimer||0)>10?"SPREADING NOW — 50pt penalty soon":inc.sev===3?"Sev 3 — will spread if no team assigned":
+        hasTask?`${TEAMS[hasTask.team]?.icon} in progress (${Math.round(hasTask.progress)}%)`:
+        tte<15?`⏱ Escalates in ${Math.round(tte)}s — no team assigned!`:"Unassigned — click card to respond";
+      sysLog(`  #${i+1} [#${inc.id}] ${mod.icon} ${sc.name} — ${r}`,i===0?"te":i<=2?"tw":"ti");});
+    return;}
+  if(cmd==="teams"){
+    sysLog("─── TEAM STATUS ───","th");
+    Object.values(TEAMS).forEach(team=>{
+      const task=team.task;
+      if(task){const eta=Math.max(0,task.actualDur-task.elapsed);sysLog(`  ${team.icon} ${team.name.padEnd(16)} BUSY: ${task.responseName} #${task.incId} (${Math.round(task.progress)}% · ~${Math.round(eta)}s left)`,"tw");}
+      else sysLog(`  ${team.icon} ${team.name.padEnd(16)} AVAILABLE`,"ti");});
+    return;}
+  if(cmd==="status"){const w=worldClock();
+    sysLog(`─── Status · DEFCON ${defcon} ───`,"th");
+    sysLog(`  Score ${score.toLocaleString()} | Resolved ${resolvedCount}/${spawnedCount} | Spread events ${spreadEvts}`,"ti");
+    sysLog(`  Ops clock Day ${w.day} · ${String(w.hh).padStart(2,"0")}:${String(w.mm).padStart(2,"0")} UTC (×${ACCEL})  Mission left ${fmt(Math.max(0,simDur-simT))}`,"ti");
+    return;}
+  if(cmd==="history"){cmdHistory.slice(0,10).forEach((h,i)=>sysLog(`  ${i+1}. ${h}`,"td"));return;}
+  sysLog(`Unknown: '${cmd}'. Type 'help' or click an incident card.`,"td");}
+
+// ═══ CONTROLS + SPLASH + END ═══
+document.getElementById("splash-card").innerHTML=`
+  <div class="ov-tag">GLOBAL THREAT OPERATIONS</div>
+  <div class="ov-title">CYBERWATCH</div>
+  <div class="ov-sub">INCIDENT RESPONSE SIMULATOR · RESOURCE MANAGEMENT · OCR H446</div>
+  <div class="ov-sh">WHAT YOU DO</div>
+  <div class="ov-txt">Multiple coordinated attacks are incoming. You command four teams — Network, Security Ops, Identity, and yourself. Each can only handle one task at a time. You assign responses, manage priorities, and sometimes personally stop an attack — but while you're coding, you can't manage your teams.</div>
+  <div class="ov-sh">THE FOUR INTERACTIONS</div>
+  <div class="ov-cmd"><code>Click incident card</code><span>Open response options — choose who handles it</span></div>
+  <div class="ov-cmd"><code>Assign to team</code><span>Team works independently — you watch, manage others</span></div>
+  <div class="ov-cmd"><code>Handle it yourself</code><span>You're locked in — answer a challenge to resolve it</span></div>
+  <div class="ov-cmd"><code>Pause & resume</code><span>Pull a team off a task and restart it later — progress saves</span></div>
+  <div class="ov-sh">THE REAL DECISIONS</div>
+  <div class="ov-rules">
+    <div class="ov-rule r">Sev 3 attacks SPREAD — multiplying your workload if ignored</div>
+    <div class="ov-rule y">Tasks take random time — complications and early finishes happen</div>
+    <div class="ov-rule g">The narrative log teaches you the OCR theory while your teams work</div>
+    <div class="ov-rule w">New to this? Try DEMO first — it walks through a real scenario</div>
+  </div>
+  <div class="ov-q"><b>A ransomware is spreading. Your Security Ops are 70% through isolating another incident. Do you pull them off — or find another way?</b> That's the game.</div>
+  <button class="ov-btn" id="splashDemo" style="margin-top:10px;background:rgba(41,224,255,.12);color:var(--c1);border:1px solid var(--c1)">▶ GUIDED DEMO FIRST (recommended for new players)</button>
+  <button class="ov-btn" id="splashGo">▶ DEPLOY IMMEDIATELY</button>`;
+document.getElementById("splashDemo").addEventListener("click",()=>{document.getElementById("splash").classList.remove("show");startDemo();});
+document.getElementById("splashGo").addEventListener("click",()=>{document.getElementById("splash").classList.remove("show");tIn.focus();});
+function fmt(s){s=Math.max(0,s);return`${String(Math.floor(s/60)).padStart(2,"0")}:${String(Math.floor(s%60)).padStart(2,"0")}`;}
+window.startNewGame=function(){document.getElementById("end").classList.remove("show");document.getElementById("splash").classList.add("show");};
+function showEnd(){
+  const pct=spawnedCount>0?resolvedCount/spawnedCount:0;let g,t,col;
+  if(pct>=.9&&spreadEvts===0&&!hitD1){g="S";t="CISO — ELITE THREAT HUNTER";col="var(--c1)";}
+  else if(pct>=.8){g="A";t="SENIOR SECURITY ANALYST";col="var(--ok)";}
+  else if(pct>=.6){g="B";t="SECURITY ANALYST";col="var(--c2)";}
+  else if(pct>=.4){g="C";t="JUNIOR ANALYST";col="var(--warn)";}
+  else if(pct>=.2){g="D";t="SECURITY INTERN";col="#ff8a20";}
+  else{g="F";t="SYSTEM COMPROMISED";col="var(--crit)";}
+  const seen={};incidents.forEach(i=>{if(i===demoInc)return;const k=i.scenarioName||i.type;if(!seen[k])seen[k]={n:0,r:0,type:i.type};seen[k].n++;if(i.resolved)seen[k].r++;});
+  const rows=Object.entries(seen).map(([nm,v])=>{const m=window.CW_MODULES[v.type];const ok=v.r===v.n;
+    return`<div class="arow" style="border-color:${ok?"var(--ok)":"var(--crit)"}"><span>${m?m.icon:""} ${nm}</span><span style="color:${ok?"var(--ok)":"var(--crit)"}">${v.r}/${v.n}</span></div>`;}).join("");
+  const w=worldClock();
+  document.getElementById("ec").innerHTML=`
+    <div class="ov-tag" style="text-align:center">MISSION COMPLETE · DEBRIEF</div>
+    <div class="grade" style="color:${col}">${g}</div><div class="gtitle" style="color:${col}">${t}</div>
+    <div class="stats">
+      <div class="stat"><div class="l">Score</div><div class="v" style="color:${col}">${score.toLocaleString()}</div></div>
+      <div class="stat"><div class="l">Resolved</div><div class="v">${resolvedCount}/${spawnedCount}</div></div>
+      <div class="stat"><div class="l">Hit Rate</div><div class="v">${Math.round(pct*100)}%</div></div>
+      <div class="stat"><div class="l">Spread Events</div><div class="v" style="color:${spreadEvts>3?"var(--crit)":spreadEvts>0?"var(--warn)":"var(--ok)"}">${spreadEvts}</div></div>
+      <div class="stat"><div class="l">Escalated to D1</div><div class="v" style="color:${hitD1?"var(--crit)":"var(--ok)"}">${hitD1?"YES":"NO"}</div></div>
+      <div class="stat"><div class="l">Ops Duration</div><div class="v">Day ${w.day}</div></div>
+    </div>
+    <div class="ov-sh">SCENARIOS ENCOUNTERED</div>${rows}
+    <div style="font-size:11px;color:var(--dim);margin-top:10px;line-height:1.7">OCR H446: 1.3.3(c) Network security · 1.3.1(c) Encryption · 1.3.2(d) SQL injection</div>
+    <button class="ov-btn" onclick="startNewGame()">▶ REDEPLOY</button>`;
+  document.getElementById("end").classList.add("show");}
+
+function startGame(){
+  const mins=Math.max(10,Math.min(30,Number(document.getElementById("dur").value)||10));
+  simDur=mins*60;simRun=true;simPause=false;simT=0;
+  incidents.forEach(removeMarker);incidents=[];nextId=1;score=0;wrongCmds=0;hitD1=false;
+  spreadEvts=0;resolvedCount=0;spawnedCount=0;defcon=5;
+  Object.values(TEAMS).forEach(t=>{t.task=null;t.paused=[];});tasks.length=0;
+  arcs3.forEach(a=>{gg.remove(a.mesh);gg.remove(a.part);});arcs3=[];
+  mMeshes.length=0;labsEl.querySelectorAll(".alabel").forEach(e=>e.remove());
+  cmdHistory=[];histIdx=-1;flashV=0;idleT=0;analystState=null;
+  document.getElementById("btnPause").disabled=false;document.getElementById("btnAbort").disabled=false;document.getElementById("btnReset").disabled=false;
+  document.getElementById("btnPause").textContent="❚❚";document.getElementById("score-v").textContent="0";
+  tClear();
+  sysLog("═══ CYBERWATCH ACTIVE ═══","th");
+  sysLog(`${mins}-min mission · ${Object.keys(window.CW_MODULES).filter(k=>window.CW_MODULES[k]?.scenarios?.[0]?.responses).length} modules armed`,"ti");
+  sysLog("Click incident cards to assign teams · Tasks can be paused and resumed","ti");
+  sysLog("Watch the Operations Log — it teaches you the theory as your teams work","tw");
+  renderIncidents();renderTeams();calcDefcon();schedNext(true);lastTick=performance.now();tIn.focus();}
+
+document.getElementById("btnDemo").addEventListener("click",()=>{document.getElementById("splash").classList.remove("show");if(simRun)startGame();startDemo();});
+document.getElementById("btnStart").addEventListener("click",startGame);
+document.getElementById("btnReset").addEventListener("click",()=>{if(confirm("Reset simulation?"))startGame();});
+document.getElementById("btnPause").addEventListener("click",()=>{if(!simRun)return;simPause=!simPause;
+  document.getElementById("btnPause").textContent=simPause?"▶":"❚❚";if(!simPause)lastTick=performance.now();
+  sysLog(simPause?"[ PAUSED ]":"[ RESUMED ]","td");});
+document.getElementById("btnAbort").addEventListener("click",()=>{simRun=false;document.getElementById("btnPause").disabled=true;
+  tClear();sysLog("[ MISSION ABORTED ]","te");showEnd();});
+tIn.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){const v=tIn.value.trim();if(v)runCommand(v);else tIn.value="";}
+  if(e.key==="ArrowUp"){e.preventDefault();if(histIdx<cmdHistory.length-1){histIdx++;tIn.value=cmdHistory[histIdx]||"";}}
+  if(e.key==="ArrowDown"){e.preventDefault();if(histIdx>0){histIdx--;tIn.value=cmdHistory[histIdx]||"";}else{histIdx=-1;tIn.value="";}}
+  if(e.key==="Tab"){e.preventDefault();const v=tIn.value.toLowerCase().trim();if(!v)return;const m=ALL_CMDS.find(c=>c.startsWith(v));if(m)tIn.value=m+" ";}
+});
+document.getElementById("ticker").innerHTML=[...FEED].sort(()=>Math.random()-.5).map(f=>`● ${f}&nbsp;&nbsp;&nbsp;`).join("");
+
+// ═══ 2D GLOBE DRAW ═══
+function draw2d(){const w=c2d.width,h=c2d.height,cx=w/2,cy=h/2,R=Math.min(cx,cy)*.82;
+  ctx2.clearRect(0,0,w,h);ctx2.fillStyle="#020804";ctx2.fillRect(0,0,w,h);
+  ctx2.save();ctx2.globalAlpha=.06;ctx2.fillStyle="#00ff88";st2.forEach(s=>ctx2.fillRect(s.x,s.y,1,1));ctx2.restore();
+  ctx2.save();ctx2.beginPath();ctx2.arc(cx,cy,R,0,Math.PI*2);ctx2.clip();
+  for(let lat=-88;lat<=88;lat+=2){const φ=lat*Math.PI/180;for(let lon=-178;lon<=178;lon+=2){
+    const λ=(lon+rot2)*Math.PI/180,z=Math.cos(φ)*Math.cos(λ);if(z<=0)continue;
+    const x=Math.cos(φ)*Math.sin(λ),y=Math.sin(φ),n=fbm2(x+2.1,y-1.3,z+.7);
+    if(n>.58){ctx2.globalAlpha=.07+(5-defcon)*.018;ctx2.fillStyle="#00ff88";ctx2.fillRect(cx+R*x,cy-R*y,2,2);}}}
+  ctx2.restore();ctx2.globalAlpha=1;
+  const oc=["#00ff66","#2266ff","#ccaa00","#cc5500","#cc0000"][5-defcon];
+  ctx2.strokeStyle=oc;ctx2.lineWidth=1.5;ctx2.beginPath();ctx2.arc(cx,cy,R,0,Math.PI*2);ctx2.stroke();
+  incidents.filter(i=>!i.resolved).forEach(inc=>{const p=proj2(inc.lat,inc.lon);if(!p.visible)return;
+    const col=inc.sev===1?"#00ff88":inc.sev===2?"#ffaa00":"#ff3333",base=inc.sev===1?6:inc.sev===2?9:13;
+    ctx2.save();ctx2.beginPath();ctx2.arc(p.x,p.y,base+Math.sin(performance.now()/200)*2.5,0,Math.PI*2);ctx2.fillStyle=col;ctx2.globalAlpha=.1;ctx2.fill();
+    ctx2.beginPath();ctx2.arc(p.x,p.y,base*.45,0,Math.PI*2);ctx2.fillStyle=col;ctx2.globalAlpha=.95;ctx2.shadowColor=col;ctx2.shadowBlur=10;ctx2.fill();
+    const sc=getScenario(inc),mod=window.CW_MODULES[inc.type];
+    ctx2.globalAlpha=.8;ctx2.font="10px 'Share Tech Mono',monospace";ctx2.fillStyle=col;ctx2.shadowBlur=0;
+    ctx2.fillText(`${mod?mod.icon:""}#${inc.id} ${inc.city}`,p.x+12,p.y+4);ctx2.restore();});}
+
+// ═══ MAIN LOOP ═══
+function animate(){
+  const now=performance.now();const dt=Math.min(.05,(now-lastTick)/1000);lastTick=now;
+  globeRot=worldClock().frac*Math.PI*2;
+  if(is3D()){renderGlobe(globeRot);}
+  drawOverlay(globeRot);
+  if(flashV>0){const ef=document.getElementById("edge-flash");ef.style.boxShadow=`inset 0 0 180px rgba(255,59,107,${flashV*.45})`;flashV=Math.max(0,flashV-dt*2.5);}
+  else document.getElementById("edge-flash").style.boxShadow="";
+  if(simRun&&!simPause){
+    simT+=dt;idleT+=dt;
+    document.getElementById("miss-t").textContent=fmt(Math.max(0,simDur-simT));
+    updateClockUI();updateTasks(dt);updateAnalystPanel(dt);
+    if(nextSpawnAt!==null&&simT>=nextSpawnAt){spawnIncident();schedNext();}
+    if(simT>60&&idleT>6&&incidents.filter(i=>!i.resolved).length===0){spawnIncident();idleT=0;}
+    if(Math.round(simT*10)%80===0){const a=incidents.filter(i=>!i.resolved).length,n=minCon();if(a<n){spawnIncident();if(n-a>1)setTimeout(()=>spawnIncident(),2800);}}
+    doEscalation(dt);doSpread(dt);
+    renderTeams();// live team progress refresh
+    if(simT>=simDur){simRun=false;document.getElementById("btnPause").disabled=true;showEnd();}
+  }
+  requestAnimationFrame(animate);}
+
+// Override openRespPanel and assignTask to support demo
+const _origOpen=openRespPanel;window.openRespPanel=function(id){_origOpen(id);if(demoActive)demoCheckAction("resp_panel");};
+const _origAssign=assignTask;window.assignTask=function(id,rid){_origAssign(id,rid);if(demoActive)demoCheckAction("assign_task");};
+
+// ═══ INIT ═══
+// Set up globe mode (glReady set during initGL earlier)
+if(!glReady){
+  globeMode='classic';
+  c3d.style.display='none';
+  document.getElementById("btnTheme").textContent="🌍 3D N/A";
+  document.getElementById("btnTheme").disabled=true;
+  console.warn('CYBERWATCH: running in Classic 2D mode');
+}
+resizeAll();
+loadModules(()=>{
+  const allLoaded=Object.keys(window.CW_MODULES);
+  const v2Loaded=allLoaded.filter(k=>window.CW_MODULES[k]?.scenarios?.[0]?.responses);
+  const oldFormat=allLoaded.filter(k=>!window.CW_MODULES[k]?.scenarios?.[0]?.responses);
+  console.log('CYBERWATCH: modules loaded='+allLoaded.length+' v2-format='+v2Loaded.length+' old-format='+oldFormat.length);
+  const ld=document.getElementById("loading");
+  if(!allLoaded.length){
+    ld.innerHTML=`<div style="text-align:center;padding:20px;max-width:500px">
+      <div style="font-family:'Orbitron',sans-serif;color:#ff3b6b;font-size:16px;margin-bottom:12px">⚠ MODULES NOT LOADED</div>
+      <div style="color:#cce8ff;font-size:13px;line-height:1.7">The attack modules couldn't be fetched.<br><br>
+      <b style="color:#29e0ff">If running locally:</b> open a terminal in the cyberwatch folder and run:<br>
+      <code style="background:#0a1224;padding:4px 10px;border-radius:5px;color:#00ffa3">python3 serve.py</code><br><br>
+      <b style="color:#29e0ff">If on GitHub Pages:</b> make sure all 11 module files are in the <code>modules/</code> folder.</div>
+    </div>`;
+    return;
+  }
+  if(!v2Loaded.length){
+    ld.innerHTML=`<div style="text-align:center;padding:20px;max-width:500px">
+      <div style="font-family:'Orbitron',sans-serif;color:#ffb020;font-size:16px;margin-bottom:12px">⚠ MODULES ARE OLD FORMAT</div>
+      <div style="color:#cce8ff;font-size:13px;line-height:1.7">Found ${allLoaded.length} module(s) but they use the old format (steps[] not responses[]).<br><br>
+      Please upload the new v2 module files from this download — all 11 cw_*.js files in the modules/ folder need replacing with the new versions.</div>
+    </div>`;
+    return;
+  }
+  if(oldFormat.length>0)console.warn('CYBERWATCH: '+oldFormat.length+' module(s) skipped (old format): '+oldFormat.join(', '));
+  document.getElementById("splash").classList.add("show");
+  document.getElementById("btnStart").disabled=false;document.getElementById("btnDemo").disabled=false;
+  calcDefcon();updateDefconVis();renderTeams();animate();
+  ld.style.display="none";});
+</script></body></html>
