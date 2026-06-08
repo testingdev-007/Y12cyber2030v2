@@ -1,0 +1,98 @@
+;(function(){
+if(!window.CW_MODULES)window.CW_MODULES={};
+window.CW_MODULES['DDoS']={
+icon:"⚡",cat:"Network Attack",col:"#4488ff",
+explain:["ATTACK: DDoS  |  OCR 1.3.3(c)","━━━━━━━━━━━━━━━━━━━━━",
+  "Distributed Denial of Service floods the target using a botnet — attacking AVAILABILITY.",
+  "OCR CIA triad: Confidentiality, Integrity, AVAILABILITY — DDoS attacks the last one.",
+  "Null-routing drops attack traffic BEFORE it reaches the server.",
+  "Do NOT isolate — that's what the attacker wants."],
+mutations:[
+  {name:"State botnet",label:"🏴 APT BOTNET",escMulti:1.7,spreadMult:2.0,userMult:2.0},
+  {name:"IoT botnet",label:"📡 IOT BOTNET",escMulti:1.4,spreadMult:1.8,userMult:1.5},
+  {name:"Stresser tool",label:"🎲 STRESSER",escMulti:0.6,spreadMult:0.3,userMult:0.7}],
+scenarios:[
+ {id:"volumetric",name:"Volumetric DDoS Flood",short:"Massive bandwidth exhaustion from botnet — 847Gbps",
+  escs:["Server response degrading — 847Gbps attack traffic detected",
+        "Service intermittent — 75% packet loss affecting all users",
+        "TOTAL OUTAGE — server offline for all users"],
+  escR:16,uMin:5000,uMax:100000,spread:"DDoS",
+  responses:[
+   {id:"null_route",name:"Upstream Null-Routing",team:"network",baseDuration:14,
+    ocrRef:"1.3.3(c)",effectiveness:90,scorePts:75,
+    description:"Instruct upstream routers to silently drop all packets to the targeted IP before they consume your bandwidth.",
+    duringRisk:"Service is offline during null-routing — legitimate users also temporarily blocked.",
+    narrative:[
+      "Network Team configuring upstream null-route with ISP...",
+      "DDoS attacks availability — the 'A' in the CIA triad (OCR 1.3.3c).",
+      "Null-routing tells the UPSTREAM router to drop attack packets before they reach us.",
+      "Unlike isolation, null-routing is applied AT THE CARRIER — protecting our bandwidth.",
+      "847Gbps attack traffic dropped. Service can now be restored behind the null-route."],
+    complications:[{at:.5,chance:.25,msg:"Botnet rotating attack IPs — extended null-route configuration",extraTime:.35}],
+    earlyFinish:{chance:.15,msg:"ISP had pre-configured DDoS scrubbing — applied instantly"}},
+   {id:"full_mitigation",name:"Full Mitigation + Rate Limiting",team:"network",baseDuration:35,
+    ocrRef:"1.3.3(c)",effectiveness:100,scorePts:90,
+    description:"Null-route the attack, then configure rate limiting to allow legitimate traffic through.",
+    duringRisk:"35 seconds of degraded service before full mitigation is active.",
+    narrative:[
+      "Executing full DDoS mitigation protocol...",
+      "PHASE 1: Null-routing activated — attack traffic dropped at carrier level.",
+      "PHASE 2: Deploying rate limiting — throttle connections per IP per second.",
+      "Legitimate users are rate-limited gently; attack traffic (high volume per IP) is dropped.",
+      "Service fully restored. Attack traffic filtered at edge. Rate limiting active."],
+    complications:[{at:.4,chance:.2,msg:"Botnet using residential IPs — legitimate traffic harder to distinguish",extraTime:.3}],
+    earlyFinish:{chance:.1,msg:"Attack traffic had distinctive fingerprint — quick filtering"}},
+   {id:"analyst_analyse",name:"Analyse Attack Pattern (YOU)",team:"analyst",baseDuration:30,
+    ocrRef:"1.3.3(c)",effectiveness:85,scorePts:100,
+    description:"Personally analyse the attack traffic to identify the botnet's fingerprint for permanent blocking.",
+    duringRisk:"You are unavailable for ~30 seconds.",
+    narrative:["Capturing and analysing attack traffic packets...","Looking for distinctive botnet fingerprints..."],
+    complications:[],earlyFinish:{chance:.2,msg:"Botnet used common commercial stresser — known signature"},
+    analystChallenge:{
+      context:"A DDoS attack floods a server with traffic from thousands of sources (a botnet). This targets one of the three principles in the CIA triad. Which one?",
+      question:"DDoS attacks target one specific element of the CIA triad. Which letter does it attack?\n\n(CIA stands for Confidentiality, Integrity, ___________. Type the missing word):",
+      ocrLink:"OCR 1.3.3(c): The CIA triad — Confidentiality, Integrity, Availability — is the framework for information security. DDoS attacks AVAILABILITY: they prevent legitimate users from accessing the service. Confidentiality attacks steal data. Integrity attacks corrupt data.",
+      hint1:"The CIA triad has three elements. DDoS makes a service unavailable — which letter is that?",
+      hint2:"C = Confidentiality (secrecy), I = Integrity (accuracy), A = ___________",
+      hint3:"AVAILABILITY — DDoS attacks Availability by overwhelming a service so legitimate users cannot reach it.",
+      fullAnswer:"availability",
+      checkFn:(s)=>s.trim().toLowerCase().includes("availability")||s.trim().toUpperCase()==="A"}}]},
+
+ {id:"app_layer",name:"Application Layer DDoS",short:"HTTP flood exhausting server CPU — not bandwidth",
+  escs:["Application CPU at 100% from HTTP flood",
+        "Database connections exhausted — app returning 503 errors",
+        "APPLICATION COMPLETELY DOWN — all requests rejected"],
+  escR:20,uMin:2000,uMax:40000,spread:"DDoS",
+  responses:[
+   {id:"rate_limit",name:"Per-IP Rate Limiting",team:"network",baseDuration:18,
+    ocrRef:"1.3.3(c)",effectiveness:85,scorePts:70,
+    description:"Configure rate limits that throttle suspicious high-volume connections per IP address.",
+    duringRisk:"Application remains under pressure during rate limit rollout.",
+    narrative:[
+      "Application layer DDoS targets HTTP — harder to filter than volumetric attacks.",
+      "Each request looks legitimate individually; the attack is the VOLUME from many IPs.",
+      "Deploying per-IP rate limiting: max 50 requests/second per IP address.",
+      "Bot traffic (high rate per IP) throttled. Legitimate users (low rate) unaffected.",
+      "App CPU dropping. Service recovering."],
+    complications:[{at:.5,chance:.2,msg:"Attackers distributed across residential proxy network",extraTime:.3}],
+    earlyFinish:{chance:.15,msg:"Attack concentrated on small IP range — quick rate limit effective"}}]},
+
+ {id:"dns_amplification",name:"DNS Amplification Attack",short:"DNS reflection multiplying attack traffic 50x",
+  escs:["DNS amplification from open resolvers — 50x traffic multiplication",
+        "Network edge saturated — legitimate DNS queries failing",
+        "NETWORK INFRASTRUCTURE OFFLINE — DNS resolution failing globally"],
+  escR:18,uMin:10000,uMax:200000,spread:"DNS Poisoning",
+  responses:[
+   {id:"block_resolvers",name:"Block Open DNS Resolvers",team:"network",baseDuration:16,
+    ocrRef:"1.3.3(c)",effectiveness:90,scorePts:75,
+    description:"Block traffic from known open DNS resolvers being abused for amplification.",
+    duringRisk:"Amplified traffic continues until resolver block is applied.",
+    narrative:[
+      "DNS amplification exploits open resolvers to multiply attack traffic (1.3.3c).",
+      "Attacker sends small query FROM victim's IP to open resolver — resolver sends large reply TO victim.",
+      "50x amplification: 1GB of attack traffic becomes 50GB of incoming traffic to victim.",
+      "Blocking traffic from 4,200 known open resolver IPs. Amplification eliminated."],
+    complications:[{at:.5,chance:.2,msg:"New open resolver IPs identified — expanding block list",extraTime:.35}],
+    earlyFinish:{chance:.1,msg:"Attacker used small resolver list — quick blocking sufficient"}}]}
+]};
+})();
