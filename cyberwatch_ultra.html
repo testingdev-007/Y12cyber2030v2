@@ -1,0 +1,2177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CYBERWATCH ULTRA — Global Threat Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#02040a;--c1:#29e0ff;--c2:#9b6dff;
+  --ok:#00ffa3;--warn:#ffb020;--crit:#ff3b6b;
+  --g1:rgba(8,14,28,.72);--g2:rgba(4,8,18,.88);
+  --e1:rgba(41,224,255,.16);--e2:rgba(41,224,255,.06);
+  --txt:#cce8ff;--dim:#3a5870;
+  --net:#29e0ff;--sec:#00ffa3;--id:#ff3b6b;--you:#ffb020;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--txt);
+  font-family:'Rajdhani',sans-serif;overflow:hidden;font-size:14px}
+
+/* ═══ LAYOUT ═══ */
+#hud{position:fixed;top:0;left:0;right:0;height:54px;z-index:30;
+  background:var(--g2);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--e1);
+  display:flex;align-items:center;gap:10px;padding:0 16px}
+#shell{position:fixed;top:54px;left:0;right:0;bottom:0;
+  display:grid;grid-template-columns:310px 1fr;grid-template-rows:1fr 220px}
+#sidebar{grid-column:1;grid-row:1/3;border-right:1px solid var(--e1);
+  display:flex;flex-direction:column;background:var(--g2);overflow:hidden}
+#globe-wrap{grid-column:2;grid-row:1;position:relative;overflow:hidden;background:#01020a}
+#terminal{grid-column:2;grid-row:2;border-top:1px solid var(--e1);
+  display:flex;flex-direction:column;background:var(--g2)}
+canvas#globe{position:absolute;inset:0;width:100%;height:100%}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+
+/* ═══ HUD ═══ */
+.logo{font-family:'Orbitron';font-weight:900;font-size:15px;letter-spacing:3px;
+  background:linear-gradient(90deg,var(--c1),var(--c2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 8px rgba(41,224,255,.3));flex-shrink:0}
+.logo small{display:block;font-family:'Rajdhani';font-size:8px;letter-spacing:3px;
+  -webkit-text-fill-color:var(--dim);color:var(--dim)}
+.vd{width:1px;height:32px;background:var(--e1);flex-shrink:0}
+.hb{flex-shrink:0;display:flex;flex-direction:column;justify-content:center}
+.hbl{font-size:8px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;font-weight:600}
+.hbv{font-family:'Orbitron';font-weight:700;font-size:15px;line-height:1.1}
+#defcon-wrap{display:flex;align-items:center;gap:6px;flex-shrink:0}
+#dc-ring{position:relative;width:42px;height:42px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+#dc-ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+#dc-num{font-family:'Orbitron';font-weight:900;font-size:16px;color:var(--ok);text-shadow:0 0 12px currentColor;transition:color .5s}
+#miss{font-size:20px;color:#fff}
+#opst{font-size:13px;color:var(--c1)}
+#opsd{font-size:8px;color:var(--c2);letter-spacing:1px}
+#scorev{font-size:18px;color:var(--ok);text-shadow:0 0 8px rgba(0,255,163,.35)}
+#ticker-w{flex:1;overflow:hidden;display:flex;align-items:center;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent)}
+#ticker{white-space:nowrap;font-size:10px;color:var(--dim);animation:scroll 70s linear infinite;font-weight:500}
+@keyframes scroll{0%{transform:translateX(100vw)}100%{transform:translateX(-200%)}}
+input#dur{background:rgba(0,0,0,.4);color:var(--c1);border:1px solid var(--e1);border-radius:8px;
+  font-family:'Rajdhani';font-weight:700;font-size:12px;padding:3px 6px;width:42px;text-align:center}
+.hbtn{background:transparent;border:1px solid var(--e1);border-radius:9px;
+  font-family:'Rajdhani';font-weight:700;font-size:10px;padding:6px 11px;
+  cursor:pointer;letter-spacing:1px;transition:all .18s;flex-shrink:0;white-space:nowrap}
+.hbtn:hover:not(:disabled){background:var(--e2);border-color:var(--c1);color:var(--c1)}
+.hbtn:disabled{opacity:.2;cursor:not-allowed}
+.hbtn.g{color:var(--ok)}.hbtn.g:hover:not(:disabled){border-color:var(--ok);background:rgba(0,255,163,.07)}
+.hbtn.r{color:var(--crit)}.hbtn.r:hover:not(:disabled){border-color:var(--crit);background:rgba(255,59,107,.07)}
+.hbtn.y{color:var(--warn)}.hbtn.y:hover:not(:disabled){border-color:var(--warn);background:rgba(255,176,32,.07)}
+
+/* ═══ SIDEBAR ═══ */
+.ph{padding:8px 13px;border-bottom:1px solid var(--e1);flex-shrink:0;
+  display:flex;justify-content:space-between;align-items:center}
+.ph-title{font-family:'Orbitron';font-size:9px;letter-spacing:2px;color:var(--c1)}
+.ph-ct{font-family:'Rajdhani';font-size:10px;color:var(--dim);font-weight:600}
+#team-dash{flex-shrink:0;border-bottom:1px solid var(--e1)}
+.tr{padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03)}
+.tr:last-child{border-bottom:none}
+.tr-top{display:flex;align-items:center;gap:7px}
+.tr-ico{font-size:14px;flex-shrink:0}
+.tr-name{font-size:12px;font-weight:700;color:#deeeff;flex:1}
+.tr-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;flex-shrink:0}
+.tb-free{background:rgba(0,255,163,.1);color:var(--ok)}
+.tb-busy{background:rgba(255,176,32,.1);color:var(--warn)}
+.tr-task{font-size:10px;color:var(--dim);margin-top:3px;font-weight:500}
+.tr-prog{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:3px}
+.tr-bar{height:100%;border-radius:2px;transition:width .4s}
+.tr-meta{display:flex;justify-content:space-between;font-size:9px;color:var(--dim);margin-top:2px}
+.tr-btns{display:flex;gap:5px;margin-top:4px}
+.sm-btn{font-size:9px;font-weight:700;padding:3px 8px;border-radius:5px;border:1px solid;cursor:pointer;font-family:'Rajdhani';letter-spacing:.5px;transition:all .15s}
+.sb-p{color:var(--warn);border-color:rgba(255,176,32,.3);background:rgba(255,176,32,.06)}
+.sb-r{color:var(--ok);border-color:rgba(0,255,163,.3);background:rgba(0,255,163,.06)}
+.tr-comp{font-size:9px;color:var(--crit);margin-top:2px;font-weight:700;animation:blink .8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+#inc-scroll{overflow-y:auto;flex:1 1 0}
+.ic{margin:6px;border-radius:11px;cursor:pointer;
+  background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);
+  border-left:3px solid var(--dim);transition:all .15s;overflow:hidden}
+.ic:hover{background:rgba(41,224,255,.05);transform:translateX(2px)}
+.ic.s1{border-left-color:var(--ok)}.ic.s2{border-left-color:var(--warn)}
+.ic.s3{border-left-color:var(--crit);box-shadow:0 0 14px rgba(255,59,107,.12);animation:sev3 1.6s ease-in-out infinite}
+@keyframes sev3{0%,100%{border-left-color:var(--crit)}50%{border-left-color:#ff9999}}
+.ic.res{opacity:.2;filter:grayscale(.7);pointer-events:none;animation:none}
+.ic-h{display:flex;align-items:center;gap:7px;padding:8px 10px 4px}
+.ic-ico{font-size:15px}.ic-nm{font-size:13px;font-weight:700;flex:1;color:#e4f4ff;line-height:1.2}
+.ic-sev{font-family:'Orbitron';font-size:7px;font-weight:700;padding:2px 6px;border-radius:20px}
+.sv1{background:rgba(0,255,163,.1);color:var(--ok)}.sv2{background:rgba(255,176,32,.12);color:var(--warn)}
+.sv3{background:rgba(255,59,107,.14);color:var(--crit)}.svr{background:rgba(58,88,112,.1);color:var(--dim)}
+.ic-sub{font-size:10px;color:var(--dim);padding:0 10px 4px;font-weight:500}
+.ic-esc{font-size:10px;padding:0 10px 4px;font-weight:600}
+.ic-tasks{padding:0 10px 6px}
+.ts-row{display:flex;align-items:center;gap:6px;padding:4px 7px;
+  background:rgba(255,255,255,.02);border-radius:7px;margin-bottom:4px;border:1px solid rgba(255,255,255,.04)}
+.ts-t{font-size:12px;flex-shrink:0}.ts-i{flex:1;min-width:0}
+.ts-n{font-size:10px;color:#aaccee;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ts-pb{height:2px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:2px}
+.ts-pb>i{display:block;height:100%;border-radius:2px;transition:width .4s}
+.ts-eta{font-size:9px;color:var(--dim);flex-shrink:0;min-width:30px;text-align:right}
+.ic-resp{display:flex;align-items:center;gap:6px;margin:0 10px 8px;padding:6px 10px;
+  background:rgba(41,224,255,.06);border:1px solid rgba(41,224,255,.22);border-radius:8px;
+  cursor:pointer;transition:all .14s}
+.ic-resp:hover{background:rgba(41,224,255,.14);box-shadow:0 0 10px rgba(41,224,255,.2)}
+.ic-resp span{font-size:11px;font-weight:700;color:var(--c1);letter-spacing:.5px}
+.ic-escbar{height:2px;background:rgba(255,255,255,.04);margin:0 10px 7px;border-radius:2px;overflow:hidden}
+.ic-escbar>i{display:block;height:100%;border-radius:2px;transition:width .3s}
+
+/* ═══ TERMINAL ═══ */
+.t-ph{padding:7px 14px;border-bottom:1px solid var(--e1);flex-shrink:0;
+  display:flex;justify-content:space-between;align-items:center}
+.t-ph span:first-child{font-family:'Orbitron';font-size:9px;letter-spacing:2px;color:var(--c1)}
+.t-ph span:last-child{font-size:9px;color:var(--dim)}
+#tout{flex:1 1 0;overflow-y:auto;padding:8px 14px;font-family:'Share Tech Mono';font-size:12px;line-height:1.5;min-height:0}
+.ti{color:#7fe9c8;display:block}.ts{color:var(--ok);font-weight:bold;display:block}
+.te{color:var(--crit);display:block}.tw{color:var(--warn);display:block}
+.tnt{color:#88aaee;display:block;font-style:italic}.td{color:var(--dim);display:block}
+.tc{color:#fff;display:block}.th{display:block;font-family:'Orbitron';font-size:9px;letter-spacing:1px;color:var(--c1);margin:4px 0 2px}
+.tg{color:#ff9d5c;display:block}.tcomp{color:var(--crit);font-weight:700;display:block}.tearly{color:var(--ok);font-weight:700;display:block}
+.exec-row{display:flex;gap:8px;margin-top:5px}
+.exec-btn{background:rgba(41,224,255,.1);color:var(--c1);border:1px solid rgba(41,224,255,.3);
+  border-radius:8px;font-family:'Share Tech Mono';font-size:12px;padding:5px 14px;cursor:pointer;transition:all .14s}
+.exec-btn:hover{background:rgba(41,224,255,.22);box-shadow:0 0 10px rgba(41,224,255,.25)}
+#tin-row{display:flex;align-items:center;padding:6px 14px;border-top:1px solid var(--e1);flex-shrink:0}
+#tprompt{color:var(--c1);font-family:'Share Tech Mono';font-size:12px;margin-right:6px;
+  white-space:nowrap;user-select:none;text-shadow:0 0 5px rgba(41,224,255,.4);transition:all .3s}
+#tcmd{flex:1;background:transparent;border:none;outline:none;color:#fff;
+  font-family:'Share Tech Mono';font-size:12px;caret-color:var(--c1)}
+
+/* ═══ ATTACK HUD LABELS ═══ */
+.alb{position:absolute;transform:translate(-50%,-130%);pointer-events:none;white-space:nowrap;
+  font-family:'Rajdhani';font-weight:700;font-size:11px;padding:3px 8px;border-radius:7px;
+  background:rgba(2,4,10,.72);backdrop-filter:blur(4px);border:1px solid;letter-spacing:.4px;transition:opacity .3s}
+.alb .sml{font-size:9px;opacity:.7}
+
+/* ═══ RESPONSE PANEL ═══ */
+#rp{position:fixed;top:54px;right:-420px;width:400px;bottom:0;z-index:40;
+  background:var(--g2);backdrop-filter:blur(20px);border-left:1px solid var(--e1);
+  transition:right .35s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column}
+#rp.open{right:0}
+.rp-hdr{padding:14px 16px;border-bottom:1px solid var(--e1);position:sticky;top:0;background:var(--g2);z-index:1;flex-shrink:0}
+.rp-x{position:absolute;right:14px;top:14px;background:rgba(255,255,255,.05);border:1px solid var(--e1);
+  color:var(--dim);border-radius:7px;font-family:'Rajdhani';font-weight:700;font-size:11px;padding:4px 10px;cursor:pointer}
+.rp-x:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+.rp-tag{font-family:'Orbitron';font-size:9px;letter-spacing:1px;color:var(--c1);margin-bottom:3px}
+.rp-nm{font-size:18px;font-weight:700;color:#fff;margin-bottom:2px}
+.rp-sub{font-size:11px;color:var(--dim);font-weight:500}
+.rp-sec{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04)}
+.rp-sh{font-family:'Orbitron';font-size:8px;letter-spacing:2px;color:var(--c2);margin-bottom:10px;text-transform:uppercase}
+.ro{border-radius:11px;border:1px solid rgba(255,255,255,.07);margin-bottom:10px;cursor:pointer;
+  background:rgba(255,255,255,.02);transition:all .16s;overflow:hidden}
+.ro:hover{border-color:rgba(41,224,255,.28);background:rgba(41,224,255,.04)}
+.ro.ya{border-color:rgba(255,176,32,.22)}.ro.ya:hover{border-color:var(--warn);background:rgba(255,176,32,.05)}
+.ro.busy{opacity:.5;cursor:default}
+.ro-h{display:flex;align-items:center;gap:8px;padding:10px 12px 7px}
+.ro-ti{font-size:14px;flex-shrink:0}.ro-ri{flex:1}
+.ro-rn{font-size:13px;font-weight:700;color:#e8f5ff}
+.ro-tl{font-size:10px;color:var(--dim);font-weight:500}
+.ro-dur{text-align:right;flex-shrink:0}
+.ro-ds{font-family:'Orbitron';font-size:13px;font-weight:700;color:#fff}
+.ro-dl{font-size:8px;color:var(--dim);letter-spacing:1px}
+.ro-bd{padding:0 12px 8px;font-size:11px;color:var(--dim);line-height:1.5;font-weight:500}
+.ro-tags{display:flex;gap:5px;flex-wrap:wrap;padding:0 12px 8px}
+.ro-tag{padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:.5px}
+.tg-hi{background:rgba(0,255,163,.1);color:var(--ok);border:1px solid rgba(0,255,163,.2)}
+.tg-md{background:rgba(255,176,32,.1);color:var(--warn);border:1px solid rgba(255,176,32,.2)}
+.tg-ocr{background:rgba(155,109,255,.1);color:var(--c2);border:1px solid rgba(155,109,255,.2)}
+.tg-you{background:rgba(255,176,32,.12);color:var(--you);border:1px solid rgba(255,176,32,.25)}
+.tg-bsy{background:rgba(255,59,107,.1);color:var(--crit);border:1px solid rgba(255,59,107,.2)}
+.ro-risk{padding:0 12px 8px;font-size:10px;color:rgba(255,176,32,.7);font-style:italic;font-weight:500}
+.ro-go{margin:0 12px 12px;padding:8px;text-align:center;border-radius:8px;
+  font-family:'Rajdhani';font-weight:700;font-size:12px;letter-spacing:1px;cursor:pointer;border:none;transition:all .14s}
+.ra-go{background:linear-gradient(90deg,var(--c1),var(--c2));color:#02040a}
+.ra-go:hover{filter:brightness(1.12)}
+.ra-you{background:linear-gradient(90deg,var(--warn),#ff8a20);color:#02040a}
+.ra-you:hover{filter:brightness(1.1)}
+.ra-bsy{background:rgba(255,59,107,.14);color:var(--crit);border:1px solid rgba(255,59,107,.28)!important;cursor:pointer}
+.ra-bsy:hover{background:rgba(255,59,107,.26)}
+
+/* ═══ ANALYST PANEL ═══ */
+#ap{display:none;position:fixed;inset:0;z-index:50;background:rgba(1,2,8,.95);backdrop-filter:blur(8px);flex-direction:column}
+#ap.show{display:flex}
+#ap-top{padding:12px 20px;border-bottom:1px solid var(--e1);display:flex;align-items:center;gap:14px;flex-shrink:0;background:var(--g2)}
+.ap-title{font-family:'Orbitron';font-size:13px;font-weight:700;color:var(--you);letter-spacing:1px;flex:1}
+.ap-w{font-size:11px;color:var(--crit);font-weight:600;animation:blink .8s infinite}
+#ap-body{flex:1 1 0;display:grid;grid-template-columns:1fr 1fr;overflow:hidden}
+#ap-left{padding:22px;overflow-y:auto;border-right:1px solid var(--e1)}
+#ap-right{padding:22px;overflow-y:auto;background:rgba(155,109,255,.02)}
+.ap-sh{font-family:'Orbitron';font-size:9px;letter-spacing:2px;color:var(--c2);margin-bottom:10px;text-transform:uppercase}
+.ap-ctx{font-size:13px;color:var(--txt);line-height:1.7;margin-bottom:16px;font-weight:500}
+.chal{background:rgba(255,255,255,.03);border:1px solid var(--e1);border-radius:12px;padding:18px;margin-bottom:14px}
+.chal-l{font-size:10px;color:var(--dim);font-weight:600;letter-spacing:1px;margin-bottom:5px;text-transform:uppercase}
+.chal-q{font-size:14px;color:#fff;font-weight:600;line-height:1.5;margin-bottom:12px}
+.chal-r{display:flex;gap:8px;align-items:center}
+#ainput{flex:1;background:rgba(0,0,0,.4);border:2px solid var(--e1);border-radius:9px;
+  color:#fff;font-family:'Share Tech Mono';font-size:14px;padding:9px 13px;outline:none;transition:border .2s}
+#ainput:focus{border-color:var(--you)}
+#asub{padding:9px 16px;background:var(--you);color:#02040a;border:none;border-radius:9px;
+  font-family:'Rajdhani';font-weight:700;font-size:13px;cursor:pointer;transition:all .14s}
+#asub:hover{filter:brightness(1.1)}
+.afb{margin-top:8px;font-size:12px;font-weight:600;min-height:20px}
+.ap-ocr{background:rgba(155,109,255,.06);border:1px solid rgba(155,109,255,.2);border-radius:10px;padding:14px;margin-bottom:14px}
+.ap-ocr-ref{font-family:'Orbitron';font-size:8px;letter-spacing:2px;color:var(--c2);margin-bottom:5px}
+.ap-ocr-txt{font-size:12px;color:var(--txt);line-height:1.7;font-weight:500}
+#scaff{margin-top:4px}
+.sc-btn{display:flex;align-items:center;gap:7px;width:100%;margin-bottom:7px;padding:8px 12px;
+  background:rgba(255,255,255,.03);border:1px solid var(--e1);border-radius:9px;cursor:pointer;
+  font-family:'Rajdhani';font-size:12px;font-weight:600;color:var(--dim);transition:all .14s;text-align:left}
+.sc-btn:hover{background:rgba(255,255,255,.07);color:var(--txt)}
+.sc-btn.hint{border-color:rgba(41,224,255,.2);color:var(--c1)}
+.sc-btn.hint:hover{background:rgba(41,224,255,.08)}
+.sc-btn.ans{border-color:rgba(255,59,107,.2);color:var(--crit)}
+.sc-btn.ans:hover{background:rgba(255,59,107,.07)}
+.sc-reveal{background:rgba(255,255,255,.025);border-radius:8px;padding:12px;margin-bottom:8px;
+  font-size:12px;color:var(--txt);line-height:1.6;border-left:3px solid var(--c1)}
+#ap-narr{font-size:11px;color:var(--dim);line-height:1.7;font-family:'Share Tech Mono';margin-top:8px}
+
+/* ═══ NEWS FLASH ═══ */
+#nf-stack{position:fixed;top:64px;right:16px;width:320px;z-index:60;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.nf{border-radius:13px;padding:13px 14px;pointer-events:all;
+  background:var(--g2);backdrop-filter:blur(14px);border:1px solid var(--e1);
+  transform:translateX(350px);opacity:0;transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .3s}
+.nf.in{transform:translateX(0);opacity:1}
+.nf.out{transform:translateX(350px);opacity:0;transition:transform .3s ease-in,opacity .2s}
+.nf-tag{font-family:'Orbitron';font-size:8px;letter-spacing:2px;margin-bottom:4px;font-weight:700}
+.nf-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:3px}
+.nf-sub{font-size:11px;color:var(--dim);line-height:1.4;margin-bottom:9px;font-weight:500}
+.nf-ocr{font-size:10px;font-style:italic;color:var(--c2);margin-bottom:8px;font-weight:600}
+.nf-btn{font-family:'Rajdhani';font-weight:700;font-size:11px;letter-spacing:1px;
+  padding:6px 14px;border-radius:7px;border:none;cursor:pointer;transition:all .14s}
+.nb1{background:var(--ok);color:#02040a}.nb2{background:var(--warn);color:#02040a}.nb3{background:var(--crit);color:#fff}
+
+/* ═══ DEMO MODAL ═══ */
+#demo-modal{position:fixed;inset:0;z-index:70;display:none;align-items:flex-end;justify-content:center;padding:0 0 70px}
+#demo-modal.show{display:flex}
+.dm{background:var(--g2);border:1px solid var(--e1);border-radius:16px;
+  max-width:540px;width:100%;padding:20px 24px;backdrop-filter:blur(20px)}
+.dm-step{font-family:'Orbitron';font-size:8px;letter-spacing:2px;color:var(--dim);margin-bottom:4px}
+.dm-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:7px}
+.dm-body{font-size:13px;color:var(--txt);line-height:1.65;margin-bottom:10px;font-weight:500}
+.dm-ocr{display:inline-block;font-family:'Orbitron';font-size:8px;letter-spacing:1px;
+  padding:3px 8px;border-radius:5px;background:rgba(155,109,255,.1);
+  color:var(--c2);border:1px solid rgba(155,109,255,.25);margin-bottom:10px}
+.dm-btns{display:flex;gap:8px;justify-content:flex-end}
+.dm-skip{background:transparent;color:var(--dim);border:1px solid var(--e1);border-radius:8px;
+  font-family:'Rajdhani';font-weight:700;font-size:11px;padding:7px 14px;cursor:pointer}
+.dm-skip:hover{color:var(--txt)}
+.dm-next{background:linear-gradient(90deg,var(--c1),var(--c2));color:#02040a;
+  border:none;border-radius:8px;font-family:'Rajdhani';font-weight:700;font-size:12px;
+  padding:8px 18px;cursor:pointer;letter-spacing:.5px}
+.dm-next:hover{filter:brightness(1.1)}
+#dm-hl{position:fixed;z-index:65;pointer-events:none;border-radius:12px;display:none;
+  box-shadow:0 0 0 4px var(--c1),0 0 30px rgba(41,224,255,.4);transition:all .3s}
+
+/* ═══ OVERLAYS ═══ */
+.ov{display:none;position:fixed;inset:0;z-index:80;align-items:center;justify-content:center;
+  padding:20px;background:radial-gradient(circle at 50% 40%,rgba(20,30,60,.4),rgba(0,2,8,.95))}
+.ov.show{display:flex}
+.ov-card{max-width:700px;width:100%;max-height:90vh;overflow-y:auto;padding:28px 32px;border-radius:18px;
+  background:var(--g2);backdrop-filter:blur(22px);border:1px solid var(--e1)}
+.ov-tag{font-family:'Orbitron';font-size:8px;letter-spacing:4px;color:var(--dim);margin-bottom:5px}
+.ov-title{font-family:'Orbitron';font-weight:900;font-size:28px;letter-spacing:2px;margin-bottom:5px;
+  background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ov-sub{font-size:12px;color:var(--c1);margin-bottom:20px;letter-spacing:1px;font-weight:600}
+.ov-sh{font-family:'Orbitron';font-size:8px;letter-spacing:2px;color:var(--c2);
+  border-bottom:1px solid var(--e1);padding-bottom:5px;margin:14px 0 10px}
+.ov-txt{font-size:13px;color:var(--txt);line-height:1.7;font-weight:500}
+.ov-cmd{display:grid;grid-template-columns:150px 1fr;gap:8px;align-items:start;margin-bottom:7px}
+.ov-cmd code{font-family:'Share Tech Mono';font-size:12px;color:#fff;
+  background:rgba(41,224,255,.1);padding:4px 10px;border-radius:7px;border:1px solid var(--e1)}
+.ov-cmd span{font-size:12px;color:var(--dim);font-weight:500;padding-top:4px}
+.ov-rules{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ov-rule{padding:9px 12px;border-left:3px solid;border-radius:0 8px 8px 0;
+  font-size:12px;line-height:1.5;background:rgba(255,255,255,.02);font-weight:500}
+.ovr-r{border-color:var(--crit)}.ovr-y{border-color:var(--warn)}.ovr-g{border-color:var(--ok)}.ovr-p{border-color:var(--c2)}
+.ov-q{font-size:13px;color:#fff;margin-top:14px;padding:14px;border:1px solid var(--e1);
+  border-radius:11px;line-height:1.7;background:rgba(41,224,255,.04)}
+.ov-btn{display:block;width:100%;margin-top:16px;padding:13px;font-family:'Orbitron';
+  font-weight:700;font-size:11px;letter-spacing:3px;color:#02040a;
+  background:linear-gradient(90deg,var(--c1),var(--c2));border:none;border-radius:11px;cursor:pointer}
+.ov-btn:hover{filter:brightness(1.1)}
+.ov-btn-alt{background:rgba(41,224,255,.1);color:var(--c1);border:1px solid var(--c1)}
+.ov-btn-alt:hover{background:rgba(41,224,255,.2)}
+.grade{font-family:'Orbitron';font-weight:900;font-size:72px;text-align:center;text-shadow:0 0 40px currentColor;line-height:1;margin:8px 0}
+.gtitle{font-family:'Orbitron';font-size:11px;letter-spacing:4px;text-align:center;margin-bottom:14px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.stat{padding:10px 11px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--e1)}
+.stat .l{font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;font-weight:600}
+.stat .v{font-family:'Orbitron';font-size:17px;margin-top:2px}
+.arow{padding:5px 10px;border-left:2px solid;border-radius:0 7px 7px 0;
+  margin-bottom:4px;background:rgba(255,255,255,.02);font-size:11px;display:flex;justify-content:space-between}
+
+/* ═══ PREEMPT DIALOG ═══ */
+#preempt-dlg{display:none;position:fixed;inset:0;z-index:55;align-items:center;justify-content:center;background:rgba(0,0,0,.65)}
+#preempt-dlg.show{display:flex}
+.pdlg{background:var(--g2);border:1px solid var(--e1);border-radius:14px;padding:22px 26px;max-width:420px;width:100%}
+.pdlg h3{font-family:'Orbitron';font-size:12px;letter-spacing:1px;color:var(--warn);margin-bottom:10px}
+.pdlg p{font-size:13px;color:var(--txt);line-height:1.6;margin-bottom:14px;font-weight:500}
+.pdlg .pb{display:flex;gap:10px}
+
+/* ═══ MISC ═══ */
+#edge-flash{position:fixed;inset:0;z-index:5;pointer-events:none}
+#loading{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:14px;background:var(--bg)}
+.ld-spin{width:44px;height:44px;border:2px solid var(--e1);border-top-color:var(--c1);
+  border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-txt{font-family:'Orbitron';font-size:10px;letter-spacing:3px;color:var(--c1)}
+.ld-sub{font-size:11px;color:var(--dim);text-align:center;max-width:400px;line-height:1.6;font-weight:500}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:2;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.03),rgba(0,0,0,.03) 1px,transparent 1px,transparent 4px)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(41,224,255,.18);border-radius:3px}
+</style>
+</head>
+<body>
+<div id="loading">
+  <div class="ld-spin"></div>
+  <div class="ld-txt">CYBERWATCH ULTRA</div>
+  <div class="ld-sub" id="ld-msg">Initialising threat grid...</div>
+</div>
+<div id="edge-flash"></div>
+<div id="dm-hl"></div>
+<div id="nf-stack"></div>
+
+<div id="hud">
+  <div class="logo">CYBERWATCH<small>ULTRA · THREAT OPS</small></div><div class="vd"></div>
+  <div id="defcon-wrap">
+    <div id="dc-ring">
+      <svg width="42" height="42"><circle cx="21" cy="21" r="17" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="2.5"/>
+        <circle id="dc-arc" cx="21" cy="21" r="17" fill="none" stroke="#00ffa3" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="107" stroke-dashoffset="0"/></svg>
+      <div id="dc-num">5</div></div>
+    <div class="hb"><div class="hbl">Defcon</div></div>
+  </div><div class="vd"></div>
+  <div class="hb"><div class="hbl">Mission</div><div class="hbv" id="miss">00:00</div></div><div class="vd"></div>
+  <div class="hb"><div class="hbl" id="opsd">DAY 1 · ×720</div><div class="hbv" id="opst" style="font-size:12px">06:00 UTC ☀</div></div><div class="vd"></div>
+  <div class="hb"><div class="hbl">Score</div><div class="hbv" id="scorev">0</div></div><div class="vd"></div>
+  <div id="ticker-w"><div id="ticker"></div></div><div class="vd"></div>
+  <div class="hbl" style="flex-shrink:0">DUR</div>
+  <input type="number" id="dur" min="10" max="30" value="10">
+  <button class="hbtn g" id="btnDemo" disabled>▶ DEMO</button>
+  <button class="hbtn" id="btnStart" disabled>▶ DEPLOY</button>
+  <button class="hbtn y" id="btnReset" disabled>↺ RESET</button>
+  <button class="hbtn" id="btnPause" disabled>❚❚</button>
+  <button class="hbtn r" id="btnAbort" disabled>✕ ABORT</button>
+</div>
+
+<div id="shell">
+  <div id="sidebar">
+    <div class="ph"><span class="ph-title">◆ OPS TEAMS</span></div>
+    <div id="team-dash">
+      <div class="tr" id="tr-network"></div>
+      <div class="tr" id="tr-security"></div>
+      <div class="tr" id="tr-identity"></div>
+      <div class="tr" id="tr-analyst"></div>
+    </div>
+    <div class="ph" style="border-top:1px solid var(--e1)">
+      <span class="ph-title">◆ INCIDENTS</span><span class="ph-ct" id="ic-count">0 ACTIVE</span>
+    </div>
+    <div id="inc-scroll"></div>
+  </div>
+  <div id="globe-wrap">
+    <canvas id="globe"></canvas>
+    <div id="labels"></div>
+  </div>
+  <div id="terminal">
+    <div class="t-ph"><span>◆ OPERATIONS LOG</span><span>↑↓ history · TAB complete · click cards to respond</span></div>
+    <div id="tout"></div>
+    <div id="tin-row"><span id="tprompt">ops ▸&nbsp;</span><input id="tcmd" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="type a command or click an incident..."></div>
+  </div>
+</div>
+
+<div id="rp">
+  <div class="rp-hdr">
+    <button class="rp-x" onclick="closeRP()">✕ Close</button>
+    <div class="rp-tag" id="rp-tag">INCIDENT #1 · SOCIAL ENGINEERING</div>
+    <div class="rp-nm" id="rp-nm">Attack Name</div>
+    <div class="rp-sub" id="rp-sub">Location · Severity</div>
+  </div>
+  <div id="rp-opts"></div>
+</div>
+
+<div id="ap">
+  <div id="ap-top">
+    <div class="ap-title" id="ap-title">👤 ANALYST TASK</div>
+    <div class="ap-w" id="ap-warn">⚠ Incident worsening while you work</div>
+    <button class="hbtn r" onclick="abandonAP()">ABANDON (−25 pts)</button>
+  </div>
+  <div id="ap-body">
+    <div id="ap-left">
+      <div class="ap-sh">YOUR TASK</div>
+      <div class="ap-ctx" id="ap-ctx"></div>
+      <div class="chal">
+        <div class="chal-l">CHALLENGE</div>
+        <div class="chal-q" id="ap-q"></div>
+        <div class="chal-r"><input id="ainput" type="text" placeholder="Your answer..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button id="asub" onclick="submitAP()">SUBMIT ▸</button></div>
+        <div class="afb" id="ap-fb"></div>
+      </div>
+      <div id="scaff"></div>
+    </div>
+    <div id="ap-right">
+      <div class="ap-sh">OCR SPECIFICATION</div>
+      <div class="ap-ocr"><div class="ap-ocr-ref" id="ap-ocrref">H446 · 1.3.3(c)</div><div class="ap-ocr-txt" id="ap-ocrtxt"></div></div>
+      <div class="ap-sh" style="margin-top:12px">LIVE INTELLIGENCE</div>
+      <div id="ap-narr"></div>
+    </div>
+  </div>
+</div>
+
+<div id="preempt-dlg">
+  <div class="pdlg">
+    <h3>⚠ TEAM CURRENTLY BUSY</h3>
+    <p id="pdlg-msg">This team is handling another task. Stopping it now preserves progress — you can resume later.</p>
+    <div class="pb">
+      <button class="hbtn r" onclick="confirmPreempt()">STOP & REASSIGN</button>
+      <button class="hbtn" onclick="cancelPreempt()">KEEP CURRENT TASK</button>
+    </div>
+  </div>
+</div>
+
+<div id="splash" class="ov show"><div class="ov-card" id="splash-card"></div></div>
+<div id="end" class="ov"><div class="ov-card" id="ec"></div></div>
+<div id="demo-modal"><div class="dm" id="dm-card"></div></div>
+<script>
+// ═══════════════════════════════════════════════
+//  BUILT-IN MODULE DATA  (OCR H446 aligned)
+//  External modules/cw_*.js files override these
+// ═══════════════════════════════════════════════
+window.CW_MODULES = {};
+
+(function seedBuiltInModules() {
+
+function mod(name, icon, cat, scenarios) {
+  window.CW_MODULES[name] = {icon, cat, scenarios};
+}
+
+// ─── Helper: compact response builder ───
+function r(id, name, team, dur, eff, ocrRef, desc, risk, narr, pts, analyst) {
+  return {id,name,team,baseDuration:dur,effectiveness:eff,ocrRef,description:desc,
+    duringRisk:risk,narrative:narr,scorePts:pts||80,
+    complications:[{at:.5,chance:.25,msg:"Complication: additional vectors found",extraTime:.3}],
+    earlyFinish:{chance:.15,msg:"Conditions favourable — ahead of schedule"},
+    analystChallenge:analyst||null};
+}
+
+function ac(ctx, q, ocrLink, h1, h2, h3, ans, checkFn) {
+  return {context:ctx, question:q, ocrLink, hint1:h1, hint2:h2, hint3:h3,
+    fullAnswer:ans, checkFn:checkFn||(s=>s.trim().toLowerCase().includes(ans.toLowerCase()))};
+}
+
+// ═══ 1. PHISHING — OCR 1.3.3(c) Social Engineering ═══
+mod('Phishing','✉','Social Engineering',[
+  {id:'mass',name:'Mass Phishing Campaign',short:'Bulk emails impersonating HMRC sent to entire organisation',
+   escs:['Phishing emails reaching all inboxes — credentials at risk',
+         'Users clicking links — credential harvest underway',
+         'ADMIN CREDENTIALS STOLEN — full network access obtained'],
+   escR:28,uMin:5000,uMax:60000,spread:'Credential Stuffing',
+   responses:[
+    r('gw','Block at Email Gateway','network',18,80,'1.3.3(c)',
+      'Blacklist the malicious domain at the email gateway. Fast — stops new emails instantly.',
+      'Users who already received emails remain at risk until notified.',
+      ['Network Team accessing email gateway console...',
+       'Phishing exploits HUMAN PSYCHOLOGY not software — OCR 1.3.3(c) core concept.',
+       'Email gateways filter against blacklists of known malicious domains.',
+       'Domain malicious-invoice-247.xyz blacklisted. All matching emails quarantined.',
+       'Gateway active. Staff protected from further lures.'],
+      60),
+    r('full','Full Response: Block + Notify + MFA','identity',55,100,'1.3.3(c)',
+      'Block the domain, alert all staff, force password resets, enable MFA enforcement.',
+      'Attack continues for 55s before full protection is active.',
+      ['Identity Team coordinating full phishing response...',
+       'Key insight: MFA defeats phishing even when passwords are stolen (OCR 1.3.3c).',
+       'Broadcasting alert: DO NOT click links from invoice-247.xyz.',
+       'Password resets enforced. MFA enabled. Stolen credentials now useless to attacker.'],
+      100),
+    r('trace','Trace Attack Infrastructure (YOU)','analyst',35,95,'1.3.3(c)',
+      'Personally trace the attacker\'s infrastructure to neutralise the full campaign.',
+      'You are locked — teams cannot be managed for ~35 seconds.',
+      ['Examining email headers for true origin...','SPF and DKIM records being audited...'],
+      120,
+      ac('You\'re examining the email header of a suspicious message. The FROM field shows \'HMRC <tax@gov.uk>\' but something\'s wrong — it came from a different server.',
+         'Which email header field reveals the TRUE IP address of the sending server?\n\nFormat: X-Originating-___',
+         'OCR 1.3.3(c): Social engineering exploits human trust. SPF (Sender Policy Framework) uses DNS records to verify authorised sending servers — preventing domain spoofing. Email headers contain a field that reveals the real originating server even when FROM is spoofed.',
+         'Think about what uniquely identifies every device on a network. Two-letter abbreviation.',
+         'Every device has an Internet Protocol address. The field format is X-Originating-___ (2 letters).',
+         'Answer: IP — X-Originating-IP reveals the real sending server even when the FROM field is spoofed.',
+         'IP',s=>s.trim().toUpperCase()==='IP'||s.trim().toUpperCase()==='X-ORIGINATING-IP'))]},
+
+  {id:'spear',name:'Spear Phishing',short:'Highly targeted emails using personal detail gathered via LinkedIn',
+   escs:['Targeted senior staff — credentials at risk',
+         'Executive has clicked — compromise likely',
+         'C-SUITE CREDENTIALS STOLEN — board access obtained'],
+   escR:22,uMin:10,uMax:500,spread:'Social Engineering',
+   responses:[
+    r('alert','Alert Targeted Individuals','identity',12,85,'1.3.3(c)',
+      'Contact all named targets directly via phone — warn before they click.',
+      'Targets may have already acted before the warning reaches them.',
+      ['Spear phishing uses personal detail (name, role, manager) to appear convincing.',
+       'Unlike mass phishing, each email is crafted for ONE person — much higher click rate.',
+       'Calling all 12 identified targets directly. Lock accounts pending credential reset.'],
+      70),
+    r('osint','OSINT Investigation (YOU)','analyst',30,90,'1.3.3(c)',
+      'Use open-source intelligence to find how attacker gathered personal details.',
+      'You are locked for ~30 seconds.',
+      ['Examining spear phish content for OSINT indicators...'],
+      110,
+      ac('The spear phish knew the target\'s job title, manager name, and recent project. The attacker gathered this from public sources.',
+         'What 5-letter acronym describes using publicly available information (LinkedIn, company website, social media) to gather intelligence before an attack?',
+         'OCR 1.3.3(c): Social engineering attackers use OSINT (Open Source INTelligence) — gathering freely available information to make attacks more convincing. Oversharing professional details online enables more targeted attacks.',
+         'It\'s gathering intelligence from PUBLIC sources only. 5-letter acronym.',
+         'Open Source IN_______ — gathering intelligence without hacking.',
+         'OSINT — Open Source INTelligence. Attackers use LinkedIn, company websites, social media to craft convincing spear phishes.',
+         'OSINT',s=>s.trim().toUpperCase()==='OSINT'))]},
+
+  {id:'whaling',name:'Whaling Attack',short:'CEO impersonated — £240k wire transfer requested from finance',
+   escs:['CEO email impersonation detected — wire transfer request sent',
+         'Finance processing £240,000 transfer — imminent',
+         '£240,000 TRANSFERRED — funds moved to attacker account'],
+   escR:20,uMin:1,uMax:20,spread:'Social Engineering',
+   responses:[
+    r('halt','Halt Transfer + Alert Finance','identity',10,90,'1.3.3(c)',
+      'Call finance director NOW — halt any pending transfer immediately.',
+      'Transfer may already be in progress.',
+      ['Whaling targets C-suite with tailored impersonation — CEO fraud is OCR 1.3.3(c) example.',
+       'Finance director called directly — bypassing compromised email entirely.',
+       'Transfer of £240,000 HALTED. CEO impersonation domain blocked.'],
+      75)]}]);
+
+// ═══ 2. RANSOMWARE — OCR 1.3.3(c) + 1.3.1(c) Asymmetric Encryption ═══
+mod('Ransomware','🔒','Malware',[
+  {id:'worm',name:'Network Worm Ransomware',short:'Self-propagating worm encrypting files across all network shares',
+   escs:['RANSOMWARE ACTIVE — encrypting workstation files NOW',
+         'Worm spread to file server — shared drives being encrypted',
+         'DOMAIN CONTROLLER ENCRYPTED — organisation completely locked out'],
+   escR:13,uMin:200,uMax:8000,spread:'Ransomware',
+   responses:[
+    r('iso','Emergency Network Isolation','security',15,80,'1.3.3(c)',
+      'Immediately isolate infected machines. Containment before anything else — every second more files are encrypted.',
+      'Encryption continues on isolated machines until kill-process runs.',
+      ['CRITICAL: Ransomware must be isolated IMMEDIATELY — OCR 1.3.3(c).',
+       'Isolating infected workstations from network. Worm spread halted.',
+       'Checking shared drives for encryption activity. Containment successful.'],
+      65),
+    r('full','Full: Isolate + Kill + Restore','security',75,100,'1.3.3(c) + 1.3.1(c)',
+      'Complete response: isolate, terminate encryption, restore from clean backup.',
+      '75 seconds of active encryption before full resolution.',
+      ['Full ransomware eradication protocol activated...',
+       'Ransomware uses ASYMMETRIC encryption: attacker\'s public key encrypts your files (OCR 1.3.1c).',
+       'Only the attacker\'s PRIVATE key can decrypt — making recovery without payment impossible.',
+       'Kill process executed. Clean backup from yesterday being restored.',
+       'Files restored. Zero data loss. Worm permanently removed.'],
+      100),
+    r('patch','Patch Entry Vulnerability (YOU)','analyst',40,95,'1.3.1(c)',
+      'Identify and patch the vulnerability the worm used to enter the network.',
+      'You are locked — incident continues for ~40 seconds.',
+      ['Analysing worm propagation vectors...','Checking SMB and network share vulnerabilities...'],
+      120,
+      ac('Ransomware has encrypted your files. It uses asymmetric encryption — even if you can see the encrypted data, you cannot decrypt it without a key.',
+         'Ransomware uses [blank] encryption. Your files receive the PUBLIC key (can only encrypt). The attacker keeps the PRIVATE key (can decrypt). Type the encryption type:',
+         'OCR 1.3.1(c): Asymmetric encryption uses a KEY PAIR. The PUBLIC key (freely shared) encrypts data. The PRIVATE key (kept secret) decrypts it. Ransomware exploits this: attackers give victims the public key to prove decryption is possible, but keep the private key as leverage.',
+         'There are two main types: symmetric (same key) and ___metric (different keys for encrypt/decrypt).',
+         'ASYM___metric — the prefix meaning "not the same".',
+         'ASYMMETRIC encryption. Public key encrypts (given to victim). Private key decrypts (kept by attacker).',
+         'asymmetric',s=>s.trim().toLowerCase().includes('asymmetric')))]},
+
+  {id:'dbl',name:'Double Extortion Ransomware',short:'Files encrypted AND data exfiltrated — ransom or publication',
+   escs:['Encrypting files AND exfiltrating data to attacker server',
+         '200GB stolen — ransom note issued: pay or data published',
+         'RANSOM DEADLINE: 72 hours or customer records go public'],
+   escR:16,uMin:1000,uMax:20000,spread:'Credential Stuffing',
+   responses:[
+    r('cut','Cut Exfiltration Channel','network',18,75,'1.3.3(c)',
+      'Block the attacker\'s outbound data channel. Stops theft — encryption continues.',
+      'Encryption continues while exfil channel is being cut.',
+      ['Double extortion: encrypt data AND threaten to publish stolen data — two leverage points.',
+       'Identifying C2 server receiving stolen data. Outbound channel blocked.',
+       'Exfiltration stopped. Encryption still active — Security Ops needed for full fix.'],
+      65),
+    r('full','Full Response','security',70,100,'1.3.3(c)',
+      'Cut exfil, isolate, kill process, restore from backup.',
+      '70 seconds of combined threat before resolution.',
+      ['Executing double extortion response...',
+       'Exfiltration channel severed. Isolation applied. Encryption process killed.',
+       'Clean backup deployed. GDPR breach notification team alerted.'],
+      100)]}]);
+
+// ═══ 3. SQL INJECTION — OCR 1.3.2(d) ═══
+mod('SQL Injection','💉','Web Attack',[
+  {id:'bypass',name:'SQLi Login Bypass',short:'Authentication bypassed via injected OR 1=1 clause',
+   escs:['SQLi bypass attempts detected in login portal',
+         'Admin authentication bypassed — database being explored',
+         'FULL DATABASE ACCESS — all user records exposed'],
+   escR:32,uMin:200,uMax:30000,spread:'Credential Stuffing',
+   responses:[
+    r('waf','Deploy WAF Rules','network',22,75,'1.3.2(d)',
+      'Deploy Web Application Firewall rules blocking known SQL injection patterns. Temporary but fast.',
+      'The underlying code vulnerability remains — adapted injection could bypass WAF.',
+      ['WAF blocking SQL injection patterns: OR 1=1, UNION SELECT, DROP TABLE.',
+       'This stops current attack but does NOT fix the vulnerable code.',
+       'Parameterised queries (OCR 1.3.2d) are the correct long-term solution.'],
+      60),
+    r('patch','Patch Queries (YOU)','analyst',50,100,'1.3.2(d)',
+      'Personally patch the vulnerable code using parameterised queries — the OCR spec solution.',
+      'Database remains exploitable for ~50 seconds while you work.',
+      ['Loading vulnerable authentication code...','Parameterised queries prevent injection by treating input as DATA not CODE (OCR 1.3.2d).'],
+      130,
+      ac('The vulnerable login query is:\n\nSELECT * FROM users WHERE email=\'\' + email + \'\'\n\nThis allows injection of: \' OR 1=1 -- (which always returns true, bypassing login).\n\nThe OCR fix is parameterised queries where inputs are treated as data, not code.',
+         'Complete the fixed parameterised query:\n\nSELECT * FROM users WHERE email = ___\n\n(Type the parameter placeholder used in parameterised queries)',
+         'OCR 1.3.2(d): SQL injection occurs when user input is concatenated directly into a SQL query. PARAMETERISED QUERIES (prepared statements) fix this: the query structure is defined first using ? placeholders, then the actual data values are bound separately. The database engine treats the input as pure data — it cannot be interpreted as SQL commands regardless of content.',
+         'In parameterised queries you use a placeholder symbol. It\'s a single punctuation character.',
+         'The placeholder is a question mark — the query becomes WHERE email = ? and the value is passed separately.',
+         'Answer: ? (question mark). The full query: SELECT * FROM users WHERE email = ? — the value is bound separately so it can never be executed as SQL code.',
+         '?',s=>s.trim()==='?'||s.toLowerCase().includes('question mark')||s.includes('$1')||s.includes(':email')))]},
+
+  {id:'union',name:'SQLi Data Extraction',short:'UNION SELECT attack dumping entire customer database',
+   escs:['UNION SELECT injection extracting user table data',
+         'Customer PII being exfiltrated — GDPR breach imminent',
+         'ENTIRE DATABASE DUMPED — 2.1M customer records stolen'],
+   escR:38,uMin:1000,uMax:80000,spread:'Credential Stuffing',
+   responses:[
+    r('val','Input Validation','security',25,80,'1.3.2(d)',
+      'Add server-side validation to reject SQL injection characters.',
+      'Attacker may encode characters to bypass simple validation.',
+      ['Input validation rejects characters used in SQL injection: single quotes, double-dashes, semicolons.',
+       'Stops current attack but parameterised queries still needed for complete protection.',
+       'Extraction stopped. GDPR notification team alerted to potential data exposure.'],
+      70),
+    r('full','Full Parameterisation (YOU)','analyst',55,100,'1.3.2(d)',
+      'Parameterise ALL database queries across the entire codebase.',
+      'Database remains exploitable for ~55 seconds.',
+      ['Running SQL vulnerability scanner across all endpoints...'],
+      130,
+      ac('A UNION SELECT attack has been detected. The query appends: \' UNION SELECT email,password FROM users-- to the search input.',
+         'What character BEGINS most SQL injection attacks — breaking out of the intended string context?\n\nType the single character:',
+         'OCR 1.3.2(d): The single quote character (\') is used to break out of the SQL string context. For example: WHERE name=\'[input]\' becomes WHERE name=\'\' OR 1=1--\' when the attacker inputs \' OR 1=1--. The single quote closes the string, then arbitrary SQL can be injected.',
+         'It\'s a punctuation character that starts and ends text strings in SQL.',
+         'SQL uses this character to delimit strings. Type it — it\'s one character.',
+         'A single quote: \' — this breaks the SQL string context, allowing injection of arbitrary commands.',
+         "'",s=>s.trim()==='\''||s.toLowerCase().includes('single quote')||s.toLowerCase().includes('apostrophe')))]},
+
+  {id:'blind',name:'Blind SQL Injection',short:'Time-based inference attack — slow but extracts full schema',
+   escs:['Time-delay SQLi mapping full database schema',
+         'Admin password hash being extracted',
+         'ADMIN HASH CRACKED — full administrative access'],
+   escR:45,uMin:500,uMax:40000,spread:'Brute Force',
+   responses:[
+    r('timeout','Block Time-Based Requests','network',18,70,'1.3.2(d)',
+      'Set query execution time limit to break time-delay injection.',
+      'Boolean-based blind injection may still work.',
+      ['Blind SQLi uses time delays to infer data: slow response = condition true (OCR 1.3.2d).',
+       'Configuring maximum query execution time: 1 second hard limit.',
+       'Time-based injection now impossible. Boolean-based still needs parameterisation.'],
+      55),
+    r('audit','Full Code Audit (YOU)','analyst',60,100,'1.3.2(d)',
+      'Audit and parameterise all database queries.',
+      'You are locked for ~60 seconds.',
+      ['Running comprehensive SQL vulnerability audit...'],
+      130,
+      ac('Blind SQL injection uses true/false or time-delay questions to extract data without visible output. What are the two main types? You need to name one of them.',
+         'There are two types of blind SQLi: boolean-based (true/false responses) and ___-based (intentional server delays). Type the missing word:',
+         'OCR 1.3.2(d): Blind SQL injection has two subtypes. TIME-BASED blind SQLi uses SLEEP() or WAITFOR DELAY commands to cause intentional server delays. If the database delays, the condition was true. BOOLEAN-BASED blind SQLi checks for different responses to true/false conditions.',
+         'One type uses true/false page responses. The other uses server response ___.',
+         'Time-_____ based — the attack deliberately slows the server response.',
+         'TIME-based blind SQLi — injects commands like SLEEP(5) to cause delays. If the page takes 5 seconds longer, the condition was true.',
+         'time',s=>s.trim().toLowerCase().includes('time')||s.trim().toLowerCase().includes('delay'))]}]);
+
+// ═══ 4. DDoS — OCR 1.3.3(c) Availability ═══
+mod('DDoS','⚡','Network Attack',[
+  {id:'vol',name:'Volumetric DDoS Flood',short:'847Gbps attack from botnet exhausting all bandwidth',
+   escs:['Server degrading — 847Gbps attack traffic incoming',
+         'Service intermittent — 75% packet loss',
+         'TOTAL OUTAGE — server offline, zero connectivity'],
+   escR:16,uMin:5000,uMax:100000,spread:'DDoS',
+   responses:[
+    r('nr','Upstream Null-Routing','network',14,90,'1.3.3(c)',
+      'Instruct upstream routers to drop attack traffic before it reaches your bandwidth.',
+      'Service is offline during null-routing. Legitimate users also temporarily blocked.',
+      ['Null-routing tells UPSTREAM router to silently discard attack packets (OCR 1.3.3c).',
+       'DDoS attacks AVAILABILITY — the A in the CIA triad. Denying service to legitimate users.',
+       '847Gbps attack traffic dropped at carrier level. Service can now be restored.'],
+      75),
+    r('full','Null-Route + Rate Limit','network',35,100,'1.3.3(c)',
+      'Null-route the attack then configure rate limiting to allow legitimate traffic.',
+      '35 seconds of degraded service.',
+      ['Null-routing applied. Attack traffic dropped.',
+       'Rate limiting configured: max 100 requests/second per IP.',
+       'Legitimate users (low rate) pass through. Botnet IPs (high rate) throttled.',
+       'Service fully restored.'],
+      90),
+    r('analyse','Analyse Attack Pattern (YOU)','analyst',28,85,'1.3.3(c)',
+      'Analyse attack traffic fingerprint for permanent blocking rules.',
+      'You are locked for ~28 seconds.',
+      ['Capturing and analysing attack traffic patterns...'],
+      100,
+      ac('A DDoS attack is flooding your server with traffic from thousands of sources. This targets one specific element of the CIA triad.',
+         'DDoS attacks target which element of the CIA triad?\n\n(CIA = Confidentiality, Integrity, _________. Type the missing word)',
+         'OCR 1.3.3(c): The CIA Triad is a fundamental security framework: Confidentiality (data only accessible to authorised users), Integrity (data is accurate and untampered), Availability (systems accessible when needed). DDoS attacks AVAILABILITY — by overwhelming a server with traffic, they prevent legitimate users from accessing the service.',
+         'The CIA triad has three elements. DDoS makes a service inaccessible — which letter is that?',
+         'C = Confidentiality, I = Integrity, A = _________',
+         'AVAILABILITY — DDoS attacks the Availability component of the CIA triad, preventing legitimate users from accessing the service.',
+         'availability',s=>s.trim().toLowerCase().includes('availability')||s.trim().toUpperCase()==='A'))]}]);
+
+// ═══ 5. BRUTE FORCE — OCR 1.3.3(c) ═══
+mod('Brute Force','🔨','Auth Attack',[
+  {id:'dict',name:'Dictionary Attack',short:'Top 100,000 passwords being tested at 1M attempts/second',
+   escs:['Dictionary attack on login portal — common passwords being tried',
+         'Multiple accounts locked — some compromised',
+         'ADMIN PASSWORD CRACKED — elevated access obtained'],
+   escR:22,uMin:100,uMax:5000,spread:'Credential Stuffing',
+   responses:[
+    r('lock','Enforce Account Lockout','identity',16,90,'1.3.3(c)',
+      'Lock accounts after 5 failed attempts — stopping automated password guessing.',
+      'Accounts still being targeted until lockout is enforced.',
+      ['Account lockout is a key defence against brute force (OCR 1.3.3c).',
+       'Setting threshold: 5 failed attempts → 15-minute lockout.',
+       'At this rate, attacker would need centuries to try all passwords. Attack neutralised.'],
+      70),
+    r('mfa','Configure MFA (YOU)','analyst',38,100,'1.3.3(c)',
+      'Implement multi-factor authentication — making brute force permanently ineffective.',
+      'You are locked for ~38 seconds.',
+      ['Configuring MFA across all authentication endpoints...'],
+      120,
+      ac('You\'re implementing MFA to defeat brute force attacks. Even if an attacker correctly guesses a password, MFA means they still cannot log in.',
+         'MFA defeats brute force because a correct password alone isn\'t enough. What does MFA stand for?\n\n(Type the full 3-word phrase)',
+         'OCR 1.3.3(c): Multi-Factor Authentication (MFA) requires users to verify identity using two or more independent factors: something you KNOW (password), something you HAVE (phone/token), something you ARE (biometric). Brute force can only attack "something you know" — MFA makes that factor alone insufficient for access.',
+         'It requires MORE THAN ONE way to verify who you are.',
+         'MFA = ______-Factor Authentication. Fill in the blank (means "more than one").',
+         'Multi-Factor Authentication — requiring a password PLUS a second factor such as a one-time code sent to your phone.',
+         'multi-factor authentication',s=>{const l=s.toLowerCase();return l.includes('multi-factor')||l.includes('multifactor')||l==='mfa';}))]},
+
+  {id:'spray',name:'Password Spray Attack',short:'Top 3 passwords tried on every account — evades standard lockout',
+   escs:['Password spray: "Password1" being tried on all accounts',
+         '47 accounts accessed — data at risk',
+         'MULTIPLE ADMINS COMPROMISED — full domain access'],
+   escR:28,uMin:50,uMax:20000,spread:'Credential Stuffing',
+   responses:[
+    r('tighten','Tighten Lockout Threshold','identity',14,85,'1.3.3(c)',
+      'Reduce lockout to 3 attempts — catches spray that tries 1-2 passwords per account.',
+      'Some accounts may be compromised before policy takes effect.',
+      ['Password spray uses 1-2 passwords per account to evade standard 10-attempt lockout.',
+       'Reducing threshold to 3 attempts. Spray pattern now blocked.',
+       'Compromised accounts identified for mandatory password reset.'],
+      65)]}]);
+
+// ═══ 6. ZERO-DAY — OCR 1.3.3(c) ═══
+mod('Zero-Day','☢','Advanced Exploit',[
+  {id:'vpn',name:'VPN Appliance Zero-Day',short:'Critical unknown flaw in edge VPN — attacker inside perimeter',
+   escs:['ZERO-DAY: VPN appliance flaw actively exploited',
+         'Attacker authenticated to internal network via VPN',
+         'LATERAL MOVEMENT: attacker accessing internal servers'],
+   escR:11,uMin:500,uMax:30000,spread:'Trojan Backdoor',
+   responses:[
+    r('iso','Isolate VPN Appliance','security',15,85,'1.3.3(c)',
+      'Take vulnerable VPN offline — no patch exists, so isolation is the only defence.',
+      'Remote workers lose access. Attacker\'s entry point is eliminated.',
+      ['Zero-day: no patch exists — zero days since vendor was informed (OCR 1.3.3c).',
+       'Isolation is "defence in depth" — removing one compromised layer.',
+       'VPN offline. Remote access suspended. Attacker entry point eliminated.',
+       'Vendor contacted for emergency patch. Lateral movement scan initiated.'],
+      75),
+    r('intel','Threat Intel Analysis (YOU)','analyst',35,90,'1.3.3(c)',
+      'Analyse the zero-day exploit to understand scope and identify other vulnerable systems.',
+      'You are locked for ~35 seconds.',
+      ['Reverse-engineering exploit payload...','Scanning for similar vulnerability signatures...'],
+      120,
+      ac('A zero-day exploit is attacking your VPN. Standard antivirus software failed to detect it.',
+         'Why did antivirus fail to detect this zero-day attack?\n\nAV uses ________-based detection that only matches KNOWN threats.\n\nType the missing word:',
+         'OCR 1.3.3(c): Traditional antivirus uses SIGNATURE-based detection — it compares files against a database of known malware "fingerprints". Zero-days are unknown threats, so no signature exists yet. This is why signature-based detection alone is insufficient. Behavioural detection (monitoring what programs DO rather than what they ARE) is more effective against unknown threats.',
+         'Traditional AV works by matching files against a database of known threat fingerprints.',
+         'AV compares each file against stored malware ___________s (unique fingerprints of known threats).',
+         'SIGNATURE-based detection — matches files against known malware signatures. Zero-days have no signature, so they\'re invisible to traditional AV.',
+         'signature',s=>s.trim().toLowerCase().includes('signature')))}]);
+
+// ═══ 7. SOCIAL ENGINEERING — OCR 1.3.3(c) ═══
+mod('Social Engineering','🎭','Social Engineering',[
+  {id:'vish',name:'IT Helpdesk Vishing',short:'Phone call impersonating IT support requesting credentials',
+   escs:['Suspicious IT calls requesting password resets',
+         'Three employees gave credentials to caller',
+         'VPN ACCESS GRANTED via stolen credentials — network compromised'],
+   escR:35,uMin:50,uMax:2000,spread:'Phishing',
+   responses:[
+    r('alert','Broadcast Security Alert','identity',10,85,'1.3.3(c)',
+      'Send immediate all-staff alert: IT NEVER asks for passwords by phone.',
+      'Staff already on a call remain vulnerable.',
+      ['Vishing (voice phishing) exploits trust in authority — OCR 1.3.3(c) social engineering.',
+       'Broadcasting URGENT alert: "IT will NEVER ask for your password. Hang up and report."',
+       'Callback verification protocol activated. Incident reported.'],
+      65),
+    r('policy','Update Verification Policy (YOU)','analyst',32,100,'1.3.3(c)',
+      'Rewrite IT verification procedures so social engineering structurally cannot succeed.',
+      'You are locked for ~32 seconds.',
+      ['Reviewing IT helpdesk procedures...','Social engineering exploits human psychology, not software (OCR 1.3.3c).'],
+      115,
+      ac('A social engineering attack succeeded by phone. The attacker pretended to be from IT support and convinced staff to give their passwords.',
+         'Social engineering attacks HUMAN _________ rather than software vulnerabilities.\n\nType the one-word answer:',
+         'OCR 1.3.3(c): Social engineering is the manipulation of people into performing actions or disclosing confidential information. It exploits human PSYCHOLOGY — specifically trust, authority, urgency and fear. Because it targets people rather than systems, technical defences like firewalls are ineffective against it.',
+         'It\'s what makes people feel trust or urgency — the human "___________".',
+         'Not software, not hardware — it targets the human _________ (mind, emotions, behaviour).',
+         'PSYCHOLOGY — social engineering exploits human psychology such as trust in authority, natural helpfulness, and fear of consequences.',
+         'psychology',s=>s.trim().toLowerCase().includes('psych')))}]);
+
+// ═══ 8. DNS POISONING — OCR 1.3.3(b) + 1.3.1(c) ═══
+mod('DNS Poisoning','☣','Network Attack',[
+  {id:'cache',name:'DNS Cache Poisoning',short:'Corporate resolver injected — users silently redirected to fake sites',
+   escs:['DNS cache poisoned — fake records active',
+         'Staff redirected to credential-harvesting clone sites',
+         'BANKING CREDENTIALS HARVESTED — 2,400 accounts compromised'],
+   escR:25,uMin:500,uMax:20000,spread:'Phishing',
+   responses:[
+    r('flush','Flush Cache + Deploy DNSSEC','network',22,100,'1.3.3(b) + 1.3.1(c)',
+      'Clear all poisoned DNS entries and deploy DNSSEC cryptographic authentication.',
+      'Users remain redirected until cache is fully flushed.',
+      ['DNS translates domain names to IPs. Poisoning injects fake records (OCR 1.3.3b).',
+       'Flushing poisoned DNS cache across all corporate resolvers.',
+       'Deploying DNSSEC: digital signatures on all DNS records (OCR 1.3.1c).',
+       'DNSSEC means resolvers can verify DNS responses are authentic and unmodified.',
+       'Cache poisoning now impossible — all responses cryptographically verified.'],
+      85),
+    r('config','Configure DNSSEC (YOU)','analyst',38,100,'1.3.1(c)',
+      'Configure the full DNSSEC chain of trust for all organisation domains.',
+      'You are locked for ~38 seconds.',
+      ['Setting up DNSSEC key pairs and signing DNS zones...'],
+      120,
+      ac('DNS cache poisoning injects fake records into DNS resolvers. DNSSEC prevents this using cryptographic signatures.',
+         'DNSSEC prevents DNS poisoning by adding _________ signatures to DNS records — proving they haven\'t been tampered with.\n\nType the one-word answer:',
+         'OCR 1.3.1(c): DNSSEC (DNS Security Extensions) uses PUBLIC KEY CRYPTOGRAPHY to digitally sign DNS records. Each DNS zone has a key pair — the private key signs records, the public key verifies them. Resolvers check the digital signature before trusting a DNS response, making injected fake records detectable because they lack a valid signature.',
+         'It\'s a type of cryptographic verification — proving a message came from the legitimate source.',
+         'DNSSEC uses _________ signatures, the same concept as secure email and HTTPS certificates.',
+         'DIGITAL signatures — DNSSEC adds digital signatures to DNS records so resolvers can verify their authenticity.',
+         'digital',s=>s.trim().toLowerCase().includes('digital')||s.trim().toLowerCase().includes('cryptograph')))}]);
+
+// ═══ 9. TROJAN BACKDOOR — OCR 1.3.3(c) Malware Types ═══
+mod('Trojan Backdoor','🐴','Malware',[
+  {id:'rat',name:'Remote Access Trojan',short:'Full remote control backdoor — attacker has keyboard, screen, files',
+   escs:['C2 beacon traffic: RAT calling home to attacker server',
+         'Data exfiltration confirmed — file shares accessed remotely',
+         'APT: full network visibility, privilege escalation active'],
+   escR:45,uMin:100,uMax:5000,spread:'Trojan Backdoor',
+   responses:[
+    r('c2','Block C2 Beacon Traffic','network',18,75,'1.3.3(c)',
+      'Block the malware\'s communication with its Command & Control server. Blinds attacker but malware remains.',
+      'RAT still installed — attacker loses control but malware persists until Security Ops cleans it.',
+      ['C2 (Command & Control): attacker\'s server that issues commands to infected machines (OCR 1.3.3c).',
+       'C2 beacon to 94.142.x.x identified and blocked. Attacker\'s remote control severed.',
+       'Note: trojan still present. Security Ops needed for full removal.'],
+      60),
+    r('full','Scan + Isolate + Wipe','security',60,100,'1.3.3(c)',
+      'Full eradication: scan network for all infected hosts, isolate, clean reinstall.',
+      'Attacker has full access for 60 seconds during scan.',
+      ['Scanning for C2 beacon patterns across all 450 machines...',
+       'OCR 1.3.3(c): Trojan disguises as legitimate software, does NOT self-replicate.',
+       '7 infected hosts identified. All isolated.',
+       'Clean OS reinstall deployed. Backdoor permanently removed. Credentials rotated.'],
+      100),
+    r('forensic','Digital Forensics (YOU)','analyst',45,90,'1.3.3(c)',
+      'Forensic analysis to understand how the trojan entered and what data was accessed.',
+      'You are locked for ~45 seconds.',
+      ['Examining trojan infection vector...','Auditing C2 communication logs...'],
+      120,
+      ac('A Remote Access Trojan was found on 7 workstations. A colleague asks: "Is it spreading by itself? Should we be worried about other machines getting infected automatically?"',
+         'A Trojan does NOT automatically spread to other computers. What type of malware DOES spread autonomously across networks without any user action?\n\nType the one-word answer:',
+         'OCR 1.3.3(c) distinguishes three malware types: TROJAN — disguises as legitimate software, requires user to run it, does NOT self-replicate. VIRUS — attaches to files, self-replicates but requires a host file. WORM — spreads AUTONOMOUSLY across networks with no user action needed. This three-way distinction is directly testable in OCR exams.',
+         'Unlike a trojan, this type spreads by itself across networks. Famous examples: WannaCry.',
+         'A _______ spreads autonomously. A trojan requires the user to run it.',
+         'A WORM spreads autonomously across networks — no user action needed. A trojan requires user execution. A virus needs a host file.',
+         'worm',s=>s.trim().toLowerCase()==='worm'))}]);
+
+// ═══ 10. MAN-IN-THE-MIDDLE — OCR 1.3.3(c) + 1.3.1(c) ═══
+mod('Man-in-the-Middle','👁','Network Attack',[
+  {id:'arp',name:'ARP Poisoning Attack',short:'Rogue device intercepting all LAN traffic — silently reading everything',
+   escs:['ARP poisoning on LAN — all traffic being intercepted',
+         'Session cookies harvested — multiple accounts hijacked',
+         'FINANCIAL TRANSACTIONS INTERCEPTED and silently modified'],
+   escR:30,uMin:200,uMax:5000,spread:'Credential Stuffing',
+   responses:[
+    r('seg','VLAN Segmentation','network',25,90,'1.3.3(c)',
+      'Segment the affected VLAN to isolate the rogue device and stop interception.',
+      'Interception continues until segmentation is applied.',
+      ['ARP poisoning sends fake MAC-to-IP mappings — traffic flows through attacker (OCR 1.3.3c).',
+       'Rogue device identified: MAC aa:bb:cc:11:22:33 on VLAN 14.',
+       'VLAN 14 segmented. Rogue device isolated. ARP inspection enabled.',
+       'HTTPS/TLS would have protected data even if intercepted — encrypted in transit (OCR 1.3.1c).'],
+      80),
+    r('tls','Enforce HTTPS/TLS (YOU)','analyst',38,100,'1.3.1(c)',
+      'Configure HSTS and certificate pinning so intercepted traffic is useless to attackers.',
+      'You are locked for ~38 seconds.',
+      ['Auditing HTTPS enforcement across all services...','Configuring HSTS headers and certificate pinning...'],
+      125,
+      ac('A MITM attack is intercepting network traffic. If HTTPS/TLS were properly enforced, all intercepted data would be unreadable ciphertext — the attack would be useless.',
+         'What does TLS stand for? (The protocol that creates encrypted tunnels, making MITM interception useless)\n\nType the full 3-word phrase:',
+         'OCR 1.3.1(c): TLS (Transport Layer Security) is the cryptographic protocol securing HTTPS connections. It provides: ENCRYPTION (data unreadable in transit), AUTHENTICATION (server identity verified via certificate from a trusted Certificate Authority), and INTEGRITY (data cannot be modified undetected). Together these defeat MITM attacks.',
+         'It\'s the \'S\' in HTTPS — the security protocol that encrypts web traffic.',
+         'Transport ___ Security — the protocol securing HTTPS. 3 words.',
+         'Transport Layer Security — TLS encrypts the connection so intercepted data appears as unreadable ciphertext.',
+         'transport layer security',s=>{const l=s.toLowerCase();return l.includes('transport layer security')||l.trim().toUpperCase()==='TLS';}))}]);
+
+// ═══ 11. CREDENTIAL STUFFING — OCR 1.3.3(c) ═══
+mod('Credential Stuffing','🔑','Auth Attack',[
+  {id:'dark',name:'Dark Web Database Attack',short:'14.7M credentials from breached database tested against all accounts',
+   escs:['Stuffing using fresh dark web breach DB — 2M attempts/hour',
+         '847 accounts accessed — customer data at risk',
+         'PAYMENT DETAILS ACCESSED — GDPR mandatory breach notification'],
+   escR:20,uMin:5000,uMax:100000,spread:'Phishing',
+   responses:[
+    r('lock','Lock Breach-Matched Accounts','identity',20,90,'1.3.3(c)',
+      'Cross-reference accounts against the breach database. Lock all matches immediately.',
+      'Accounts with reused passwords not in the breach DB remain at risk.',
+      ['Credential stuffing exploits password reuse — 85% of people reuse passwords (OCR 1.3.3c).',
+       '2,847 accounts matched to breach database. All locked immediately.',
+       'Password resets enforced. MFA activated. Breach credentials now useless.'],
+      75),
+    r('mfa','Implement MFA (YOU)','analyst',42,100,'1.3.3(c)',
+      'Configure MFA across all authentication endpoints — permanently defeating credential stuffing.',
+      'You are locked for ~42 seconds.',
+      ['Auditing authentication endpoints for MFA capability...'],
+      130,
+      ac('Credential stuffing attacks use username/password pairs from previous data breaches. They succeed because of widespread password reuse.',
+         'Approximately what PERCENTAGE of people reuse passwords across multiple services?\n\n(Type the number — it\'s why credential stuffing is so effective)',
+         'OCR 1.3.3(c): Password reuse is a critical vulnerability. Research consistently shows approximately 85% of people reuse passwords. When ONE service is breached, ALL services sharing that password become vulnerable. This is why credential stuffing is so effective, and why MFA and unique passwords for each service are essential defences.',
+         'It\'s a surprisingly high number — the vast majority of people do it. Between 80 and 90.',
+         'Studies show 8_% of people reuse passwords (fill in the blank digit).',
+         '85% — approximately 85% of people reuse passwords. One breach therefore compromises many accounts.',
+         '85',s=>{const n=parseInt(s.trim());return n>=80&&n<=90;}))}]);
+
+})(); // end seedBuiltInModules
+
+// ═══════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════
+const FEED=[
+  'NCSC advisory: heightened state-sponsored threat against UK critical infrastructure',
+  'CVE-2026-8841: zero-day in VPN appliance — actively exploited in the wild',
+  'Cl0p ransomware: new campaign targeting healthcare and logistics sectors',
+  'Dark web: 14.7M credentials from financial sector breach — $12,000 BTC asking',
+  'APT-29 infrastructure targeting EU government election systems',
+  'CERT-UK: Spear-phishing campaign targeting FTSE 100 C-suite executives',
+  'LockBit 4.0: AI-adapted payloads reported evading standard antivirus',
+  'Supply chain attack: popular HR software vendor confirms third-party breach',
+  'GCHQ: UK businesses face 65% rise in cyber incidents year-on-year',
+  'FBI IC3: £3.4B lost to cybercrime — 85% of incidents still going unreported'];
+
+const CITIES=[
+  {c:"London",la:51.507,lo:-0.128,r:"EU"},{c:"Paris",la:48.856,lo:2.352,r:"EU"},
+  {c:"Amsterdam",la:52.367,lo:4.904,r:"EU"},{c:"Frankfurt",la:50.110,lo:8.682,r:"EU"},
+  {c:"Berlin",la:52.520,lo:13.405,r:"EU"},{c:"Madrid",la:40.416,lo:-3.703,r:"EU"},
+  {c:"Warsaw",la:52.230,lo:21.012,r:"EU"},{c:"Stockholm",la:59.334,lo:18.063,r:"EU"},
+  {c:"Dublin",la:53.349,lo:-6.260,r:"EU"},{c:"Zurich",la:47.376,lo:8.548,r:"EU"},
+  {c:"New York",la:40.713,lo:-74.006,r:"NA"},{c:"Toronto",la:43.653,lo:-79.383,r:"NA"},
+  {c:"Chicago",la:41.878,lo:-87.630,r:"NA"},{c:"San Francisco",la:37.774,lo:-122.419,r:"NA"},
+  {c:"Mexico City",la:19.432,lo:-99.133,r:"NA"},{c:"São Paulo",la:-23.550,lo:-46.633,r:"LA"},
+  {c:"Buenos Aires",la:-34.603,lo:-58.381,r:"LA"},{c:"Bogotá",la:4.711,lo:-74.072,r:"LA"},
+  {c:"Cairo",la:30.044,lo:31.236,r:"MEA"},{c:"Dubai",la:25.204,lo:55.271,r:"MEA"},
+  {c:"Lagos",la:6.524,lo:3.379,r:"MEA"},{c:"Nairobi",la:-1.286,lo:36.817,r:"MEA"},
+  {c:"Singapore",la:1.352,lo:103.820,r:"APAC"},{c:"Tokyo",la:35.676,lo:139.650,r:"APAC"},
+  {c:"Hong Kong",la:22.319,lo:114.170,r:"APAC"},{c:"Seoul",la:37.566,lo:126.978,r:"APAC"},
+  {c:"Mumbai",la:19.076,lo:72.878,r:"APAC"},{c:"Sydney",la:-33.868,lo:151.209,r:"APAC"},
+  {c:"Beijing",la:39.913,lo:116.391,r:"APAC"},{c:"Johannesburg",la:-26.204,lo:28.047,r:"MEA"}];
+
+// ═══════════════════════════════════════════════
+//  GLOBE RENDERER — 2D canvas, day/night cycle, city lights
+// ═══════════════════════════════════════════════
+const gCanvas = document.getElementById('globe');
+const gCtx = gCanvas.getContext('2d');
+let gW = 0, gH = 0, gCX = 0, gCY = 0, gR = 0;
+let gRot = 0; // globe Y-rotation (driven by ops clock for day/night)
+let stars = [];
+
+// Sun fixed in world space — earth spins under it creating day/night
+const SUN = [1.0, 0.15, 0.3]; // normalized sun direction vector
+
+function normSun(v) {
+  const m = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+  return [v[0]/m, v[1]/m, v[2]/m];
+}
+const SN = normSun(SUN);
+
+function resizeGlobe() {
+  const wrap = document.getElementById('globe-wrap');
+  gW = wrap.clientWidth; gH = wrap.clientHeight;
+  gCanvas.width = gW; gCanvas.height = gH;
+  gCX = gW / 2; gCY = gH / 2;
+  gR = Math.min(gCX, gCY) * 0.88;
+  seedStars();
+}
+
+function seedStars() {
+  stars = Array.from({length:200}, () => ({
+    x: Math.random()*gW, y: Math.random()*gH,
+    a: 0.04 + Math.random()*0.14, s: 0.5 + Math.random()*1.2
+  }));
+}
+
+// lat/lon → 3D unit sphere position (accounting for rotation)
+function ll3(lat, lon, rot) {
+  const phi = (90 - lat) * Math.PI / 180;
+  const theta = (lon + 180) * Math.PI / 180;
+  const x0 = -Math.cos(theta) * Math.sin(phi);
+  const y0 = Math.cos(phi);
+  const z0 = Math.sin(theta) * Math.sin(phi);
+  // apply Y rotation
+  const c = Math.cos(rot), s = Math.sin(rot);
+  return [x0*c + z0*s, y0, -x0*s + z0*c];
+}
+
+// project 3D point to screen
+function proj(x, y, z) {
+  if (z <= 0.05) return null;
+  return { x: gCX + gR * x, y: gCY - gR * y };
+}
+
+// day/night blend: dot product of surface normal with sun direction (in world space)
+function dayAmount(x, y, z) {
+  const dot = x * SN[0] + y * SN[1] + z * SN[2];
+  return Math.max(0, Math.min(1, (dot + 0.22) / 0.44));
+}
+
+// Fast noise helpers
+function hn(x,y,z){const s=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5;return s-Math.floor(s);}
+function sm(t){return t*t*(3-2*t);}
+function vn(x,y,z){const xi=Math.floor(x),yi=Math.floor(y),zi=Math.floor(z),u=sm(x-xi),v=sm(y-yi),w=sm(z-zi);
+  const n=(_x,_y,_z)=>hn(_x,_y,_z);
+  return((n(xi,yi,zi)*(1-u)+n(xi+1,yi,zi)*u)*(1-v)+(n(xi,yi+1,zi)*(1-u)+n(xi+1,yi+1,zi)*u)*v)*(1-w)+
+    ((n(xi,yi,zi+1)*(1-u)+n(xi+1,yi,zi+1)*u)*(1-v)+(n(xi,yi+1,zi+1)*(1-u)+n(xi+1,yi+1,zi+1)*u)*v)*w;}
+function fbm(x,y,z){let s=0,a=0.55,f=1.15;for(let i=0;i<5;i++){s+=a*vn(x*f,y*f,z*f);f*=2;a*=0.52;}return s;}
+
+// DEFCON colour lookup
+function defconCol() {
+  return ['#00ff66','#2266ff','#ffcc00','#ff6600','#ff2222'][5 - currentDefcon];
+}
+
+function drawGlobe() {
+  gCtx.clearRect(0, 0, gW, gH);
+
+  // Stars
+  gCtx.save();
+  stars.forEach(s => {
+    gCtx.globalAlpha = s.a;
+    gCtx.fillStyle = '#88aabb';
+    gCtx.fillRect(s.x, s.y, s.s, s.s);
+  });
+  gCtx.restore();
+
+  // Atmosphere halo (behind sphere)
+  const haCol = ['rgba(41,224,255,','rgba(41,224,255,','rgba(255,220,32,','rgba(255,110,32,','rgba(255,50,50,'][5-currentDefcon];
+  const halo = gCtx.createRadialGradient(gCX, gCY, gR*0.85, gCX, gCY, gR*1.22);
+  halo.addColorStop(0, haCol+'0)');
+  halo.addColorStop(0.5, haCol+'0.09)');
+  halo.addColorStop(1, haCol+'0)');
+  gCtx.fillStyle = halo;
+  gCtx.beginPath(); gCtx.arc(gCX, gCY, gR*1.22, 0, Math.PI*2); gCtx.fill();
+
+  // Sphere background (deep space blue)
+  gCtx.save();
+  gCtx.beginPath(); gCtx.arc(gCX, gCY, gR, 0, Math.PI*2); gCtx.clip();
+  gCtx.fillStyle = '#010408'; gCtx.fillRect(0, 0, gW, gH);
+
+  // Continents with day/night colouring + city lights
+  for (let lat = -86; lat <= 86; lat += 2) {
+    const phi = lat * Math.PI / 180;
+    for (let lon = -178; lon <= 178; lon += 2) {
+      const [x, y, z] = ll3(lat, lon, gRot);
+      if (z <= 0) continue;
+      const n = fbm(x+2.1, y-1.3, z+0.7);
+      if (n <= 0.58) continue;
+      const px = gCX + gR*x, py = gCY - gR*y;
+      const da = dayAmount(x, y, z);
+      if (da > 0.05) {
+        // Daylight continents — green land
+        const brightness = 0.05 + da * 0.25;
+        gCtx.globalAlpha = brightness;
+        gCtx.fillStyle = n > 0.61 ? '#88ffcc' : '#00cc66';
+        gCtx.fillRect(px, py, 2, 2);
+      } else {
+        // Night side — dark continents
+        gCtx.globalAlpha = 0.04;
+        gCtx.fillStyle = '#003355';
+        gCtx.fillRect(px, py, 2, 2);
+      }
+    }
+  }
+
+  // City lights on night side (warm golden glow)
+  CITIES.forEach(city => {
+    const [x, y, z] = ll3(city.la, city.lo, gRot);
+    if (z <= 0.05) return;
+    const da = dayAmount(x, y, z);
+    const nightAmt = Math.max(0, 0.25 - da) / 0.25; // bright when da < 0.25
+    if (nightAmt < 0.05) return;
+    const px = gCX + gR*x, py = gCY - gR*y;
+    // Warm glow for city lights
+    const grad = gCtx.createRadialGradient(px, py, 0, px, py, 4);
+    grad.addColorStop(0, `rgba(255,220,120,${nightAmt*0.85})`);
+    grad.addColorStop(0.4, `rgba(255,180,80,${nightAmt*0.4})`);
+    grad.addColorStop(1, 'rgba(255,150,50,0)');
+    gCtx.fillStyle = grad;
+    gCtx.fillRect(px-4, py-4, 8, 8);
+  });
+
+  // Grid lines
+  const gc = ['#003300','#001840','#221a00','#221000','#220000'][5-currentDefcon];
+  gCtx.strokeStyle = gc; gCtx.lineWidth = 0.5; gCtx.globalAlpha = 1;
+  for (let lat = -60; lat <= 60; lat += 30) {
+    gCtx.beginPath(); let started = false;
+    for (let lon = -180; lon <= 180; lon += 5) {
+      const [x,y,z] = ll3(lat, lon, gRot);
+      if (z <= 0) { started = false; continue; }
+      const px=gCX+gR*x, py=gCY-gR*y;
+      if (!started) { gCtx.moveTo(px,py); started=true; } else gCtx.lineTo(px,py);
+    }
+    gCtx.stroke();
+  }
+  for (let lon = -180; lon <= 180; lon += 30) {
+    gCtx.beginPath(); let started = false;
+    for (let lat = -88; lat <= 88; lat += 4) {
+      const [x,y,z] = ll3(lat, lon, gRot);
+      if (z <= 0) { started = false; continue; }
+      const px=gCX+gR*x, py=gCY-gR*y;
+      if (!started) { gCtx.moveTo(px,py); started=true; } else gCtx.lineTo(px,py);
+    }
+    gCtx.stroke();
+  }
+  gCtx.restore();
+
+  // Globe outline
+  const oc = defconCol();
+  gCtx.strokeStyle = oc; gCtx.lineWidth = 1.5; gCtx.globalAlpha = 0.7;
+  gCtx.beginPath(); gCtx.arc(gCX, gCY, gR, 0, Math.PI*2); gCtx.stroke();
+  gCtx.globalAlpha = 1;
+
+  // City dots (dim)
+  CITIES.forEach(city => {
+    const [x,y,z] = ll3(city.la, city.lo, gRot);
+    if (z <= 0.05) return;
+    const p = proj(x, y, z); if (!p) return;
+    gCtx.save(); gCtx.globalAlpha = 0.18; gCtx.fillStyle = '#aaccff';
+    gCtx.beginPath(); gCtx.arc(p.x, p.y, 1.5, 0, Math.PI*2); gCtx.fill(); gCtx.restore();
+  });
+
+  // Spread arcs
+  const now = performance.now() / 1000;
+  spreadArcs.forEach(arc => {
+    const prog = Math.min(1, arc.age / 1.5);
+    const fade = arc.age > 2.5 ? Math.max(0, 1-(arc.age-2.5)/2) : 1;
+    gCtx.save(); gCtx.globalAlpha = 0.7 * fade;
+    gCtx.strokeStyle = '#ff3b6b'; gCtx.lineWidth = 1.5; gCtx.setLineDash([6,5]);
+    gCtx.shadowColor = '#ff3b6b'; gCtx.shadowBlur = 5;
+    gCtx.beginPath(); let started = false;
+    for (let t = 0; t <= prog; t += 0.02) {
+      const la = arc.sla + (arc.dla - arc.sla)*t, lo = arc.slo + (arc.dlo - arc.slo)*t;
+      const [x,y,z] = ll3(la, lo, gRot);
+      const p = proj(x, y, z);
+      if (!p) { started = false; continue; }
+      if (!started) { gCtx.moveTo(p.x, p.y); started = true; } else gCtx.lineTo(p.x, p.y);
+    }
+    gCtx.stroke(); gCtx.setLineDash([]);
+    // Travelling pulse
+    if (arc.age < 1.5) {
+      const la2 = arc.sla+(arc.dla-arc.sla)*prog, lo2 = arc.slo+(arc.dlo-arc.slo)*prog;
+      const [x2,y2,z2] = ll3(la2, lo2, gRot);
+      const p2 = proj(x2, y2, z2);
+      if (p2) {
+        gCtx.globalAlpha = fade; gCtx.fillStyle = '#ffccdd'; gCtx.shadowBlur = 8;
+        gCtx.beginPath(); gCtx.arc(p2.x, p2.y, 5, 0, Math.PI*2); gCtx.fill();
+      }
+    }
+    gCtx.restore();
+  });
+
+  // Incident markers
+  incidents.filter(i => !i.resolved).forEach(inc => {
+    const [x,y,z] = ll3(inc.lat, inc.lon, gRot);
+    const p = proj(x, y, z);
+    const lab = inc._lab;
+    if (!p) { if (lab) lab.style.opacity = '0'; return; }
+
+    const col = inc.sev===1 ? '#00ffa3' : inc.sev===2 ? '#ffb020' : '#ff3b6b';
+    const rgb = inc.sev===1 ? '0,255,163' : inc.sev===2 ? '255,176,32' : '255,59,107';
+    const base = inc.sev===1 ? 6 : inc.sev===2 ? 9 : 13;
+    const spd = inc.sev===3 ? 1.8 : 1.2;
+    const maxR = inc.sev===3 ? 5.5 : 3.5;
+
+    // Pulsing rings
+    gCtx.save();
+    for (let i = 0; i < inc.sev + 1; i++) {
+      const f = ((now * spd + i/(inc.sev+1)) % 1);
+      const rs = base + f * maxR * base;
+      const op = 0.45 * (1-f);
+      gCtx.globalAlpha = op;
+      gCtx.strokeStyle = col; gCtx.lineWidth = 1.5;
+      gCtx.shadowColor = col; gCtx.shadowBlur = 6;
+      gCtx.beginPath(); gCtx.arc(p.x, p.y, rs, 0, Math.PI*2); gCtx.stroke();
+    }
+    // Core dot
+    const cp = 1 + Math.sin(now*spd*2)*0.2;
+    gCtx.globalAlpha = 0.95;
+    gCtx.fillStyle = col; gCtx.shadowColor = col; gCtx.shadowBlur = 14;
+    gCtx.beginPath(); gCtx.arc(p.x, p.y, base*0.45*cp, 0, Math.PI*2); gCtx.fill();
+    gCtx.restore();
+
+    // HTML label
+    if (lab) {
+      lab.style.left = p.x + 'px'; lab.style.top = (p.y - 20) + 'px'; lab.style.opacity = '1';
+      const sc = getScenario(inc), md = window.CW_MODULES[inc.type];
+      lab.style.borderColor = col; lab.style.color = col;
+      lab.innerHTML = `${md?md.icon:''} #${inc.id} ${sc?sc.name:inc.type}<span class="sml"> · ${inc.city}</span>`;
+    }
+  });
+
+  // Hide labels for resolved or off-globe
+  incidents.filter(i => i.resolved || (() => {
+    const [x,y,z] = ll3(i.lat, i.lon, gRot); return z <= 0.05;
+  })()).forEach(i => { if (i._lab) i._lab.style.opacity = '0'; });
+
+  // Edge flash overlay
+  if (flashVal > 0) {
+    gCtx.fillStyle = `rgba(255,59,107,${flashVal*0.22})`;
+    gCtx.fillRect(0, 0, gW, gH);
+  }
+}
+
+// Marker label management
+const labsEl = document.getElementById('labels');
+function makeMarker(inc) {
+  const lab = document.createElement('div'); lab.className = 'alb';
+  labsEl.appendChild(lab); inc._lab = lab;
+}
+function removeMarker(inc) {
+  if (inc._lab) { inc._lab.remove(); inc._lab = null; }
+}
+
+// Globe click — find nearest incident
+gCanvas.addEventListener('click', e => {
+  if (!simRunning && !demoActive) return;
+  const rect = gCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  let best = null, bestD = 40;
+  incidents.filter(i => !i.resolved).forEach(inc => {
+    const [x,y,z] = ll3(inc.lat, inc.lon, gRot);
+    const p = proj(x, y, z); if (!p) return;
+    const d = Math.hypot(mx - p.x, my - p.y);
+    if (d < bestD) { bestD = d; best = inc; }
+  });
+  if (best) openRP(best.id);
+});
+
+window.addEventListener('resize', () => { resizeGlobe(); });
+
+// Spread arc system
+let spreadArcs = [];
+function makeArc(src, dst) {
+  spreadArcs.push({ sla: src.lat, slo: src.lon, dla: dst.la, dlo: dst.lo, age: 0 });
+}
+function updateArcs(dt) {
+  spreadArcs.forEach(a => a.age += dt);
+  spreadArcs = spreadArcs.filter(a => a.age < 4.5);
+}
+
+let flashVal = 0;
+function triggerFlash() { flashVal = 1; }
+
+// Current DEFCON for colour lookups
+let currentDefcon = 5;
+
+// ═══════════════════════════════════════════════
+//  TEAM SYSTEM + TASK ENGINE
+// ═══════════════════════════════════════════════
+const TEAMS = {
+  network:  {id:'network',  name:'Network Team',  icon:'🔵', task:null, pausedTasks:[]},
+  security: {id:'security', name:'Security Ops',  icon:'🟢', task:null, pausedTasks:[]},
+  identity: {id:'identity', name:'Identity Team', icon:'🔴', task:null, pausedTasks:[]},
+  analyst:  {id:'analyst',  name:'YOU',            icon:'👤', task:null, pausedTasks:[]}
+};
+function tCol(id){return{network:'#29e0ff',security:'#00ffa3',identity:'#ff3b6b',analyst:'#ffb020'}[id]||'#fff';}
+let tasks=[], taskSeq=1;
+
+function createTask(inc, resp) {
+  const v = 0.65 + Math.random()*0.75;
+  return {id:taskSeq++, incId:inc.id, incRef:inc,
+    responseId:resp.id, responseName:resp.name,
+    team:resp.team, baseDur:resp.baseDuration, actualDur:Math.round(resp.baseDuration*v),
+    elapsed:0, progress:0, state:'active', narrativeIdx:0,
+    compApplied:false, earlyApplied:false,
+    ocrRef:resp.ocrRef||'1.3.3(c)', scorePts:resp.scorePts||80,
+    narrative:resp.narrative||[], complications:resp.complications||[],
+    earlyFinish:resp.earlyFinish||null};
+}
+
+let pendingPreempt = null;
+
+function assignTask(incId, respId) {
+  const inc = incidents.find(i=>i.id===incId); if(!inc||inc.resolved) return;
+  const sc = getScenario(inc); if(!sc) return;
+  const resp = sc.responses.find(r=>r.id===respId); if(!resp) return;
+  if(resp.team==='analyst') { openAP(inc, resp); return; }
+  const team = TEAMS[resp.team];
+  if(team.task) {pendingPreempt={inc,resp}; showPreempt(team); return;}
+  doStartTask(inc, resp);
+}
+
+function doStartTask(inc, resp) {
+  const team = TEAMS[resp.team];
+  if(team.task) doPauseTask(team.task, true);
+  const task = createTask(inc, resp);
+  team.task = task; tasks.push(task);
+  inc.activeTaskId = task.id; inc.responseId = resp.id;
+  sysLog(`${team.icon} ${team.name} → ${resp.name} on #${inc.id} ${inc.scenarioName} (~${task.actualDur}s)`,
+    task.actualDur > resp.baseDuration*1.1 ? 'tw' : 'tsys');
+  closeRP(); renderTeams(); renderIncidents();
+}
+
+function doPauseTask(task, silent) {
+  const team = TEAMS[task.team]; team.task = null;
+  task.state = 'paused';
+  const inc = incidents.find(i=>i.id===task.incId);
+  if(inc) { if(!inc.pausedTasks) inc.pausedTasks=[]; inc.pausedTasks.push(task); inc.activeTaskId=null; }
+  const idx = tasks.indexOf(task); if(idx>-1) tasks.splice(idx,1);
+  if(!silent) sysLog(`⏸ ${TEAMS[task.team].name} paused: ${task.responseName} #${task.incId} at ${Math.round(task.progress)}%`,'tw');
+  renderTeams(); renderIncidents();
+}
+
+function resumeTask(incId, taskId) {
+  const inc = incidents.find(i=>i.id===incId); if(!inc) return;
+  const task = inc.pausedTasks && inc.pausedTasks.find(t=>t.id===taskId); if(!task) return;
+  const team = TEAMS[task.team];
+  if(team.task) {pendingPreempt={isResume:true,inc,task}; showPreempt(team); return;}
+  doResumeTask(inc, task);
+}
+
+function doResumeTask(inc, task) {
+  const team = TEAMS[task.team]; if(team.task) doPauseTask(team.task, false);
+  task.state='active'; team.task=task;
+  if(!tasks.includes(task)) tasks.push(task);
+  inc.pausedTasks = (inc.pausedTasks||[]).filter(t=>t!==task);
+  inc.activeTaskId = task.id;
+  sysLog(`▶ ${team.icon} ${team.name} resumed: ${task.responseName} #${inc.id} from ${Math.round(task.progress)}%`,'ti');
+  renderTeams(); renderIncidents();
+}
+
+function showPreempt(team) {
+  const current = team.task;
+  document.getElementById('pdlg-msg').textContent =
+    `${team.icon} ${team.name} is currently on "${current?current.responseName:'a task'}" ` +
+    `(#${current?current.incId:'?'}) at ${current?Math.round(current.progress):0}% complete. ` +
+    `Stopping now preserves progress — you can resume later.`;
+  document.getElementById('preempt-dlg').classList.add('show');
+}
+function confirmPreempt() {
+  document.getElementById('preempt-dlg').classList.remove('show');
+  if(!pendingPreempt) return;
+  const p = pendingPreempt; pendingPreempt = null;
+  if(p.isResume) { const team=TEAMS[p.task.team]; if(team.task) doPauseTask(team.task,false); doResumeTask(p.inc,p.task); }
+  else { const team=TEAMS[p.resp.team]; if(team.task) doPauseTask(team.task,false); doStartTask(p.inc,p.resp); }
+}
+function cancelPreempt() { document.getElementById('preempt-dlg').classList.remove('show'); pendingPreempt=null; }
+
+function updateTasks(dt) {
+  const toComplete = [];
+  tasks.forEach(task => {
+    if(task.state !== 'active') return;
+    task.elapsed += dt; task.progress = Math.min(100, (task.elapsed/task.actualDur)*100);
+    // Complication
+    if(!task.compApplied && task.progress>=50 && task.complications.length) {
+      task.compApplied = true;
+      task.complications.forEach(c => {
+        if(Math.random() < c.chance) {
+          const extra = Math.round(task.actualDur * c.extraTime);
+          task.actualDur += extra;
+          sysLog(`⚠ COMPLICATION: ${c.msg} — ${task.responseName} extended by ${extra}s`, 'tcomp');
+          triggerFlash();
+        }
+      });
+    }
+    // Early finish
+    if(!task.earlyApplied && task.progress>=30 && task.earlyFinish && Math.random()<task.earlyFinish.chance) {
+      task.earlyApplied = true;
+      task.actualDur = Math.round(task.elapsed + (task.actualDur-task.elapsed)*0.6);
+      sysLog(`⚡ ${task.earlyFinish.msg} — ahead of schedule`, 'tearly');
+    }
+    // Narrative streaming
+    if(task.narrative.length && task.narrativeIdx < task.narrative.length) {
+      const interval = task.actualDur / task.narrative.length;
+      if(task.elapsed >= task.narrativeIdx * interval) {
+        sysLog(`  ${task.narrative[task.narrativeIdx]}`, 'tnt');
+        task.narrativeIdx++;
+      }
+    }
+    if(task.progress >= 100) toComplete.push(task);
+  });
+  if(toComplete.length) {
+    toComplete.forEach(completeTask);
+    renderTeams(); renderIncidents();
+  }
+}
+
+function completeTask(task) {
+  const team = TEAMS[task.team]; team.task = null;
+  const idx = tasks.indexOf(task); if(idx>-1) tasks.splice(idx,1);
+  const inc = incidents.find(i=>i.id===task.incId);
+  addScore(task.scorePts);
+  sysLog(`✅ ${team.icon} ${team.name} completed: ${task.responseName} #${task.incId} (+${task.scorePts} pts)`,'ts');
+  if(inc && !inc.resolved) {
+    inc.resolved=true; inc.activeTaskId=null; resolvedCount++;
+    calcDefcon(); renderIncidents();
+    setTimeout(()=>removeMarker(inc), 500);
+    setTimeout(()=>{
+      const active = incidents.filter(i=>!i.resolved);
+      if(!active.length) return;
+      const top = active.sort((a,b)=>urgScore(b)-urgScore(a))[0];
+      if(top.sev===3||(top.spreadTimer||0)>8) sysLog(`  ⚡ #${top.id} ${top.scenarioName} is Sev 3 — assign a team NOW`,'te');
+    }, 400);
+  }
+}
+
+function renderTeams() {
+  Object.values(TEAMS).forEach(team => {
+    const el = document.getElementById('tr-'+team.id); if(!el) return;
+    const task = team.task;
+    // Gather paused tasks for this team across all incidents
+    const paused = [];
+    incidents.forEach(inc => { (inc.pausedTasks||[]).forEach(t=>{ if(t.team===team.id) paused.push({t,inc}); }); });
+    let html = `<div class="tr-top"><span class="tr-ico">${team.icon}</span><span class="tr-name">${team.name}</span>`;
+    if(task) {
+      const eta = Math.max(0, task.actualDur - task.elapsed);
+      const c = tCol(team.id);
+      html += `<span class="tr-badge tb-busy">${Math.round(task.progress)}%</span></div>
+      <div class="tr-task">${task.responseName} · #${task.incId}</div>
+      <div class="tr-prog"><div class="tr-bar" style="width:${task.progress}%;background:${c}"></div></div>
+      <div class="tr-meta"><span>ETA ~${Math.round(eta)}s</span><span style="color:${c}">▶ ACTIVE</span></div>
+      <div class="tr-btns"><button class="sm-btn sb-p" onclick="doPauseTask(TEAMS['${team.id}'].task)">⏸ PAUSE</button></div>`;
+    } else {
+      html += `<span class="tr-badge tb-free">AVAILABLE</span></div>`;
+    }
+    paused.forEach(({t,inc})=>{
+      html += `<div style="margin-top:5px;padding:4px 0;border-top:1px solid rgba(255,255,255,.04)">
+        <div class="tr-task" style="color:var(--warn)">⏸ ${t.responseName} · #${t.incId} · ${Math.round(t.progress)}%</div>
+        <div class="tr-prog"><div class="tr-bar" style="width:${t.progress}%;background:var(--warn)"></div></div>
+        <div class="tr-btns"><button class="sm-btn sb-r" onclick="resumeTask(${inc.id},${t.id})">▶ RESUME</button></div></div>`;
+    });
+    el.innerHTML = html;
+  });
+}
+
+// ═══ INCIDENT PANEL ═══
+function getScenario(inc){const m=window.CW_MODULES[inc.type];return m?(m.scenarios.find(s=>s.id===inc.scenario)||m.scenarios[0]):null;}
+
+function renderIncidents() {
+  const list = document.getElementById('inc-scroll');
+  const active = incidents.filter(i=>!i.resolved);
+  document.getElementById('ic-count').textContent = active.length + ' ACTIVE';
+  if(!incidents.length){list.innerHTML='<div style="padding:16px;color:var(--dim);font-size:11px;text-align:center">Monitoring global infrastructure...</div>';return;}
+  const disp = [...active.sort((a,b)=>b.sev-a.sev||a.escAge-b.escAge), ...incidents.filter(i=>i.resolved).slice(-2)];
+  list.innerHTML = disp.map(inc=>{
+    const md=window.CW_MODULES[inc.type], sc=getScenario(inc); if(!md||!sc) return '';
+    const pct=inc.escRate?Math.min(100,(inc.escAge/inc.escRate)*100):0;
+    const bc=pct>80?'var(--crit)':pct>55?'var(--warn)':'var(--ok)';
+    const atsk=inc.activeTaskId&&tasks.find(t=>t.id===inc.activeTaskId);
+    const hasPaused=inc.pausedTasks&&inc.pausedTasks.length>0;
+    const tte=!inc.resolved&&inc.sev<3&&inc.escRate?Math.max(0,inc.escRate-inc.escAge):null;
+    const tteStr=inc.resolved?'':(inc.sev===3?(((inc.spreadTimer||0)>8)?
+      '<span style="color:var(--crit);font-weight:700">⚡ SPREADING NOW</span>':
+      '<span style="color:var(--crit)">⚠ SEV 3 ACTIVE</span>'):
+      (tte!==null?`<span style="color:${tte<15?'var(--crit)':tte<30?'var(--warn)':'var(--dim)'}">⏱ ${Math.round(tte)}s → Sev${inc.sev+1}</span>`:''));
+    // Task strips
+    let strips='';
+    if(atsk){const eta=Math.max(0,atsk.actualDur-atsk.elapsed),c=tCol(atsk.team);
+      strips+=`<div class="ts-row"><span class="ts-t">${TEAMS[atsk.team].icon}</span><div class="ts-i"><div class="ts-n">${atsk.responseName}</div><div class="ts-pb"><i style="width:${atsk.progress}%;background:${c}"></i></div></div><div class="ts-eta" style="color:${c}">~${Math.round(eta)}s</div></div>`;}
+    if(hasPaused){(inc.pausedTasks||[]).forEach(t=>{
+      strips+=`<div class="ts-row" style="opacity:.65"><span class="ts-t">⏸</span><div class="ts-i"><div class="ts-n" style="color:var(--warn)">${t.responseName}</div><div class="ts-pb"><i style="width:${t.progress}%;background:var(--warn)"></i></div></div><div class="ts-eta" style="color:var(--warn)">${Math.round(t.progress)}%</div></div>`;});}
+    const showBtn=!inc.resolved&&!atsk;
+    const sevCls=inc.resolved?'res':'s'+inc.sev;
+    return `<div class="ic ${sevCls}" id="ic-${inc.id}" data-id="${inc.id}">
+      <div class="ic-h"><span class="ic-ico">${md.icon}</span><span class="ic-nm">#${inc.id} ${sc.name}</span><span class="ic-sev ${inc.resolved?'svr':'sv'+inc.sev}">${inc.resolved?'✓ DONE':'SEV '+inc.sev}</span></div>
+      <div class="ic-sub">${inc.city} · ${inc.region} · ~${inc.users.toLocaleString()} at risk</div>
+      ${inc.mutation?`<div class="ic-sub" style="color:var(--c2)">${inc.mutationLabel}</div>`:''}
+      ${tteStr?`<div class="ic-esc">${tteStr}</div>`:''}
+      ${strips?`<div class="ic-tasks">${strips}</div>`:''}
+      ${showBtn?`<div class="ic-resp" onclick="openRP(${inc.id})"><span>◆ SEE RESPONSE OPTIONS</span></div>`:''}
+      ${!inc.resolved?`<div class="ic-escbar"><i style="width:${pct}%;background:${bc}"></i></div>`:''}
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.ic').forEach(el=>{
+    el.addEventListener('click',e=>{
+      if(e.target.closest('.ic-resp')||e.target.closest('.sm-btn')) return;
+      const id=parseInt(el.getAttribute('data-id'));
+      if(id&&!el.classList.contains('res')) openRP(id);
+    });
+  });
+  updatePromptHint();
+}
+
+// ═══ RESPONSE PANEL ═══
+let currentRPIncId = null;
+function openRP(incId) {
+  const inc=incidents.find(i=>i.id===incId); if(!inc||inc.resolved) return;
+  const sc=getScenario(inc), md=window.CW_MODULES[inc.type]; if(!sc||!md) return;
+  currentRPIncId=incId;
+  document.getElementById('rp-tag').textContent=`INCIDENT #${inc.id} · ${md.cat.toUpperCase()}`;
+  document.getElementById('rp-nm').textContent=`${md.icon} ${sc.name}`;
+  document.getElementById('rp-sub').textContent=`${inc.city} · ${inc.region} · ~${inc.users.toLocaleString()} users · ${inc.mutation?inc.mutationLabel:'No modifiers'}`;
+  const opts=document.getElementById('rp-opts');
+  opts.innerHTML=`<div class="rp-sec"><div class="rp-sh">WHAT IS THIS ATTACK?</div>
+    <div style="font-size:12px;color:var(--dim);line-height:1.6;font-weight:500">${sc.short}</div>
+    <div style="font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:1px;color:var(--c2);margin-top:8px">OCR H446 SPEC ALIGNMENT: ${[...new Set((sc.responses||[]).map(r=>r.ocrRef).filter(Boolean))].join(' · ')}</div></div>
+    <div class="rp-sec"><div class="rp-sh">CHOOSE YOUR RESPONSE</div>` +
+    (sc.responses||[]).map(resp=>{
+      const team=TEAMS[resp.team]; const busy=team.task!==null&&resp.team!=='analyst';
+      const isYou=resp.team==='analyst';
+      const effCls=resp.effectiveness>=80?'tg-hi':'tg-md';
+      return `<div class="ro ${isYou?'ya':''} ${busy?'busy':''}" onclick="${busy?`showPreemptForResp(${incId},'${resp.id}')`:`assignTask(${incId},'${resp.id}')`}">
+        <div class="ro-h"><span class="ro-ti">${team.icon}</span><div class="ro-ri"><div class="ro-rn">${resp.name}</div><div class="ro-tl">${team.name}${busy?' — BUSY':''}</div></div>
+          <div class="ro-dur"><div class="ro-ds">~${resp.baseDuration}s</div><div class="ro-dl">EST. TIME</div></div></div>
+        <div class="ro-bd">${resp.description}</div>
+        <div class="ro-tags">
+          <span class="ro-tag ${effCls}">${resp.effectiveness}% effective</span>
+          <span class="ro-tag tg-ocr">OCR ${resp.ocrRef}</span>
+          ${isYou?'<span class="ro-tag tg-you">👤 YOU REQUIRED</span>':''}
+          ${busy?'<span class="ro-tag tg-bsy">⚠ TEAM BUSY</span>':''}
+        </div>
+        <div class="ro-risk">⚠ During implementation: ${resp.duringRisk}</div>
+        <button class="ro-go ${busy?'ra-bsy':isYou?'ra-you':'ra-go'}" onclick="event.stopPropagation();${busy?`showPreemptForResp(${incId},'${resp.id}')`:`assignTask(${incId},'${resp.id}')`}">${busy?'PREEMPT & REASSIGN':isYou?'👤 I WILL HANDLE THIS':'▸ ASSIGN TO '+team.name.toUpperCase()}</button>
+      </div>`;
+    }).join('')+'</div>';
+  document.getElementById('rp').classList.add('open');
+  if(demoActive) demoCheckAction('resp_panel');
+}
+function closeRP(){document.getElementById('rp').classList.remove('open');}
+function showPreemptForResp(incId,respId){
+  const inc=incidents.find(i=>i.id===incId); if(!inc) return;
+  const sc=getScenario(inc); if(!sc) return;
+  const resp=(sc.responses||[]).find(r=>r.id===respId); if(!resp) return;
+  pendingPreempt={inc,resp}; showPreempt(TEAMS[resp.team]);
+}
+
+// ═══════════════════════════════════════════════
+//  GAME STATE + LOGIC
+// ═══════════════════════════════════════════════
+let incidents=[], nextId=1, score=0, wrongCmds=0, hitD1=false;
+let spreadEvts=0, resolvedCount=0, spawnedCount=0;
+let simRunning=false, simPaused=false, simDur=0, simT=0;
+let nextSpawnAt=null, lastTick=performance.now(), idleT=0;
+const ACCEL=720, START_H=6;
+
+function worldClock(){
+  const tm=START_H*60+(simT*ACCEL)/60, day=Math.floor(tm/(24*60))+1, mod=tm%(24*60);
+  return{day, hh:Math.floor(mod/60), mm:Math.floor(mod%60), frac:mod/(24*60)};
+}
+
+function fmt(s){s=Math.max(0,s);return`${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`;}
+
+function addScore(p){score+=p; document.getElementById('scorev').textContent=score.toLocaleString();}
+
+function calcDefcon(){
+  const active=incidents.filter(i=>!i.resolved), s3=active.filter(i=>i.sev===3).length;
+  let d=5;
+  if(active.length>=1)d=4; if(active.length>=3||s3>=1)d=3;
+  if(active.length>=5||s3>=2)d=2; if(s3>=3||active.length>=8)d=1;
+  currentDefcon=d; if(d===1)hitD1=true;
+  const cols=['#00ffa3','#29e0ff','#ffe020','#ff8a20','#ff3b6b'][5-d];
+  document.getElementById('dc-num').textContent=d;
+  document.getElementById('dc-num').style.color=cols;
+  document.getElementById('dc-arc').style.stroke=cols;
+  document.getElementById('dc-arc').style.strokeDashoffset=String(107*(d-1)/4);
+}
+
+function urgScore(inc){
+  if(inc.resolved) return -1;
+  const sc=getScenario(inc); if(!sc) return 0;
+  const tte=(inc.sev<3&&inc.escRate)?Math.max(0,inc.escRate-inc.escAge):999;
+  const hasTask=inc.activeTaskId&&tasks.find(t=>t.id===inc.activeTaskId);
+  return(3-inc.sev)*10+(1/(tte+1))*100+((inc.spreadTimer||0)>8?50:0)+inc.users/10000-(hasTask?30:0);
+}
+
+function updatePromptHint(){
+  const untouched=incidents.filter(i=>!i.resolved&&!i.activeTaskId&&!(i.pausedTasks||[]).length);
+  const prompt=document.getElementById('tprompt');
+  if(simRunning&&untouched.length===1&&incidents.filter(i=>!i.resolved).length===1)
+    prompt.textContent=`try: scan ▸ `;
+  else prompt.textContent=`ops ▸ `;
+}
+
+// Spawn rate schedule
+const SCHED=[{a:0,i:[30,45]},{a:60,i:[19,30]},{a:150,i:[12,20]},{a:300,i:[8,15]},{a:480,i:[5,11]}];
+function getSpawnIv(){const s=SCHED.filter(x=>simT>=x.a).pop()||SCHED[0];const[lo,hi]=s.i;return(lo+Math.random()*(hi-lo))*[1.6,1.3,1,.8,.65][5-currentDefcon];}
+function schedNext(first){nextSpawnAt=simT+(first?5+Math.random()*4:getSpawnIv());}
+function minCon(){if(simT<60)return 0;if(simT<150)return 1;if(simT<300)return 2;return 3;}
+
+const MUTATIONS=[
+  {name:'Nation-state actor',label:'🏴 STATE-SPONSORED',escMulti:1.6,spreadMult:2.0,userMult:1.4},
+  {name:'AI-enhanced attack',label:'🤖 AI-ENHANCED',escMulti:1.3,spreadMult:1.1,userMult:1.2},
+  {name:'Opportunistic scan',label:'🎲 OPPORTUNISTIC',escMulti:0.7,spreadMult:0.5,userMult:0.8},
+  {name:'Coordinated campaign',label:'🌐 COORDINATED',escMulti:1.1,spreadMult:2.2,userMult:1.5}
+];
+
+function spawnIncident(fType, fCity) {
+  const mods=Object.keys(window.CW_MODULES); if(!mods.length) return;
+  const aC=new Set(incidents.filter(i=>!i.resolved).map(i=>i.city));
+  let cands=CITIES.filter(c=>!aC.has(c.c)); if(!cands.length) cands=CITIES;
+  const city=fCity||cands[Math.floor(Math.random()*cands.length)];
+  const tn=fType||mods[Math.floor(Math.random()*mods.length)];
+  const md=window.CW_MODULES[tn]; if(!md) return;
+  // Pick scenario with responses
+  const scenarios=(md.scenarios||[]).filter(s=>s.responses&&s.responses.length);
+  if(!scenarios.length) return;
+  const sc=scenarios[Math.floor(Math.random()*scenarios.length)];
+  let mut=null; if(Math.random()<0.28) mut=MUTATIONS[Math.floor(Math.random()*MUTATIONS.length)];
+  const em=mut?mut.escMulti:1, um=mut?mut.userMult:1;
+  const ep=Math.min(0.22,0.04+simT/simDur*0.22), rv=Math.random();
+  const sev=rv<ep?2+Math.floor(Math.random()*2):1;
+  const users=Math.floor((sc.uMin+Math.random()*(sc.uMax-sc.uMin))*um);
+  const inc={id:nextId++, type:tn, scenario:sc.id, scenarioName:sc.name,
+    mutation:mut?mut.name:null, mutationLabel:mut?mut.label:null,
+    city:city.c, lat:city.la, lon:city.lo, region:city.r,
+    sev, users, escAge:0, escRate:sc.escR*(0.7+Math.random()*0.6)*em,
+    resolved:false, escMulti:1, spreadTimer:0, spreadMult:mut?mut.spreadMult:1,
+    activeTaskId:null, pausedTasks:[], responseId:null};
+  incidents.push(inc); spawnedCount++; idleT=0;
+  makeMarker(inc);
+  const w=worldClock();
+  sysLog(`[D${w.day} ${String(w.hh).padStart(2,'0')}:${String(w.mm).padStart(2,'0')}] ${sev===3?'🔴':sev===2?'🟡':'⚠'} #${inc.id} ${sc.name}${mut?` [${mut.label}]`:''} · ${city.c} · Sev ${sev} · ~${users.toLocaleString()} users`,'tw');
+  queueNewsFlash(inc,'spawn');
+  calcDefcon(); renderIncidents();
+  if(sev===3) triggerFlash();
+  if(demoActive) demoCheckAction('incident_spawn');
+}
+
+function getGEM(){return(1+Math.min(1,simT/simDur)*0.9)*[1,1.12,1.25,1.4,1.6][5-currentDefcon]*((simDur-simT)<120?1.5:1);}
+
+function doEscalation(dt){
+  const gm=getGEM(); let changed=false;
+  incidents.forEach(inc=>{
+    if(inc.resolved||inc.activeTaskId) return;
+    inc.escAge+=dt*inc.escMulti*gm;
+    const sc=getScenario(inc); if(!sc) return;
+    if(inc.escAge>=inc.escRate&&inc.sev<3){
+      inc.sev++; inc.escAge=0; changed=true;
+      const w=worldClock();
+      sysLog(`[D${w.day} ${String(w.hh).padStart(2,'0')}:${String(w.mm).padStart(2,'0')}] ${inc.sev===3?'🔴':'🟡'} #${inc.id} → SEV ${inc.sev}: ${sc.escs[inc.sev-1]}`,'tw');
+      queueNewsFlash(inc,'escalate');
+      if(inc.sev===3) triggerFlash();
+    }
+  });
+  if(changed){calcDefcon(); renderIncidents();}
+}
+
+function doSpread(dt){
+  incidents.forEach(inc=>{
+    if(inc.resolved||inc.sev<3) return;
+    inc.spreadTimer=(inc.spreadTimer||0)+dt;
+    const iv=Math.max(8,15-(simT/simDur)*8);
+    if(inc.spreadTimer<iv) return;
+    inc.spreadTimer=0;
+    const sc=getScenario(inc);
+    const chance=0.26*(inc.spreadMult||1)*(1+simT/simDur*0.4);
+    if(Math.random()<chance){
+      const aC=new Set(incidents.filter(i=>!i.resolved).map(i=>i.city));
+      const cands=CITIES.filter(c=>!aC.has(c.c)); if(!cands.length) return;
+      const dst=cands[Math.floor(Math.random()*cands.length)];
+      makeArc({lat:inc.lat,lon:inc.lon}, dst);
+      spreadEvts++; addScore(-50); triggerFlash();
+      const w=worldClock();
+      sysLog(`[D${w.day} ${String(w.hh).padStart(2,'0')}:${String(w.mm).padStart(2,'0')}] ⚡ SPREAD: #${inc.id} ${inc.scenarioName} → ${dst.c} [−50 pts]`,'te');
+      document.getElementById('edge-flash').style.boxShadow='inset 0 0 200px rgba(255,59,107,.6)';
+      setTimeout(()=>document.getElementById('edge-flash').style.boxShadow='',700);
+      queueNewsFlash(inc,'spread');
+      const st=(sc&&sc.spread&&window.CW_MODULES[sc.spread])?sc.spread:inc.type;
+      spawnIncident(st,dst);
+    }
+  });
+}
+
+function checkMin(){
+  if(!simRunning||simPaused) return;
+  const a=incidents.filter(i=>!i.resolved).length, n=minCon();
+  if(a<n){spawnIncident(); if(n-a>1) setTimeout(()=>spawnIncident(),2600);}
+}
+
+// ═══ OPS LOG ═══
+const tOut=document.getElementById('tout'), tIn=document.getElementById('tcmd');
+let cmdHistory=[], histIdx=-1;
+function sysLog(msg,cls){const d=document.createElement('div');d.className=cls||'tsys';d.textContent=msg;tOut.appendChild(d);tOut.scrollTop=tOut.scrollHeight;}
+function tClear(){tOut.innerHTML='';}
+function tPrintExec(cmd,id){const row=document.createElement('div');row.className='exec-row';row.innerHTML=`<button class="exec-btn" onclick="assignOrRun('${cmd}',${id});this.closest('.exec-row').style.opacity='.4'">▸ EXECUTE: ${cmd.toUpperCase()} ${id}</button>`;tOut.appendChild(row);tOut.scrollTop=tOut.scrollHeight;}
+function assignOrRun(cmd,id){runCommand(cmd+' '+id);}
+
+// ═══ NEWS FLASH SYSTEM ═══
+const nfStack=document.getElementById('nf-stack');
+const nfQueue=[], nfShowing=[];
+function queueNewsFlash(inc,type){
+  const sc=getScenario(inc), md=window.CW_MODULES[inc.type]; if(!sc||!md) return;
+  nfQueue.push({inc,sc,md,type}); if(nfShowing.length<3) drainNFQueue();
+}
+function drainNFQueue(){while(nfShowing.length<3&&nfQueue.length){showNewsFlash(nfQueue.shift());}}
+function showNewsFlash({inc,sc,md,type}){
+  const col=inc.sev===1?'var(--ok)':inc.sev===2?'var(--warn)':'var(--crit)';
+  const btnCls=inc.sev===1?'nb1':inc.sev===2?'nb2':'nb3';
+  const tag=type==='spawn'?'⚠ NEW INCIDENT':type==='escalate'?`🔴 ESCALATED → SEV ${inc.sev}`:'⚡ THREAT SPREADING';
+  // OCR line for spawn only
+  const ocrResp=type==='spawn'&&sc.responses&&sc.responses[0]?`<div class="nf-ocr">OCR ${sc.responses[0].ocrRef}</div>`:'';
+  const card=document.createElement('div');card.className='nf';
+  card.innerHTML=`<div class="nf-tag" style="color:${col}">${tag}</div>
+    <div class="nf-title">${md.icon} ${sc.name}</div>
+    <div class="nf-sub">${sc.short} — ${inc.city} · ~${inc.users.toLocaleString()} at risk</div>
+    ${ocrResp}
+    <button class="nf-btn ${btnCls}" onclick="openRP(${inc.id});this.closest('.nf').classList.remove('in');this.closest('.nf').classList.add('out')">▸ RESPOND: INSPECT #${inc.id}</button>`;
+  nfStack.appendChild(card); nfShowing.push(card);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>card.classList.add('in')));
+  const dur=inc.sev===3?6000:4500;
+  setTimeout(()=>{card.classList.remove('in');card.classList.add('out');
+    setTimeout(()=>{card.remove();const idx=nfShowing.indexOf(card);if(idx>-1)nfShowing.splice(idx,1);drainNFQueue();},350);},dur);
+}
+
+// ═══ ANALYST PANEL ═══
+let apState=null, apScaffoldTimer=0, apScaffoldShown=0;
+
+function openAP(inc,resp){
+  apState={inc,resp,attempts:0}; apScaffoldTimer=0; apScaffoldShown=0;
+  const ch=resp.analystChallenge||{};
+  document.getElementById('ap-title').textContent=`👤 ANALYST TASK: ${resp.name}`;
+  document.getElementById('ap-ctx').textContent=ch.context||resp.description;
+  document.getElementById('ap-q').textContent=ch.question||resp.name;
+  document.getElementById('ap-ocrref').textContent=`OCR H446 · ${resp.ocrRef}`;
+  document.getElementById('ap-ocrtxt').textContent=ch.ocrLink||'See OCR H446 specification for full detail.';
+  document.getElementById('ap-fb').textContent='';
+  document.getElementById('ainput').value='';
+  const narr=document.getElementById('ap-narr');narr.innerHTML='';
+  (resp.narrative||[]).slice(0,3).forEach(line=>{const d=document.createElement('div');d.style.marginBottom='6px';d.textContent=line;narr.appendChild(d);});
+  document.getElementById('scaff').innerHTML=`<div style="font-size:10px;color:var(--dim);margin-bottom:8px;font-weight:600;letter-spacing:1px">NEED HELP? SCAFFOLDING AVAILABLE:</div>`;
+  document.getElementById('ap').classList.add('show');
+  setTimeout(()=>document.getElementById('ainput').focus(),100);
+  sysLog(`👤 YOU are handling: ${resp.name} on #${inc.id} — teams await your orders after`,'tg');
+  closeRP();
+}
+
+function showScaffold(level){
+  const ch=apState&&apState.resp&&apState.resp.analystChallenge; if(!ch) return;
+  const sa=document.getElementById('scaff');
+  if(level===1&&!sa.querySelector('.sc1')){const d=document.createElement('div');d.className='sc-reveal sc1';d.innerHTML=`💡 <b>Hint:</b> ${ch.hint1}`;sa.appendChild(d);}
+  if(level===2&&!sa.querySelector('.sc2')){const d=document.createElement('div');d.className='sc-reveal sc2';d.style.borderLeftColor='var(--warn)';d.innerHTML=`📖 <b>More help:</b> ${ch.hint2}`;sa.appendChild(d);}
+  if(level===3&&!sa.querySelector('.sc3')){const d=document.createElement('div');d.className='sc-reveal sc3';d.style.borderLeftColor='var(--c2)';d.innerHTML=`🔍 <b>Detail:</b> ${ch.hint3}`;sa.appendChild(d);}
+  apScaffoldShown=Math.max(apScaffoldShown,level);
+}
+
+function buildScaffoldButtons(){
+  const ch=apState&&apState.resp&&apState.resp.analystChallenge; if(!ch) return;
+  const sa=document.getElementById('scaff');
+  sa.innerHTML=`<div style="font-size:10px;color:var(--dim);margin-bottom:8px;font-weight:600">STUCK? USE SCAFFOLDING:</div>
+    <button class="sc-btn hint" onclick="showScaffold(1)">💡 Hint — nudge me in the right direction</button>
+    <button class="sc-btn hint" onclick="showScaffold(2)">📖 Explain — give me the concept</button>
+    <button class="sc-btn hint" onclick="showScaffold(3)">🔍 Example — show me a worked example</button>
+    <button class="sc-btn ans" onclick="giveAnswer()">🆘 Give Me The Answer (−50 pts)</button>`;
+}
+
+function giveAnswer(){
+  const ch=apState&&apState.resp&&apState.resp.analystChallenge; if(!ch) return;
+  addScore(-50); document.getElementById('ainput').value=ch.fullAnswer;
+  document.getElementById('ap-fb').style.color='var(--warn)';
+  document.getElementById('ap-fb').textContent=`Answer: "${ch.fullAnswer}" (−50 pts). Read the OCR explanation to understand why.`;
+  showScaffold(3); submitAP();
+}
+
+function submitAP(){
+  const ch=apState&&apState.resp&&apState.resp.analystChallenge; if(!ch||!apState) return;
+  const inp=document.getElementById('ainput').value.trim();
+  apState.attempts++;
+  const ok=ch.checkFn?ch.checkFn(inp):(inp.toLowerCase().includes(ch.fullAnswer.toLowerCase()));
+  const fb=document.getElementById('ap-fb');
+  if(ok){
+    fb.style.color='var(--ok)'; fb.textContent='✅ Correct! Well done.';
+    setTimeout(()=>{
+      document.getElementById('ap').classList.remove('show');
+      const{inc,resp}=apState; apState=null;
+      sysLog(`✅ YOU completed: ${resp.name} on #${inc.id} (+${resp.scorePts} pts)`,'ts');
+      addScore(resp.scorePts); inc.resolved=true; resolvedCount++;
+      calcDefcon(); renderIncidents(); setTimeout(()=>removeMarker(inc),600);
+    },1200);
+  } else {
+    fb.style.color='var(--crit)'; fb.textContent=`❌ Not quite.${apState.attempts>=2?' Try the scaffolding below.':' Have another go.'}`;
+    if(apState.attempts>=2) buildScaffoldButtons();
+    document.getElementById('ainput').select();
+  }
+}
+
+function abandonAP(){
+  if(!apState) return; addScore(-25);
+  const s=apState; apState=null; apScaffoldShown=0;
+  document.getElementById('ap').classList.remove('show');
+  sysLog(`↩ Abandoned: ${s.resp.name} on #${s.inc.id} (−25 pts)`,'tw');
+}
+
+function updateAP(dt){
+  if(!apState) return;
+  apScaffoldTimer+=dt;
+  if(apScaffoldTimer>20&&apScaffoldShown===0){showScaffold(1);buildScaffoldButtons();}
+  else if(apScaffoldTimer>45&&apScaffoldShown<2)showScaffold(2);
+  const inc=apState.inc;
+  document.getElementById('ap-warn').textContent=`⚠ #${inc.id} worsening while you work · Sev ${inc.sev}`;
+}
+
+document.getElementById('ainput').addEventListener('keydown',e=>{if(e.key==='Enter')submitAP();});
+
+// ═══ DEMO MODE ═══
+let demoActive=false, demoStep=-1, demoWait=null, demoInc=null;
+const DEMO_STEPS=[
+  {title:'Welcome to CYBERWATCH ULTRA',
+   body:'This simulation makes you a global threat operations analyst. Coordinated cyberattacks are incoming — you command four teams and sometimes personally stop the attacks yourself. This guided demo walks you through a real phishing incident.',
+   ocr:null,hl:null,wait:null,btn:'Let\'s go →'},
+  {title:'A Phishing Campaign Has Been Detected',
+   body:'See the incident card in the left sidebar. It shows: attack name, city, severity (1–3), and users at risk. The escalation bar fills as the attack worsens. Sev 3 attacks SPREAD to new cities if you leave them.',
+   ocr:'OCR 1.3.3(c): Phishing is a social engineering attack that exploits human trust rather than software vulnerabilities.',
+   hl:'#inc-scroll',wait:null,btn:'Got it →'},
+  {title:'Meet Your Teams',
+   body:'You have four resources: Network Team 🔵, Security Ops 🟢, Identity Team 🔴, and YOU 👤. Each handles one task at a time. When a team is busy, you must decide — wait, or pull them off their current job.',
+   ocr:null,hl:'#team-dash',wait:null,btn:'Understood →'},
+  {title:'See Your Response Options',
+   body:'Click the incident card now — or the "SEE RESPONSE OPTIONS" button. You\'ll see multiple ways to handle this attack, each with different teams, durations, and effectiveness. Go on — click it.',
+   ocr:null,hl:'#inc-scroll .ic:first-child',wait:'resp_panel',btn:null},
+  {title:'Choose How to Respond',
+   body:'Each option shows the team needed, estimated time, effectiveness rating, and the OCR spec reference. Pick the "Full Response" option — assign it to the Identity Team. Watch the Operations Log stream live intelligence.',
+   ocr:'OCR 1.3.3(c): Defences against phishing include email filtering, user education, and MFA (Multi-Factor Authentication).',
+   hl:'#rp',wait:'assign_task',btn:null},
+  {title:'Your Team Is Working',
+   body:'Watch the Identity Team\'s progress bar fill in the sidebar and on the incident card. The Operations Log streams real OCR theory as they work — this is how you learn. Some tasks hit complications and take longer.',
+   ocr:null,hl:'#tr-identity',wait:'task_complete',btn:null},
+  {title:'Incident Resolved — Ready to Play',
+   body:'The phishing campaign is neutralised. You now understand the core loop: incidents appear, you assign teams or handle it yourself, OCR theory explains what\'s happening. Press DEPLOY to start your own mission.',
+   ocr:'OCR H446 covers: 1.3.3(c) Network security · 1.3.1(c) Encryption · 1.3.2(d) SQL',
+   hl:null,wait:null,btn:'I\'m ready — play now'}
+];
+function startDemo(){
+  demoActive=true; demoStep=-1;
+  const md=window.CW_MODULES['Phishing']; if(!md){sysLog('Demo requires Phishing module.','te');return;}
+  const sc=md.scenarios[0];
+  demoInc={id:nextId++,type:'Phishing',scenario:sc.id,scenarioName:sc.name,
+    mutation:null,mutationLabel:null,city:'London',lat:51.507,lon:-0.128,region:'EU',
+    sev:1,users:12400,escAge:0,escRate:120,resolved:false,escMulti:1,spreadTimer:0,spreadMult:1,
+    activeTaskId:null,pausedTasks:[],responseId:null};
+  incidents.push(demoInc); spawnedCount++; makeMarker(demoInc);
+  simRunning=true; simPaused=false; simT=0; simDur=99999;
+  tClear(); sysLog('═══ DEMO MODE ═══','th'); sysLog('Phishing campaign detected in London. Follow the guided walkthrough.','ti');
+  renderIncidents(); calcDefcon(); lastTick=performance.now(); advanceDemo();
+}
+function advanceDemo(){
+  demoStep++; if(demoStep>=DEMO_STEPS.length){endDemo();return;}
+  const step=DEMO_STEPS[demoStep], hl=document.getElementById('dm-hl');
+  if(step.hl){const el=document.querySelector(step.hl);if(el){const r=el.getBoundingClientRect();hl.style.cssText=`display:block;left:${r.left-4}px;top:${r.top-4}px;width:${r.width+8}px;height:${r.height+8}px;`;}}
+  else hl.style.display='none';
+  demoWait=step.wait;
+  const card=document.getElementById('dm-card');
+  card.innerHTML=`<div class="dm-step">STEP ${demoStep+1} / ${DEMO_STEPS.length}</div>
+    <div class="dm-title">${step.title}</div>
+    <div class="dm-body">${step.body}</div>
+    ${step.ocr?`<div class="dm-ocr">${step.ocr}</div>`:''}
+    <div class="dm-buttons">
+      <button class="dm-skip" onclick="endDemo()">Skip Demo</button>
+      ${step.btn?`<button class="dm-next" onclick="advanceDemo()">${step.btn}</button>`:`<div style="font-size:11px;color:var(--c1);font-weight:600;align-self:center">Complete the action above to continue →</div>`}
+    </div>`;
+  document.getElementById('demo-modal').classList.add('show');
+}
+function demoCheckAction(action){
+  if(!demoActive||demoWait!==action) return;
+  if(action==='assign_task'&&demoWait==='assign_task'){
+    // Wait for actual task assignment
+    setTimeout(()=>{if(demoActive){demoWait=null;setTimeout(advanceDemo,800);}},500);
+    return;
+  }
+  if(action==='task_complete'){demoWait=null;setTimeout(advanceDemo,600);return;}
+  demoWait=null; setTimeout(advanceDemo,500);
+}
+function endDemo(){
+  demoActive=false; demoStep=-1; demoWait=null;
+  document.getElementById('demo-modal').classList.remove('show');
+  document.getElementById('dm-hl').style.display='none';
+  if(demoInc){demoInc.resolved=true;setTimeout(()=>removeMarker(demoInc),300);}
+  incidents=incidents.filter(i=>i!==demoInc); demoInc=null;
+  simRunning=false; renderIncidents(); calcDefcon();
+  sysLog('Demo complete. Press DEPLOY to start your mission.','ts');
+}
+
+// ═══════════════════════════════════════════════
+//  COMMAND SYSTEM
+// ═══════════════════════════════════════════════
+const ALL_CMDS=['help','scan','triage','status','teams','history','clear'];
+
+function runCommand(raw){
+  raw=raw.trim(); if(!raw) return;
+  const sp=raw.indexOf(' '); const cmd=sp===-1?raw.toLowerCase():raw.slice(0,sp).toLowerCase();
+  const arg=sp===-1?'':raw.slice(sp+1).trim(); const idN=parseInt(arg);
+  sysLog('▸ '+raw,'tc'); cmdHistory.unshift(raw); if(cmdHistory.length>50)cmdHistory.pop(); histIdx=-1; tIn.value='';
+
+  if(cmd==='clear'){tClear();return;}
+  if(cmd==='help'){
+    sysLog('─── INTERACTION ───','th');
+    sysLog('  Click incident card  → see response options','ti');
+    sysLog('  Click response option → assign team or handle yourself','ti');
+    sysLog('  Click PAUSE button   → pause team task (progress saves)','ti');
+    sysLog('  Click RESUME          → pick up paused task','ti');
+    sysLog('─── COMMANDS ───','th');
+    sysLog('  scan    — live threat board with urgency','ti');
+    sysLog('  triage  — what to tackle next and why','ti');
+    sysLog('  teams   — all team statuses','ti');
+    sysLog('  status  — score, time, DEFCON','ti');
+    return;
+  }
+  if(cmd==='scan'){
+    const active=incidents.filter(i=>!i.resolved);
+    if(!active.length){sysLog('No active incidents.','ti');return;}
+    sysLog(`─── ${active.length} Active · DEFCON ${currentDefcon} ───`,'th');
+    active.sort((a,b)=>urgScore(b)-urgScore(a)).forEach(inc=>{
+      const md=window.CW_MODULES[inc.type],sc=getScenario(inc); if(!md||!sc) return;
+      const tte=inc.escRate?Math.max(0,inc.escRate-inc.escAge):null;
+      const hasTask=inc.activeTaskId&&tasks.find(t=>t.id===inc.activeTaskId);
+      const ts=inc.sev===3?((inc.spreadTimer||0)>8?'⚡SPREAD':'🔴SEV3'):(tte!==null?`⏱${Math.round(tte)}s`:'');
+      const tsk=hasTask?` [${TEAMS[hasTask.team].icon}${Math.round(hasTask.progress)}%]`:' [unassigned]';
+      sysLog(`  #${String(inc.id).padEnd(3)}${md.icon} ${sc.name.padEnd(28)} ${inc.city.padEnd(13)} ${ts}${tsk}`,inc.sev===3?'te':tte<30?'tw':'ti');
+    });
+    return;
+  }
+  if(cmd==='triage'){
+    const active=incidents.filter(i=>!i.resolved); if(!active.length){sysLog('All clear.','ts');return;}
+    sysLog('─── TRIAGE ───','th');
+    active.sort((a,b)=>urgScore(b)-urgScore(a)).slice(0,5).forEach((inc,i)=>{
+      const sc=getScenario(inc),md=window.CW_MODULES[inc.type]; if(!sc||!md) return;
+      const tte=inc.escRate?Math.max(0,inc.escRate-inc.escAge):null;
+      const hasTask=inc.activeTaskId&&tasks.find(t=>t.id===inc.activeTaskId);
+      const reason=(inc.spreadTimer||0)>8?'SPREADING — 50pt penalty incoming':inc.sev===3?'Sev 3 — will spread if unassigned':
+        hasTask?`${TEAMS[hasTask.team].icon} in progress (${Math.round(hasTask.progress)}%)`:
+        tte<15?`Escalates in ${Math.round(tte)}s — CLICK CARD NOW`:'Unassigned — click card to respond';
+      sysLog(`  #${i+1} [#${inc.id}] ${md.icon} ${sc.name} — ${reason}`,i===0?'te':i<=2?'tw':'ti');
+    });
+    return;
+  }
+  if(cmd==='teams'){
+    sysLog('─── TEAM STATUS ───','th');
+    Object.values(TEAMS).forEach(team=>{
+      if(team.task){const eta=Math.max(0,team.task.actualDur-team.task.elapsed);sysLog(`  ${team.icon} ${team.name.padEnd(16)} BUSY: ${team.task.responseName} #${team.task.incId} (${Math.round(team.task.progress)}% · ~${Math.round(eta)}s left)`,'tw');}
+      else sysLog(`  ${team.icon} ${team.name.padEnd(16)} AVAILABLE`,'ti');
+    });
+    return;
+  }
+  if(cmd==='status'){
+    const w=worldClock();
+    sysLog(`─── Status · DEFCON ${currentDefcon} ───`,'th');
+    sysLog(`  Score ${score.toLocaleString()} | Resolved ${resolvedCount}/${spawnedCount} | Spread events ${spreadEvts}`,'ti');
+    sysLog(`  Time left ${fmt(Math.max(0,simDur-simT))} | Ops clock Day ${w.day} ${String(w.hh).padStart(2,'0')}:${String(w.mm).padStart(2,'0')} UTC`,'ti');
+    return;
+  }
+  if(cmd==='history'){cmdHistory.slice(0,10).forEach((h,i)=>sysLog(`  ${i+1}. ${h}`,'td'));return;}
+  sysLog(`Unknown: '${cmd}'. Type 'help' or click an incident card.`,'td');
+}
+
+// ═══ END SCREEN ═══
+window.startNewGame=function(){document.getElementById('end').classList.remove('show');document.getElementById('splash').classList.add('show');};
+
+function showEnd(){
+  const pct=spawnedCount>0?resolvedCount/spawnedCount:0;
+  let g,t,col;
+  if(pct>=0.9&&spreadEvts===0&&!hitD1){g='S';t='CISO — ELITE THREAT HUNTER';col='var(--c1)';}
+  else if(pct>=0.8){g='A';t='SENIOR SECURITY ANALYST';col='var(--ok)';}
+  else if(pct>=0.6){g='B';t='SECURITY ANALYST';col='var(--c2)';}
+  else if(pct>=0.4){g='C';t='JUNIOR ANALYST';col='var(--warn)';}
+  else if(pct>=0.2){g='D';t='SECURITY INTERN';col='#ff8a20';}
+  else{g='F';t='SYSTEM COMPROMISED';col='var(--crit)';}
+  const seen={};
+  incidents.filter(i=>i!==demoInc).forEach(i=>{const k=i.scenarioName||i.type;if(!seen[k])seen[k]={n:0,r:0,type:i.type};seen[k].n++;if(i.resolved)seen[k].r++;});
+  const rows=Object.entries(seen).map(([nm,v])=>{const m=window.CW_MODULES[v.type];const ok=v.r===v.n;
+    return `<div class="arow" style="border-color:${ok?'var(--ok)':'var(--crit)'}"><span>${m?m.icon:''} ${nm}</span><span style="color:${ok?'var(--ok)':'var(--crit)'}">${v.r}/${v.n}</span></div>`;}).join('');
+  const w=worldClock();
+  document.getElementById('ec').innerHTML=`
+    <div class="ov-tag" style="text-align:center">MISSION COMPLETE · DEBRIEF</div>
+    <div class="grade" style="color:${col}">${g}</div>
+    <div class="gtitle" style="color:${col}">${t}</div>
+    <div class="stats">
+      <div class="stat"><div class="l">Score</div><div class="v" style="color:${col}">${score.toLocaleString()}</div></div>
+      <div class="stat"><div class="l">Resolved</div><div class="v">${resolvedCount}/${spawnedCount}</div></div>
+      <div class="stat"><div class="l">Hit Rate</div><div class="v">${Math.round(pct*100)}%</div></div>
+      <div class="stat"><div class="l">Spread Events</div><div class="v" style="color:${spreadEvts>3?'var(--crit)':spreadEvts>0?'var(--warn)':'var(--ok)'}">${spreadEvts}</div></div>
+      <div class="stat"><div class="l">DEFCON 1 Hit</div><div class="v" style="color:${hitD1?'var(--crit)':'var(--ok)'}">${hitD1?'YES':'NO'}</div></div>
+      <div class="stat"><div class="l">Sim Duration</div><div class="v">Day ${w.day}</div></div>
+    </div>
+    <div class="ov-sh">SCENARIOS ENCOUNTERED</div>${rows}
+    <div style="font-size:11px;color:var(--dim);margin-top:10px;line-height:1.7">OCR H446: 1.3.3(c) Network security · 1.3.1(c) Encryption · 1.3.2(d) SQL</div>
+    <button class="ov-btn" onclick="startNewGame()">▶ REDEPLOY</button>`;
+  document.getElementById('end').classList.add('show');
+}
+
+// ═══ SPLASH CONTENT ═══
+function buildSplash(){
+  document.getElementById('splash-card').innerHTML=`
+    <div class="ov-tag">EYES ONLY · GLOBAL THREAT OPERATIONS</div>
+    <div class="ov-title">CYBERWATCH ULTRA</div>
+    <div class="ov-sub">INCIDENT RESPONSE SIMULATOR · OCR H446 ALIGNED · ×720 REAL TIME</div>
+    <div class="ov-sh">SITUATION</div>
+    <div class="ov-txt">You command a global threat operations centre. Coordinated attacks are incoming. You have four teams — and sometimes you personally must stop an attack, which locks you out from managing others. Every decision has a cost. The world clock runs at ×720, so each minute compresses 12 hours of real incident response.</div>
+    <div class="ov-sh">HOW IT WORKS</div>
+    <div class="ov-cmd"><code>Click incident card</code><span>See 2–3 response options with team, time, effectiveness and OCR spec reference</span></div>
+    <div class="ov-cmd"><code>Assign to team</code><span>Team works independently — you manage the rest</span></div>
+    <div class="ov-cmd"><code>Handle yourself</code><span>Answer an OCR challenge to resolve it — but you\'re locked until done</span></div>
+    <div class="ov-cmd"><code>Pause & Resume</code><span>Pull a team off a task at any time — progress saves, resume whenever</span></div>
+    <div class="ov-sh">THE STRATEGIC REALITY</div>
+    <div class="ov-rules">
+      <div class="ov-rule ovr-r">Sev 3 attacks SPREAD to new cities — multiplying your workload instantly</div>
+      <div class="ov-rule ovr-y">Tasks take random time — complications slow them, sometimes they finish early</div>
+      <div class="ov-rule ovr-g">The Operations Log streams real OCR theory as your teams work</div>
+      <div class="ov-rule ovr-p">New to this? Run the DEMO first — it walks through a live scenario</div>
+    </div>
+    <div class="ov-q"><b>When two incidents escalate simultaneously and both teams are busy — do you stop one mid-task, or ride it out?</b> That's the game.</div>
+    <button class="ov-btn ov-btn-alt" id="splashDemo" style="margin-top:12px">▶ GUIDED DEMO (recommended)</button>
+    <button class="ov-btn" id="splashGo">▶ DEPLOY IMMEDIATELY</button>`;
+  document.getElementById('splashDemo').onclick=()=>{document.getElementById('splash').classList.remove('show');startDemo();};
+  document.getElementById('splashGo').onclick=()=>{document.getElementById('splash').classList.remove('show');tIn.focus();};
+}
+
+// ═══ CONTROLS ═══
+function startGame(){
+  const mins=Math.max(10,Math.min(30,Number(document.getElementById('dur').value)||10));
+  simDur=mins*60; simRunning=true; simPaused=false; simT=0;
+  incidents.forEach(removeMarker); incidents=[]; nextId=1; score=0; wrongCmds=0; hitD1=false;
+  spreadEvts=0; resolvedCount=0; spawnedCount=0; currentDefcon=5;
+  Object.values(TEAMS).forEach(t=>{t.task=null;t.pausedTasks=[];});
+  tasks.length=0; spreadArcs.length=0; flashVal=0; idleT=0;
+  cmdHistory=[]; histIdx=-1;
+  document.getElementById('btnPause').disabled=false; document.getElementById('btnAbort').disabled=false; document.getElementById('btnReset').disabled=false;
+  document.getElementById('btnPause').textContent='❚❚'; document.getElementById('scorev').textContent='0';
+  tClear();
+  sysLog('═══ CYBERWATCH ULTRA — LIVE ═══','th');
+  sysLog(`${mins}-min mission · ${Object.keys(window.CW_MODULES).length} attack modules armed · ops clock ×${ACCEL}`,'ti');
+  sysLog('Click incident cards to assign teams · Tasks can be paused and resumed','ti');
+  sysLog('Watch the Operations Log — it teaches OCR theory as your teams work','tw');
+  sysLog('Threat grid live. First incident incoming...','td');
+  renderIncidents(); renderTeams(); calcDefcon(); schedNext(true);
+  lastTick=performance.now(); tIn.focus();
+}
+
+document.getElementById('btnDemo').addEventListener('click',startDemo);
+document.getElementById('btnStart').addEventListener('click',startGame);
+document.getElementById('btnReset').addEventListener('click',()=>{if(confirm('Reset?'))startGame();});
+document.getElementById('btnPause').addEventListener('click',()=>{
+  if(!simRunning)return; simPaused=!simPaused;
+  document.getElementById('btnPause').textContent=simPaused?'▶':'❚❚';
+  if(!simPaused)lastTick=performance.now();
+  sysLog(simPaused?'[ PAUSED ]':'[ RESUMED ]','td');
+});
+document.getElementById('btnAbort').addEventListener('click',()=>{
+  simRunning=false; document.getElementById('btnPause').disabled=true;
+  sysLog('[ MISSION ABORTED ]','te'); showEnd();
+});
+
+tIn.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){const v=tIn.value.trim();if(v)runCommand(v);}
+  if(e.key==='ArrowUp'){e.preventDefault();if(histIdx<cmdHistory.length-1){histIdx++;tIn.value=cmdHistory[histIdx]||'';}}
+  if(e.key==='ArrowDown'){e.preventDefault();if(histIdx>0){histIdx--;tIn.value=cmdHistory[histIdx]||'';}else{histIdx=-1;tIn.value='';}}
+  if(e.key==='Tab'){e.preventDefault();const v=tIn.value.toLowerCase().trim();if(!v)return;const m=ALL_CMDS.find(c=>c.startsWith(v));if(m)tIn.value=m+' ';}
+});
+document.addEventListener('click',e=>{if(!['INPUT','BUTTON','SELECT'].includes(e.target.tagName)&&!e.target.closest('.nf')&&!e.target.closest('.ic')&&!e.target.closest('#rp'))tIn.focus();});
+
+// Override openRP and assignTask for demo
+const _origOpenRP=openRP;
+window.openRP=function(id){_origOpenRP(id);if(demoActive)demoCheckAction('resp_panel');};
+const _origAssignTask=assignTask;
+window.assignTask=function(incId,respId){_origAssignTask(incId,respId);if(demoActive)demoCheckAction('assign_task');};
+
+// Intercept completeTask for demo
+const _origCompleteTask=completeTask;
+window.completeTask=function(task){
+  _origCompleteTask(task);
+  if(demoActive&&demoInc&&task.incId===demoInc.id)demoCheckAction('task_complete');
+};
+
+// ═══ MAIN LOOP ═══
+function animate(){
+  const now=performance.now(); const dt=Math.min(0.05,(now-lastTick)/1000); lastTick=now;
+
+  // Update globe rotation from ops clock
+  gRot=worldClock().frac*Math.PI*2;
+
+  // Draw globe
+  drawGlobe();
+
+  // Flash overlay
+  if(flashVal>0){
+    document.getElementById('edge-flash').style.boxShadow=`inset 0 0 180px rgba(255,59,107,${flashVal*0.45})`;
+    flashVal=Math.max(0,flashVal-dt*2.5);
+  } else {
+    document.getElementById('edge-flash').style.boxShadow='';
+  }
+
+  // Update spread arcs age
+  updateArcs(dt);
+
+  if(simRunning&&!simPaused){
+    simT+=dt; idleT+=dt;
+    document.getElementById('miss').textContent=fmt(Math.max(0,simDur-simT));
+    const w=worldClock();
+    document.getElementById('opst').textContent=`${String(w.hh).padStart(2,'0')}:${String(w.mm).padStart(2,'0')} UTC ${w.hh>=6&&w.hh<18?'☀':'🌙'}`;
+    document.getElementById('opsd').textContent=`DAY ${w.day} · ×${ACCEL}`;
+
+    if(nextSpawnAt!==null&&simT>=nextSpawnAt){spawnIncident();schedNext(false);}
+    if(simT>60&&idleT>6&&incidents.filter(i=>!i.resolved).length===0){spawnIncident();idleT=0;}
+    if(Math.round(simT*10)%80===0)checkMin();
+
+    updateTasks(dt);
+    updateAP(dt);
+    doEscalation(dt);
+    doSpread(dt);
+    renderTeams();
+
+    if(simT>=simDur){simRunning=false;document.getElementById('btnPause').disabled=true;showEnd();}
+  }
+
+  requestAnimationFrame(animate);
+}
+
+// ═══ INIT (wrapped in DOMContentLoaded) ═══
+document.addEventListener('DOMContentLoaded',function(){
+  const ldMsg=document.getElementById('ld-msg');
+
+  // Step 1: Resize globe canvas
+  ldMsg.textContent='Setting up globe...';
+  resizeGlobe();
+
+  // Step 2: Build splash content
+  buildSplash();
+
+  // Step 3: Build ticker
+  document.getElementById('ticker').innerHTML=FEED.sort(()=>Math.random()-0.5).map(f=>`● ${f}&nbsp;&nbsp;&nbsp;`).join('');
+
+  // Step 4: Try to load external module files (enhances built-in data, optional)
+  ldMsg.textContent='Loading attack modules...';
+  const EXT_MODULES=['modules/cw_phishing.js','modules/cw_ransomware.js','modules/cw_sqli.js',
+    'modules/cw_ddos.js','modules/cw_brute.js','modules/cw_zeroday.js','modules/cw_social.js',
+    'modules/cw_dns.js','modules/cw_trojan.js','modules/cw_mitm.js','modules/cw_credstuff.js'];
+  let pending=EXT_MODULES.length, extLoaded=0;
+
+  function onAllModulesAttempted(){
+    // Count how many have v2 format (responses[])
+    const v2count=Object.keys(window.CW_MODULES).filter(k=>window.CW_MODULES[k]&&window.CW_MODULES[k].scenarios&&window.CW_MODULES[k].scenarios[0]&&window.CW_MODULES[k].scenarios[0].responses).length;
+    console.log(`CYBERWATCH ULTRA: ${Object.keys(window.CW_MODULES).length} modules (${v2count} v2-format, ${extLoaded} external)`);
+
+    // Step 5: Start the game
+    ldMsg.textContent='Ready!';
+    document.getElementById('loading').style.display='none';
+    document.getElementById('splash').classList.add('show');
+    document.getElementById('btnStart').disabled=false;
+    document.getElementById('btnDemo').disabled=false;
+    calcDefcon();
+    animate(); // start render loop (shows globe even before game starts)
+  }
+
+  EXT_MODULES.forEach(src=>{
+    const s=document.createElement('script');s.src=src;
+    s.onload=()=>{extLoaded++;if(--pending===0)onAllModulesAttempted();};
+    s.onerror=()=>{if(--pending===0)onAllModulesAttempted();};
+    document.head.appendChild(s);
+  });
+});
+</script>
+</body>
+</html>
