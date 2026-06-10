@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CYBERWATCH 2026-06-10-001</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#02040a;color:#cce8ff;font-family:Arial,sans-serif;overflow:hidden;height:100vh}
+#loading{position:fixed;inset:0;background:#02040a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:100}
+#ld-title{font-size:22px;font-weight:bold;color:#29e0ff;letter-spacing:4px}
+#ld-msg{font-size:13px;color:#3a5870}
+#ld-error{max-width:700px;padding:20px;background:#1a0505;border:1px solid #ff3b6b;border-radius:8px;color:#ff8888;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-word;display:none}
+#app{display:none;height:100vh;display:none}
+#hud{height:50px;background:#040810;border-bottom:1px solid rgba(41,224,255,.15);display:flex;align-items:center;gap:14px;padding:0 16px}
+.hv{font-size:18px;font-weight:bold}
+.hl{font-size:9px;color:#3a5870;text-transform:uppercase;letter-spacing:1px}
+.hdiv{width:1px;height:28px;background:rgba(41,224,255,.12)}
+#main{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 50px)}
+#sidebar{border-right:1px solid rgba(41,224,255,.12);overflow-y:auto;background:#040810}
+.sh{padding:9px 13px;font-size:9px;letter-spacing:2px;color:#29e0ff;border-bottom:1px solid rgba(41,224,255,.08)}
+#team-dash{border-bottom:1px solid rgba(41,224,255,.08)}
+.tr{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.03)}
+.tr-h{display:flex;align-items:center;gap:7px}
+.tr-ico{font-size:14px}
+.tr-name{font-size:12px;font-weight:bold;flex:1}
+.tr-badge{font-size:9px;padding:2px 7px;border-radius:20px;font-weight:bold}
+.tb-free{background:rgba(0,255,163,.1);color:#00ffa3}
+.tb-busy{background:rgba(255,176,32,.1);color:#ffb020}
+.tr-info{font-size:10px;color:#3a5870;margin-top:4px}
+.tr-bar-wrap{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:4px}
+.tr-bar{height:100%;border-radius:2px;transition:width .3s}
+.sm-btn{font-size:9px;font-weight:bold;padding:3px 8px;border-radius:5px;border:1px solid;cursor:pointer;margin-top:5px;background:transparent;color:#ffb020;border-color:rgba(255,176,32,.4)}
+.sm-btn:hover{background:rgba(255,176,32,.1)}
+#inc-list{padding:6px}
+.ic{border-radius:9px;margin-bottom:6px;cursor:pointer;border-left:3px solid #3a5870;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-left:3px solid #3a5870;overflow:hidden;transition:all .15s}
+.ic:hover{background:rgba(41,224,255,.04)}
+.ic.s1{border-left-color:#00ffa3}.ic.s2{border-left-color:#ffb020}.ic.s3{border-left-color:#ff3b6b}
+.ic.done{opacity:.25;pointer-events:none}
+.ic-h{display:flex;align-items:center;gap:7px;padding:8px 10px 4px}
+.ic-nm{font-size:13px;font-weight:bold;flex:1}
+.ic-sev{font-size:8px;padding:2px 6px;border-radius:20px;font-weight:bold}
+.sv1{background:rgba(0,255,163,.1);color:#00ffa3}.sv2{background:rgba(255,176,32,.12);color:#ffb020}.sv3{background:rgba(255,59,107,.14);color:#ff3b6b}
+.ic-sub{font-size:10px;color:#3a5870;padding:0 10px 4px}
+.ic-esc{font-size:10px;padding:0 10px 3px}
+.ic-resp-btn{margin:0 10px 9px;padding:6px 10px;background:rgba(41,224,255,.07);border:1px solid rgba(41,224,255,.22);border-radius:7px;cursor:pointer;font-size:11px;font-weight:bold;color:#29e0ff;transition:all .14s}
+.ic-resp-btn:hover{background:rgba(41,224,255,.15)}
+.ic-prog-wrap{height:3px;background:rgba(255,255,255,.04);margin:0 10px 8px;border-radius:2px;overflow:hidden}
+.ic-prog{height:100%;border-radius:2px;transition:width .3s}
+#globe-area{position:relative;background:#01020a}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+#rp{position:fixed;top:50px;right:-380px;width:360px;bottom:0;background:#040810;border-left:1px solid rgba(41,224,255,.15);transition:right .3s;overflow-y:auto;z-index:20}
+#rp.open{right:0}
+.rp-hdr{padding:14px 15px;border-bottom:1px solid rgba(41,224,255,.1);position:sticky;top:0;background:#040810}
+.rp-close{float:right;background:transparent;border:1px solid rgba(255,255,255,.1);color:#3a5870;border-radius:6px;font-size:10px;padding:3px 9px;cursor:pointer}
+.rp-close:hover{color:#fff}
+.rp-tag{font-size:8px;letter-spacing:2px;color:#9b6dff;margin-bottom:3px}
+.rp-nm{font-size:16px;font-weight:bold;margin-bottom:2px}
+.rp-sub{font-size:10px;color:#3a5870}
+.rp-sec{padding:12px 15px}
+.rp-sh{font-size:8px;letter-spacing:2px;color:#9b6dff;margin-bottom:9px}
+.ro{border:1px solid rgba(255,255,255,.07);border-radius:9px;margin-bottom:10px;background:rgba(255,255,255,.02);cursor:pointer;transition:border-color .14s}
+.ro:hover{border-color:rgba(41,224,255,.28)}
+.ro-h{display:flex;align-items:center;gap:8px;padding:10px 12px 6px}
+.ro-t{font-size:13px}
+.ro-nm{font-size:13px;font-weight:bold}
+.ro-tl{font-size:10px;color:#3a5870}
+.ro-dur{text-align:right;font-size:13px;font-weight:bold}
+.ro-desc{padding:0 12px 6px;font-size:11px;color:#3a5870;line-height:1.5}
+.ro-ocr{padding:0 12px 6px;font-size:9px;color:#9b6dff;font-weight:bold}
+.ro-go{display:block;width:calc(100% - 24px);margin:0 12px 11px;padding:8px;border:none;border-radius:8px;background:linear-gradient(90deg,#29e0ff,#9b6dff);color:#02040a;font-weight:bold;font-size:12px;cursor:pointer;letter-spacing:.5px}
+.ro-go:hover{filter:brightness(1.1)}
+#log-area{position:absolute;bottom:0;left:0;right:0;height:200px;background:rgba(2,4,10,.95);border-top:1px solid rgba(41,224,255,.1);display:flex;flex-direction:column}
+#log-out{flex:1;overflow-y:auto;padding:8px 13px;font-family:monospace;font-size:11px;line-height:1.5}
+.lti{color:#7fe9c8}.lts{color:#00ffa3;font-weight:bold}.lte{color:#ff3b6b}.ltw{color:#ffb020}.ltd{color:#3a5870}.ltnt{color:#88aaee;font-style:italic}
+#log-in-row{display:flex;padding:5px 13px;border-top:1px solid rgba(41,224,255,.08);flex-shrink:0}
+#log-in-row span{color:#29e0ff;font-family:monospace;font-size:12px;margin-right:5px}
+#lcmd{flex:1;background:transparent;border:none;outline:none;color:#fff;font-family:monospace;font-size:12px}
+.hbtn{background:transparent;border:1px solid rgba(41,224,255,.2);border-radius:8px;color:#cce8ff;font-size:10px;padding:6px 12px;cursor:pointer;font-weight:bold;letter-spacing:.5px}
+.hbtn:hover:not(:disabled){background:rgba(41,224,255,.1);border-color:#29e0ff;color:#29e0ff}
+.hbtn:disabled{opacity:.2;cursor:not-allowed}
+.hbtn.g{color:#00ffa3;border-color:rgba(0,255,163,.2)}.hbtn.g:hover:not(:disabled){background:rgba(0,255,163,.08)}
+.hbtn.r{color:#ff3b6b;border-color:rgba(255,59,107,.2)}.hbtn.r:hover:not(:disabled){background:rgba(255,59,107,.07)}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div id="ld-title">CYBERWATCH</div>
+  <div id="ld-msg">Starting up...</div>
+  <div id="ld-error"></div>
+</div>
+
+<div id="app">
+  <div id="hud">
+    <div>
+      <div class="hl">CYBERWATCH</div>
+      <div style="font-size:11px;font-weight:bold;color:#29e0ff;letter-spacing:2px">2026-06-10-001</div>
+    </div>
+    <div class="hdiv"></div>
+    <div><div class="hl">DEFCON</div><div class="hv" id="dc-val" style="color:#00ffa3">5</div></div>
+    <div class="hdiv"></div>
+    <div><div class="hl">SCORE</div><div class="hv" id="score-v">0</div></div>
+    <div class="hdiv"></div>
+    <div><div class="hl">RESOLVED</div><div class="hv" id="res-v">0/0</div></div>
+    <div class="hdiv"></div>
+    <div><div class="hl">MISSION</div><div class="hv" id="miss-v">10:00</div></div>
+    <div style="flex:1"></div>
+    <div class="hl" style="flex-shrink:0">DUR MIN</div>
+    <input id="dur" type="number" min="10" max="30" value="10" style="width:40px;background:#0a1020;border:1px solid rgba(41,224,255,.2);color:#29e0ff;font-size:12px;padding:4px 6px;border-radius:6px;text-align:center">
+    <button class="hbtn g" id="btnStart" disabled>▶ DEPLOY</button>
+    <button class="hbtn" id="btnPause" disabled>❚❚</button>
+    <button class="hbtn r" id="btnAbort" disabled>✕ ABORT</button>
+  </div>
+
+  <div id="main">
+    <div id="sidebar">
+      <div class="sh">◆ OPS TEAMS</div>
+      <div id="team-dash">
+        <div class="tr" id="tr-network"></div>
+        <div class="tr" id="tr-security"></div>
+        <div class="tr" id="tr-identity"></div>
+      </div>
+      <div class="sh">◆ INCIDENTS <span id="ic-ct" style="color:#3a5870;font-family:Arial">0 ACTIVE</span></div>
+      <div id="inc-list"></div>
+    </div>
+
+    <div id="globe-area">
+      <canvas id="c3d"></canvas>
+      <div id="log-area">
+        <div id="log-out"></div>
+        <div id="log-in-row"><span>ops ▸</span><input id="lcmd" type="text" placeholder="type help" autocomplete="off"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="rp">
+  <div class="rp-hdr">
+    <button class="rp-close" onclick="closeRP()">✕ close</button>
+    <div class="rp-tag" id="rp-tag">INCIDENT</div>
+    <div class="rp-nm" id="rp-nm">-</div>
+    <div class="rp-sub" id="rp-sub">-</div>
+  </div>
+  <div id="rp-opts"></div>
+</div>
+
+<!-- LOCAL Three.js — put three.min.js in the same folder as this file -->
+<script src="three.min.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════
+// CYBERWATCH 2026-06-10-001
+// Baseline: 1 module, local three.js, visible errors
+// ═══════════════════════════════════════════════
+
+function showError(err) {
+  var el = document.getElementById('ld-error');
+  el.style.display = 'block';
+  el.textContent = 'JavaScript Error:\n' + err.message + '\n\nStack:\n' + (err.stack || 'no stack');
+  document.getElementById('ld-msg').textContent = 'Failed to start — see error below';
+  document.getElementById('ld-msg').style.color = '#ff3b6b';
+}
+
+window.onerror = function(msg, src, line, col, err) {
+  showError(err || {message: msg + ' (line ' + line + ')', stack: src + ':' + line});
+};
+
+try {
+
+// ── MODULE DATA (one module, Phishing) ──
+var MOD = {
+  icon: String.fromCodePoint(0x2709),
+  cat: 'Social Engineering',
+  scenarios: [
+    {
+      id: 'mass',
+      name: 'Mass Phishing Campaign',
+      short: 'Bulk emails impersonating HMRC sent to entire organisation',
+      escs: [
+        'Phishing emails in all inboxes — credentials at risk',
+        'Users clicking links — credential harvest underway',
+        'ADMIN CREDENTIALS STOLEN — full network access obtained'
+      ],
+      escR: 28,
+      uMin: 5000,
+      uMax: 60000,
+      spread: 'Phishing',
+      responses: [
+        {
+          id: 'gateway',
+          name: 'Block at Email Gateway',
+          team: 'network',
+          baseDuration: 18,
+          effectiveness: 80,
+          scorePts: 60,
+          ocrRef: '1.3.3(c)',
+          description: 'Blacklist the malicious domain at the email gateway. Stops new emails instantly.',
+          duringRisk: 'Users who already received emails remain at risk.',
+          narrative: [
+            'Network Team accessing email gateway console...',
+            'OCR 1.3.3(c): Phishing exploits human psychology, not software vulnerabilities.',
+            'Blacklisting domain at DNS level. Quarantining all matching emails.',
+            'Gateway active. Staff protected from further lures.'
+          ]
+        },
+        {
+          id: 'full',
+          name: 'Full Response: Block + Notify + MFA',
+          team: 'identity',
+          baseDuration: 55,
+          effectiveness: 100,
+          scorePts: 100,
+          ocrRef: '1.3.3(c)',
+          description: 'Block domain, alert all staff, force password resets, enable MFA.',
+          duringRisk: 'Attack continues for ~55s before full protection is active.',
+          narrative: [
+            'Identity Team coordinating full phishing response...',
+            'OCR 1.3.3(c): MFA defeats phishing even when passwords are stolen.',
+            'Broadcasting alert: DO NOT click links from invoice-247.xyz.',
+            'Password resets enforced. MFA enabled. Stolen credentials now useless.'
+          ]
+        }
+      ]
+    },
+    {
+      id: 'spear',
+      name: 'Spear Phishing',
+      short: 'Targeted emails using personal detail gathered via LinkedIn',
+      escs: [
+        'Targeted senior staff — credentials at risk',
+        'Executive has clicked — compromise likely',
+        'C-SUITE CREDENTIALS STOLEN'
+      ],
+      escR: 22,
+      uMin: 10,
+      uMax: 500,
+      spread: 'Phishing',
+      responses: [
+        {
+          id: 'alert',
+          name: 'Alert Targeted Individuals',
+          team: 'identity',
+          baseDuration: 12,
+          effectiveness: 85,
+          scorePts: 70,
+          ocrRef: '1.3.3(c)',
+          description: 'Contact all named targets directly via phone — warn before they click.',
+          duringRisk: 'Targets may have already acted before warning reaches them.',
+          narrative: [
+            'Spear phishing uses personal detail to appear convincing — OCR 1.3.3(c).',
+            'Calling all 12 identified targets. Accounts locked pending reset.'
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+// Register the module
+window.CW_MODULES = { Phishing: MOD };
+
+// ── CONSTANTS ──
+var TEAMS = {
+  network:  { id: 'network',  name: 'Network Team',  icon: '🔵', task: null },
+  security: { id: 'security', name: 'Security Ops',  icon: '🟢', task: null },
+  identity: { id: 'identity', name: 'Identity Team', icon: '🔴', task: null }
+};
+function tCol(id) {
+  return { network: '#29e0ff', security: '#00ffa3', identity: '#ff3b6b' }[id] || '#fff';
+}
+
+var CITIES = [
+  {c:'London', la:51.507, lo:-0.128}, {c:'New York', la:40.713, lo:-74.006},
+  {c:'Tokyo', la:35.676, lo:139.650}, {c:'Paris', la:48.856, lo:2.352},
+  {c:'Sydney', la:-33.868, lo:151.209}, {c:'Dubai', la:25.204, lo:55.271},
+  {c:'Singapore', la:1.352, lo:103.820}, {c:'Frankfurt', la:50.110, lo:8.682},
+  {c:'São Paulo', la:-23.550, lo:-46.633}, {c:'Toronto', la:43.653, lo:-79.383}
+];
+
+// ── GAME STATE ──
+var incidents = [], nextId = 1, score = 0, resolvedCount = 0, spawnedCount = 0;
+var simRunning = false, simPaused = false, simDur = 0, simT = 0;
+var nextSpawnAt = null, lastTick = performance.now();
+var defcon = 5, tasks = [], taskSeq = 1;
+
+// ── THREE.JS GLOBE ──
+var renderer, scene, camera, earthMesh, sunDir;
+var c3d = document.getElementById('c3d');
+var globeArea = document.getElementById('globe-area');
+
+function initGlobe() {
+  if (typeof THREE === 'undefined') {
+    log('WARNING: three.min.js not found — globe disabled. Put three.min.js in the same folder.', 'ltw');
+    c3d.style.display = 'none';
+    return;
+  }
+
+  var w = globeArea.clientWidth, h = globeArea.clientHeight - 200;
+  renderer = new THREE.WebGLRenderer({ canvas: c3d, antialias: true, alpha: true });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(42, w / h, 0.1, 100);
+  camera.position.set(0, 0, 3.2);
+
+  // Sphere geometry
+  var geo = new THREE.SphereGeometry(1, 64, 64);
+
+  // Try to load NASA textures; fall back to flat material
+  var mat;
+  try {
+    var loader = new THREE.TextureLoader();
+    loader.crossOrigin = 'anonymous';
+    var base = 'https://unpkg.com/three-globe/example/img/';
+    var dayTex = loader.load(base + 'earth-blue-marble.jpg');
+    var nightTex = loader.load(base + 'earth-night.jpg');
+    dayTex.encoding = THREE.sRGBEncoding;
+    nightTex.encoding = THREE.sRGBEncoding;
+    sunDir = new THREE.Vector3(1.0, 0.18, 0.35).normalize();
+
+    mat = new THREE.ShaderMaterial({
+      uniforms: {
+        uDay:   { value: dayTex },
+        uNight: { value: nightTex },
+        uSun:   { value: sunDir }
+      },
+      vertexShader: [
+        'varying vec2 vUv;',
+        'varying vec3 vN;',
+        'void main(){',
+        '  vUv = uv;',
+        '  vN = normalize(mat3(modelMatrix) * normal);',
+        '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);',
+        '}'
+      ].join('\n'),
+      fragmentShader: [
+        'precision mediump float;',
+        'uniform sampler2D uDay, uNight;',
+        'uniform vec3 uSun;',
+        'varying vec2 vUv;',
+        'varying vec3 vN;',
+        'void main(){',
+        '  float c = dot(vN, normalize(uSun));',
+        '  float d = smoothstep(-0.18, 0.28, c);',
+        '  vec3 day = texture2D(uDay, vUv).rgb;',
+        '  vec3 night = texture2D(uNight, vUv).rgb * 1.7;',
+        '  float tw = smoothstep(-0.18,0.05,c) * (1.0-smoothstep(0.05,0.30,c));',
+        '  gl_FragColor = vec4(mix(night,day,d) + vec3(0.35,0.18,0.08)*tw, 1.0);',
+        '}'
+      ].join('\n')
+    });
+  } catch(e) {
+    mat = new THREE.MeshPhongMaterial({ color: 0x2244aa, emissive: 0x001133 });
+    log('Shader load failed, using flat material: ' + e.message, 'ltw');
+  }
+
+  earthMesh = new THREE.Mesh(geo, mat);
+  scene.add(earthMesh);
+
+  // Ambient + directional light (for fallback material)
+  scene.add(new THREE.AmbientLight(0x404060, 0.5));
+  var dl = new THREE.DirectionalLight(0xffffff, 1.0);
+  dl.position.set(5, 3, 5);
+  scene.add(dl);
+
+  window.addEventListener('resize', onResize);
+  onResize();
+}
+
+function onResize() {
+  if (!renderer) return;
+  var w = globeArea.clientWidth;
+  var h = globeArea.clientHeight - 200;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+
+// ── TASK ENGINE ──
+function createTask(inc, resp) {
+  var v = 0.65 + Math.random() * 0.75;
+  return {
+    id: taskSeq++, incId: inc.id, team: resp.team,
+    responseName: resp.name, ocrRef: resp.ocrRef,
+    actualDur: Math.round(resp.baseDuration * v),
+    elapsed: 0, progress: 0, scorePts: resp.scorePts,
+    narrative: resp.narrative || [], narrativeIdx: 0,
+    compApplied: false
+  };
+}
+
+function assignTask(incId, respId) {
+  var inc = incidents.find(function(i){ return i.id === incId; });
+  if (!inc || inc.resolved) return;
+  var sc = inc._sc;
+  var resp = sc.responses.find(function(r){ return r.id === respId; });
+  if (!resp) return;
+  var team = TEAMS[resp.team];
+  if (team.task) {
+    if (!confirm(team.name + ' is busy on another task. Stop it and reassign?')) return;
+    completeOrPauseTask(team.task, false);
+  }
+  var task = createTask(inc, resp);
+  team.task = task; tasks.push(task);
+  inc.activeTaskId = task.id;
+  log(team.icon + ' ' + team.name + ' assigned to #' + inc.id + ' ' + inc.name + ' (~' + task.actualDur + 's)', 'lts');
+  closeRP(); renderTeams(); renderIncidents();
+}
+
+function completeOrPauseTask(task, resolved) {
+  var team = TEAMS[task.team]; team.task = null;
+  var idx = tasks.indexOf(task); if (idx > -1) tasks.splice(idx, 1);
+  if (resolved) {
+    score += task.scorePts;
+    document.getElementById('score-v').textContent = score;
+    log(team.icon + ' ' + team.name + ' DONE: ' + task.responseName + ' on #' + task.incId + ' (+' + task.scorePts + ' pts)', 'lts');
+  }
+}
+
+function updateTasks(dt) {
+  var done = [];
+  tasks.forEach(function(task) {
+    task.elapsed += dt;
+    task.progress = Math.min(100, (task.elapsed / task.actualDur) * 100);
+    // Complication at 50%
+    if (!task.compApplied && task.progress >= 50 && Math.random() < 0.2) {
+      task.compApplied = true;
+      var extra = Math.round(task.actualDur * 0.25);
+      task.actualDur += extra;
+      log('⚠ COMPLICATION on ' + task.responseName + ' — extended by ' + extra + 's', 'ltw');
+    }
+    // Narrative
+    if (task.narrative.length && task.narrativeIdx < task.narrative.length) {
+      var interval = task.actualDur / task.narrative.length;
+      if (task.elapsed >= task.narrativeIdx * interval) {
+        log('  ' + task.narrative[task.narrativeIdx], 'ltnt');
+        task.narrativeIdx++;
+      }
+    }
+    if (task.progress >= 100) done.push(task);
+  });
+  done.forEach(function(task) {
+    var inc = incidents.find(function(i){ return i.id === task.incId; });
+    completeOrPauseTask(task, true);
+    if (inc && !inc.resolved) {
+      inc.resolved = true; resolvedCount++;
+      updateResolved();
+      calcDefcon(); renderIncidents();
+    }
+  });
+  if (done.length) renderTeams();
+}
+
+// ── INCIDENT SPAWN ──
+function spawnIncident() {
+  var used = incidents.filter(function(i){ return !i.resolved; }).map(function(i){ return i.city; });
+  var cands = CITIES.filter(function(c){ return used.indexOf(c.c) === -1; });
+  if (!cands.length) cands = CITIES;
+  var city = cands[Math.floor(Math.random() * cands.length)];
+  var sc = MOD.scenarios[Math.floor(Math.random() * MOD.scenarios.length)];
+  var sev = Math.random() < 0.15 ? 2 : 1;
+  var users = Math.floor(sc.uMin + Math.random() * (sc.uMax - sc.uMin));
+  var inc = {
+    id: nextId++, type: 'Phishing', city: city.c, lat: city.la, lon: city.lo,
+    name: sc.name, sev: sev, users: users,
+    escAge: 0, escRate: sc.escR * (0.7 + Math.random() * 0.6),
+    resolved: false, activeTaskId: null, _sc: sc
+  };
+  incidents.push(inc); spawnedCount++;
+  log('⚠ #' + inc.id + ' ' + inc.name + ' · ' + city.c + ' · Sev ' + sev + ' · ~' + users.toLocaleString() + ' users', 'ltw');
+  calcDefcon(); renderIncidents();
+}
+
+function doEscalation(dt) {
+  var changed = false;
+  incidents.forEach(function(inc) {
+    if (inc.resolved || inc.activeTaskId) return;
+    inc.escAge += dt;
+    if (inc.escAge >= inc.escRate && inc.sev < 3) {
+      inc.sev++; inc.escAge = 0; changed = true;
+      log('🔴 #' + inc.id + ' escalated to Sev ' + inc.sev + ' — ' + inc._sc.escs[inc.sev - 1], 'lte');
+    }
+  });
+  if (changed) { calcDefcon(); renderIncidents(); }
+}
+
+function calcDefcon() {
+  var active = incidents.filter(function(i){ return !i.resolved; });
+  var s3 = active.filter(function(i){ return i.sev === 3; }).length;
+  var d = 5;
+  if (active.length >= 1) d = 4;
+  if (active.length >= 3 || s3 >= 1) d = 3;
+  if (active.length >= 5 || s3 >= 2) d = 2;
+  if (s3 >= 3 || active.length >= 8) d = 1;
+  defcon = d;
+  var cols = ['#00ffa3','#29e0ff','#ffe020','#ff8a20','#ff3b6b'];
+  var el = document.getElementById('dc-val');
+  el.textContent = d; el.style.color = cols[5 - d];
+}
+
+function updateResolved() {
+  document.getElementById('res-v').textContent = resolvedCount + '/' + spawnedCount;
+}
+
+// ── RENDER TEAMS ──
+function renderTeams() {
+  Object.values(TEAMS).forEach(function(team) {
+    var el = document.getElementById('tr-' + team.id); if (!el) return;
+    var t = team.task;
+    var html = '<div class="tr-h"><span class="tr-ico">' + team.icon + '</span><span class="tr-name">' + team.name + '</span>';
+    if (t) {
+      html += '<span class="tr-badge tb-busy">' + Math.round(t.progress) + '%</span></div>';
+      html += '<div class="tr-info">' + t.responseName + ' · #' + t.incId + '</div>';
+      html += '<div class="tr-bar-wrap"><div class="tr-bar" style="width:' + t.progress + '%;background:' + tCol(team.id) + '"></div></div>';
+      html += '<button class="sm-btn" onclick="pauseTeam(\'' + team.id + '\')">⏸ PAUSE</button>';
+    } else {
+      html += '<span class="tr-badge tb-free">FREE</span></div>';
+    }
+    el.innerHTML = html;
+  });
+}
+
+window.pauseTeam = function(teamId) {
+  var team = TEAMS[teamId]; if (!team.task) return;
+  log('⏸ ' + team.name + ' paused at ' + Math.round(team.task.progress) + '%', 'ltw');
+  completeOrPauseTask(team.task, false);
+  renderTeams(); renderIncidents();
+};
+
+// ── RENDER INCIDENTS ──
+function renderIncidents() {
+  var list = document.getElementById('inc-list');
+  document.getElementById('ic-ct').textContent = incidents.filter(function(i){ return !i.resolved; }).length + ' ACTIVE';
+  if (!incidents.length) {
+    list.innerHTML = '<div style="padding:14px;font-size:11px;color:#3a5870;text-align:center">Monitoring...</div>';
+    return;
+  }
+  list.innerHTML = incidents.slice().reverse().map(function(inc) {
+    var task = inc.activeTaskId ? tasks.find(function(t){ return t.id === inc.activeTaskId; }) : null;
+    var tte = !inc.resolved && inc.sev < 3 ? Math.max(0, inc.escRate - inc.escAge) : null;
+    var tteStr = inc.resolved ? '' : (inc.sev === 3 ? '<span style="color:#ff3b6b;font-weight:bold">⚠ SEV 3</span>' :
+      (tte !== null ? '<span style="color:' + (tte < 15 ? '#ff3b6b' : '#ffb020') + '">⏱ ' + Math.round(tte) + 's</span>' : ''));
+    var progHtml = task ? ('<div class="ic-prog-wrap"><div class="ic-prog" style="width:' + task.progress + '%;background:' + tCol(task.team) + '"></div></div>') : '';
+    var btn = (!inc.resolved && !task) ? '<div class="ic-resp-btn" onclick="openRP(' + inc.id + ')">◆ SEE RESPONSE OPTIONS</div>' : '';
+    return '<div class="ic ' + (inc.resolved ? 'done' : 's' + inc.sev) + '" onclick="if(!event.target.closest(\'.ic-resp-btn\'))openRP(' + inc.id + ')">' +
+      '<div class="ic-h"><span class="tr-ico">✉</span><span class="ic-nm">#' + inc.id + ' ' + inc.name + '</span><span class="ic-sev ' + (inc.resolved ? '' : 'sv' + inc.sev) + '">' + (inc.resolved ? '✓ DONE' : 'SEV ' + inc.sev) + '</span></div>' +
+      '<div class="ic-sub">' + inc.city + ' · ~' + inc.users.toLocaleString() + ' users</div>' +
+      (tteStr ? '<div class="ic-esc">' + tteStr + '</div>' : '') +
+      progHtml + btn + '</div>';
+  }).join('');
+}
+
+// ── RESPONSE PANEL ──
+var currentRPId = null;
+window.openRP = function(incId) {
+  var inc = incidents.find(function(i){ return i.id === incId; });
+  if (!inc || inc.resolved) return;
+  currentRPId = incId;
+  document.getElementById('rp-tag').textContent = 'INCIDENT #' + inc.id + ' · PHISHING';
+  document.getElementById('rp-nm').textContent = '✉ ' + inc.name;
+  document.getElementById('rp-sub').textContent = inc.city + ' · Sev ' + inc.sev + ' · ~' + inc.users.toLocaleString() + ' users';
+  var html = '<div class="rp-sec"><div class="rp-sh">ATTACK OVERVIEW</div>' +
+    '<div style="font-size:12px;color:#3a5870;line-height:1.5">' + inc._sc.short + '</div></div>' +
+    '<div class="rp-sec"><div class="rp-sh">RESPONSE OPTIONS</div>';
+  inc._sc.responses.forEach(function(resp) {
+    var team = TEAMS[resp.team];
+    var busy = team.task !== null;
+    html += '<div class="ro">' +
+      '<div class="ro-h"><span class="ro-t">' + team.icon + '</span><div style="flex:1"><div class="ro-nm">' + resp.name + '</div><div class="ro-tl">' + team.name + (busy ? ' — BUSY' : '') + '</div></div>' +
+      '<div class="ro-dur">~' + resp.baseDuration + 's</div></div>' +
+      '<div class="ro-desc">' + resp.description + '</div>' +
+      '<div class="ro-ocr">OCR ' + resp.ocrRef + ' · ' + resp.effectiveness + '% effective</div>' +
+      '<button class="ro-go" onclick="assignTask(' + incId + ',\'' + resp.id + '\')">▸ ASSIGN TO ' + team.name.toUpperCase() + '</button></div>';
+  });
+  html += '</div>';
+  document.getElementById('rp-opts').innerHTML = html;
+  document.getElementById('rp').classList.add('open');
+};
+window.closeRP = function() { document.getElementById('rp').classList.remove('open'); };
+
+// ── OPS LOG ──
+var logOut = document.getElementById('log-out');
+function log(msg, cls) {
+  var d = document.createElement('div'); d.className = cls || 'lti'; d.textContent = msg;
+  logOut.appendChild(d); logOut.scrollTop = logOut.scrollHeight;
+}
+
+var lcmd = document.getElementById('lcmd');
+lcmd.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  var v = lcmd.value.trim(); if (!v) return;
+  log('▸ ' + v, 'ltd'); lcmd.value = '';
+  var cmd = v.toLowerCase();
+  if (cmd === 'help') { log('Commands: scan, triage, teams, status', 'lti'); return; }
+  if (cmd === 'scan') {
+    var a = incidents.filter(function(i){ return !i.resolved; });
+    if (!a.length) { log('No active incidents.', 'lti'); return; }
+    a.forEach(function(i){ log('  #' + i.id + ' ' + i.name + ' · ' + i.city + ' · Sev ' + i.sev, i.sev === 3 ? 'lte' : 'ltw'); });
+    return;
+  }
+  if (cmd === 'teams') {
+    Object.values(TEAMS).forEach(function(t){ log('  ' + t.icon + ' ' + t.name + ': ' + (t.task ? 'BUSY — ' + t.task.responseName + ' (' + Math.round(t.task.progress) + '%)' : 'AVAILABLE'), t.task ? 'ltw' : 'lti'); });
+    return;
+  }
+  if (cmd === 'status') { log('Score: ' + score + ' | Resolved: ' + resolvedCount + '/' + spawnedCount + ' | DEFCON: ' + defcon, 'lti'); return; }
+  log('Unknown command. Type help.', 'ltd');
+});
+
+// ── SPAWN SCHEDULE ──
+function schedNext(first) {
+  var gaps = first ? [5, 8] : (simT < 60 ? [25, 40] : simT < 180 ? [14, 22] : [8, 15]);
+  nextSpawnAt = simT + gaps[0] + Math.random() * (gaps[1] - gaps[0]);
+}
+
+// ── START GAME ──
+function startGame() {
+  var mins = Math.max(10, Math.min(30, parseInt(document.getElementById('dur').value) || 10));
+  simDur = mins * 60; simRunning = true; simPaused = false; simT = 0;
+  score = 0; resolvedCount = 0; spawnedCount = 0; defcon = 5; nextId = 1;
+  incidents = []; tasks = []; taskSeq = 1;
+  Object.values(TEAMS).forEach(function(t){ t.task = null; });
+  document.getElementById('score-v').textContent = '0';
+  document.getElementById('btnPause').disabled = false;
+  document.getElementById('btnAbort').disabled = false;
+  document.getElementById('btnPause').textContent = '❚❚';
+  calcDefcon(); renderTeams(); renderIncidents(); updateResolved();
+  log('═══ CYBERWATCH ACTIVE ═══', 'lts');
+  log(mins + '-min mission · 1 module loaded · OCR H446 aligned', 'lti');
+  log('Click incident cards to respond. Type help for commands.', 'lti');
+  schedNext(true); lastTick = performance.now();
+}
+
+document.getElementById('btnStart').addEventListener('click', startGame);
+document.getElementById('btnPause').addEventListener('click', function() {
+  if (!simRunning) return;
+  simPaused = !simPaused;
+  document.getElementById('btnPause').textContent = simPaused ? '▶' : '❚❚';
+  if (!simPaused) lastTick = performance.now();
+});
+document.getElementById('btnAbort').addEventListener('click', function() {
+  simRunning = false;
+  document.getElementById('btnPause').disabled = true;
+  log('[ ABORTED ] Score: ' + score + ' | Resolved: ' + resolvedCount + '/' + spawnedCount, 'lte');
+});
+
+// ── MAIN LOOP ──
+var earthRot = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  var now = performance.now();
+  var dt = Math.min(0.05, (now - lastTick) / 1000);
+  lastTick = now;
+
+  // Rotate globe
+  if (renderer && earthMesh) {
+    earthRot += dt * 0.08;
+    earthMesh.rotation.y = earthRot;
+    renderer.render(scene, camera);
+  }
+
+  if (!simRunning || simPaused) return;
+
+  simT += dt;
+  var left = Math.max(0, simDur - simT);
+  var mm = Math.floor(left / 60), ss = Math.floor(left % 60);
+  document.getElementById('miss-v').textContent = (mm < 10 ? '0' : '') + mm + ':' + (ss < 10 ? '0' : '') + ss;
+
+  if (nextSpawnAt !== null && simT >= nextSpawnAt) { spawnIncident(); schedNext(false); }
+
+  updateTasks(dt);
+  doEscalation(dt);
+
+  if (simT >= simDur) {
+    simRunning = false;
+    document.getElementById('btnPause').disabled = true;
+    log('═══ MISSION COMPLETE ═══ Score: ' + score + ' | Resolved: ' + resolvedCount + '/' + spawnedCount, 'lts');
+  }
+}
+
+// ── INIT ──
+document.getElementById('ld-msg').textContent = 'Starting globe...';
+initGlobe();
+
+document.getElementById('ld-msg').textContent = 'Ready.';
+document.getElementById('loading').style.display = 'none';
+document.getElementById('app').style.display = 'block';
+
+document.getElementById('btnStart').disabled = false;
+
+renderTeams();
+renderIncidents();
+
+log('CYBERWATCH 2026-06-10-001 ready.', 'lts');
+log('1 module loaded: Phishing (OCR 1.3.3c)', 'lti');
+if (typeof THREE === 'undefined') {
+  log('three.min.js not found — globe disabled. Place three.min.js next to this HTML file.', 'ltw');
+} else {
+  log('Three.js loaded. Globe active.', 'lti');
+}
+log('Press DEPLOY to start. Type help for commands.', 'ltd');
+
+animate();
+
+} catch(err) {
+  showError(err);
+}
+</script>
+</body>
+</html>
