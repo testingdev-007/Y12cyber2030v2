@@ -3,1105 +3,988 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CYBERWATCH 2026-06-10-003</title>
+<title>CYBERWATCH 2026-06-10-004</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:#02040a;color:#cce8ff;font-family:Arial,sans-serif;overflow:hidden}
-
 /* LAYOUT */
-#hud{height:50px;background:#040810;border-bottom:1px solid rgba(41,224,255,.15);
-  display:flex;align-items:center;gap:10px;padding:0 12px;flex-shrink:0}
-#shell{display:flex;height:calc(100vh - 50px);overflow:hidden}
-#sidebar{width:294px;flex-shrink:0;border-right:1px solid rgba(41,224,255,.12);
-  display:flex;flex-direction:column;background:#030609;overflow:hidden}
+#hud{height:48px;background:#040810;border-bottom:1px solid rgba(41,224,255,.14);
+  display:flex;align-items:center;gap:9px;padding:0 11px;flex-shrink:0;z-index:10;position:relative}
+#shell{display:flex;height:calc(100vh - 48px)}
+#sidebar{width:296px;flex-shrink:0;border-right:1px solid rgba(41,224,255,.12);
+  display:flex;flex-direction:column;background:#030609;overflow:hidden;position:relative;z-index:5}
 #right{flex:1;display:flex;flex-direction:column;min-width:0}
-#globe-wrap{flex:1;position:relative;overflow:hidden;background:#01020a;min-height:0}
-#c3d{position:absolute;inset:0;display:block}
+#globe-wrap{flex:1;min-height:0;overflow:hidden;background:#01020a;position:relative;
+  display:flex;align-items:center;justify-content:center}
+#c3d{display:block;position:absolute;inset:0}
 #labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-#log-area{height:160px;flex-shrink:0;border-top:1px solid rgba(41,224,255,.1);
+#log-area{height:155px;flex-shrink:0;border-top:1px solid rgba(41,224,255,.1);
   display:flex;flex-direction:column;background:#030609}
-
 /* HUD */
-.hv{font-size:15px;font-weight:bold;line-height:1}
+.hv{font-size:14px;font-weight:bold;line-height:1}
 .hl{font-size:7px;color:#3a5870;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px}
-.hdiv{width:1px;height:28px;background:rgba(41,224,255,.1);flex-shrink:0}
-.hbtn{background:transparent;border:1px solid rgba(41,224,255,.2);border-radius:7px;
-  color:#cce8ff;font-size:10px;padding:5px 10px;cursor:pointer;font-weight:bold;white-space:nowrap}
+.hdiv{width:1px;height:26px;background:rgba(41,224,255,.1);flex-shrink:0}
+.hbtn{background:transparent;border:1px solid rgba(41,224,255,.2);border-radius:6px;
+  color:#cce8ff;font-size:9px;padding:5px 9px;cursor:pointer;font-weight:bold}
 .hbtn:hover:not(:disabled){background:rgba(41,224,255,.1);border-color:#29e0ff;color:#29e0ff}
 .hbtn:disabled{opacity:.2;cursor:not-allowed}
 .hbtn.g{color:#00ffa3;border-color:rgba(0,255,163,.25)}.hbtn.g:hover:not(:disabled){background:rgba(0,255,163,.07)}
-.hbtn.r{color:#ff3b6b;border-color:rgba(255,59,107,.25)}.hbtn.r:hover:not(:disabled){background:rgba(255,59,107,.07)}
-
-/* SIDEBAR */
-.sb-h{padding:7px 11px;font-size:8px;letter-spacing:2px;color:#29e0ff;
+.hbtn.r{color:#ff3b6b;border-color:rgba(255,59,107,.25)}
+/* SIDEBAR SECTIONS */
+.sb-hdr{padding:7px 10px;font-size:7px;letter-spacing:2px;color:#29e0ff;
   border-bottom:1px solid rgba(41,224,255,.08);flex-shrink:0;
   display:flex;justify-content:space-between;align-items:center}
-.sb-ct{color:#3a5870;font-size:9px;letter-spacing:0;font-weight:normal}
-
+.sb-ct{font-size:9px;color:#3a5870;letter-spacing:0;font-weight:normal}
 /* TEAMS */
-#team-dash{flex-shrink:0;border-bottom:1px solid rgba(41,224,255,.08)}
-.tr{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.03)}
-.tr-h{display:flex;align-items:center;gap:6px}
-.tr-ico{font-size:12px;flex-shrink:0}.tr-name{font-size:11px;font-weight:bold;flex:1;color:#ddeeff}
-.tb{font-size:8px;padding:2px 6px;border-radius:20px;font-weight:bold;flex-shrink:0}
+#team-dash{flex-shrink:0}
+.tr{padding:5px 9px;border-bottom:1px solid rgba(255,255,255,.03)}
+.tr-h{display:flex;align-items:center;gap:5px}
+.tr-ico{font-size:12px}.tr-nm{font-size:11px;font-weight:bold;flex:1;color:#ddeeff}
+.tb{font-size:7px;padding:2px 5px;border-radius:20px;font-weight:bold}
 .tb-free{background:rgba(0,255,163,.1);color:#00ffa3}.tb-busy{background:rgba(255,176,32,.1);color:#ffb020}
-.tr-task{font-size:10px;color:#3a5870;margin-top:3px}
-.tr-prog-row{display:flex;align-items:center;gap:6px;margin-top:3px}
-.tr-bar-w{flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
-.tr-bar{height:100%;border-radius:2px;transition:width .35s}
-.tr-eta{font-size:10px;font-weight:bold;flex-shrink:0;min-width:26px;text-align:right}
-.sm-btn{font-size:9px;font-weight:bold;padding:2px 7px;border-radius:4px;border:1px solid;
-  cursor:pointer;margin-top:4px;background:transparent;letter-spacing:.3px}
-.btn-pause{color:#ffb020;border-color:rgba(255,176,32,.35)}.btn-pause:hover{background:rgba(255,176,32,.1)}
-.btn-resume{color:#00ffa3;border-color:rgba(0,255,163,.3)}.btn-resume:hover{background:rgba(0,255,163,.07)}
-
-/* HORIZON SCANNER */
-#hz-section{flex-shrink:0}
-.hz-h{padding:7px 11px;font-size:8px;letter-spacing:2px;color:#ffb020;
-  border-bottom:1px solid rgba(255,176,32,.12);border-top:1px solid rgba(255,176,32,.08);
-  background:rgba(255,176,32,.025);display:flex;justify-content:space-between;align-items:center}
-#hz-list{}
-.hz-empty{padding:7px 11px;font-size:10px;color:#3a5870;font-style:italic}
-.hz-item{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.025);
-  border-left:3px solid #ffb020;background:rgba(255,176,32,.02)}
-.hz-item.hz-hot{border-left-color:#ff3b6b;background:rgba(255,59,107,.04);animation:hzpulse 1s infinite}
-@keyframes hzpulse{0%,100%{background:rgba(255,59,107,.03)}50%{background:rgba(255,59,107,.08)}}
-.hz-row1{display:flex;align-items:center;gap:5px}
-.hz-ico{font-size:12px}.hz-nm{font-size:11px;font-weight:bold;flex:1;color:#ffe4aa}
-.hz-t{font-family:monospace;font-size:11px;font-weight:bold}
-.hz-t.hot{color:#ff3b6b}.hz-t.warm{color:#ffb020}.hz-t.cool{color:#3a5870}
-.hz-mode{font-size:9px;margin-top:2px}
-.hz-mode.prev{color:#00ffa3}.hz-mode.prep{color:#9b6dff}
-.hz-bar-w{height:2px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;margin:4px 0}
-.hz-bar{height:100%;background:#ffb020;border-radius:2px}
-.hz-acts{display:flex;gap:4px;margin-top:4px}
-.hz-preempt{font-size:9px;font-weight:bold;padding:3px 8px;border-radius:5px;
-  background:rgba(255,176,32,.15);color:#ffb020;border:1px solid rgba(255,176,32,.4);cursor:pointer}
-.hz-preempt:hover{background:rgba(255,176,32,.28)}
-.hz-preempt:disabled{opacity:.4;cursor:not-allowed}
-.hz-skip{font-size:9px;padding:3px 7px;border-radius:5px;
-  background:transparent;color:#3a5870;border:1px solid rgba(255,255,255,.1);cursor:pointer}
-.hz-skip:hover{color:#aaa;border-color:rgba(255,255,255,.25)}
-
+.tr-task{font-size:9px;color:#3a5870;margin-top:2px}
+.tr-prow{display:flex;align-items:center;gap:5px;margin-top:2px}
+.tr-bw{flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.tr-b{height:100%;border-radius:2px;transition:width .3s}
+.tr-eta{font-size:9px;font-weight:bold;min-width:24px;text-align:right}
+.sm-btn{font-size:8px;font-weight:bold;padding:2px 6px;border-radius:4px;border:1px solid;
+  cursor:pointer;margin-top:3px;background:transparent}
+.sbp{color:#ffb020;border-color:rgba(255,176,32,.3)}.sbp:hover{background:rgba(255,176,32,.08)}
+.sbr{color:#00ffa3;border-color:rgba(0,255,163,.3)}.sbr:hover{background:rgba(0,255,163,.06)}
+/* HORIZON */
+#hz-wrap{flex-shrink:0;border-bottom:1px solid rgba(255,176,32,.12)}
+.hz-hdr{padding:6px 10px;font-size:7px;letter-spacing:2px;color:#ffb020;border-bottom:1px solid rgba(255,176,32,.1);background:rgba(255,176,32,.02);display:flex;justify-content:space-between}
+#hz-list .hz-empty{padding:6px 10px;font-size:9px;color:#3a5870;font-style:italic}
+.hz-row{padding:5px 9px;border-bottom:1px solid rgba(255,255,255,.025);border-left:2px solid #ffb020;cursor:pointer;transition:background .12s}
+.hz-row:hover{background:rgba(255,176,32,.06)}
+.hz-row.hot{border-left-color:#ff3b6b;animation:hzp .9s infinite}
+@keyframes hzp{0%,100%{background:rgba(255,59,107,.02)}50%{background:rgba(255,59,107,.06)}}
+.hz-row-top{display:flex;align-items:center;gap:5px}
+.hz-ico{font-size:11px}.hz-nm{font-size:11px;font-weight:bold;flex:1;color:#ffe4aa}
+.hz-t{font-family:monospace;font-size:10px;font-weight:bold}
+.hz-city{font-size:8px;color:#3a5870;margin-top:1px}
+.hz-bw{height:2px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden;margin-top:3px}
+.hz-b{height:100%;background:#ffb020;border-radius:2px}
 /* INCIDENTS */
-.sb-h-inc{padding:7px 11px;font-size:8px;letter-spacing:2px;color:#29e0ff;
-  border-top:1px solid rgba(41,224,255,.08);border-bottom:1px solid rgba(41,224,255,.08);
-  flex-shrink:0;display:flex;justify-content:space-between}
-#inc-scroll{overflow-y:auto;flex:1 1 0;min-height:0}
-.ic{border-radius:7px;margin:4px 5px;cursor:pointer;overflow:hidden;
+#inc-list-wrap{flex:1;overflow-y:auto;min-height:0}
+.ic{border-radius:6px;margin:3px 4px;cursor:pointer;overflow:hidden;
   border:1px solid rgba(255,255,255,.04);border-left:3px solid #3a5870;
-  background:rgba(255,255,255,.015);transition:all .13s}
+  background:rgba(255,255,255,.013);transition:all .12s}
 .ic:hover{background:rgba(41,224,255,.04);transform:translateX(1px)}
 .ic.s1{border-left-color:#00ffa3}.ic.s2{border-left-color:#ffb020}
-.ic.s3{border-left-color:#ff3b6b;animation:s3p 1.5s ease-in-out infinite}
-@keyframes s3p{0%,100%{border-left-color:#ff3b6b}50%{border-left-color:#ff8888}}
-.ic.prepared{border-top:1px solid rgba(155,109,255,.3)}
-.ic.ic-done{opacity:.2;pointer-events:none;animation:none}
-.ic-h{display:flex;align-items:center;gap:6px;padding:6px 8px 2px}
-.ic-nm{font-size:12px;font-weight:bold;flex:1;color:#e4f4ff;line-height:1.2}
-.ic-sev{font-size:7px;padding:2px 5px;border-radius:20px;font-weight:bold;flex-shrink:0}
+.ic.s3{border-left-color:#ff3b6b;animation:s3p 1.4s ease-in-out infinite}
+@keyframes s3p{0%,100%{border-left-color:#ff3b6b}50%{border-left-color:#ff9999}}
+.ic.done{opacity:.2;pointer-events:none;animation:none}
+.ic-h{display:flex;align-items:center;gap:5px;padding:5px 8px 2px}
+.ic-ico{font-size:12px}.ic-nm{font-size:11px;font-weight:bold;flex:1;color:#e4f4ff;line-height:1.2}
+.ic-sev{font-size:7px;padding:2px 5px;border-radius:20px;font-weight:bold}
 .sv1{background:rgba(0,255,163,.1);color:#00ffa3}.sv2{background:rgba(255,176,32,.12);color:#ffb020}
 .sv3{background:rgba(255,59,107,.14);color:#ff3b6b}.svd{background:rgba(50,60,80,.15);color:#3a5870}
-.ic-loc{font-size:9px;color:#3a5870;padding:0 8px 3px}
-.ic-prepared-badge{font-size:9px;color:#9b6dff;padding:0 8px 2px;font-weight:bold}
-/* unassigned pulse */
-.ic-unassigned{padding:3px 8px 4px;font-size:9px;color:#ff8a20;font-weight:bold;letter-spacing:.5px;display:flex;align-items:center;gap:4px}
-.ic-unassigned span{animation:bdot .9s infinite}.ic-unassigned span::before{content:'●';font-size:7px}
-@keyframes bdot{0%,100%{opacity:1}50%{opacity:.1}}
-/* in-progress task strip */
-.ic-task{padding:3px 8px 2px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04)}
-.ic-task-row{display:flex;align-items:center;gap:5px}
-.ic-task-n{font-size:10px;font-weight:bold;flex:1;color:#aaccee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ic-task-pct{font-size:10px;font-weight:bold;min-width:26px;text-align:right}
-.ic-task-eta{font-size:9px;color:#3a5870;min-width:28px;text-align:right}
-.ic-task-bar-w{height:2px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;margin:2px 0 3px}
-.ic-task-bar{height:100%;border-radius:2px;transition:width .35s}
-/* esc bar */
-.ic-esc-row{display:flex;align-items:center;gap:5px;padding:2px 8px 5px}
-.ic-esc-w{flex:1;height:2px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden}
-.ic-esc-b{height:100%;border-radius:2px}
-.ic-esc-t{font-size:9px;min-width:56px;text-align:right}
-/* respond btn */
-.ic-rbtn{margin:0 8px 6px;padding:5px 8px;background:rgba(41,224,255,.06);
-  border:1px solid rgba(41,224,255,.2);border-radius:6px;cursor:pointer;
-  font-size:10px;font-weight:bold;color:#29e0ff;text-align:center;transition:all .13s}
-.ic-rbtn:hover{background:rgba(41,224,255,.14);box-shadow:0 0 8px rgba(41,224,255,.2)}
-
+.ic-sub{font-size:8px;color:#3a5870;padding:0 7px 2px}
+.ic-ua{font-size:8px;color:#ff8a20;font-weight:bold;padding:0 7px 3px;display:flex;align-items:center;gap:3px}
+.ic-ua::before{content:'●';animation:bd .9s infinite;font-size:6px}
+@keyframes bd{0%,100%{opacity:1}50%{opacity:.1}}
+.ic-tk{padding:2px 7px 3px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04)}
+.ic-tk-row{display:flex;align-items:center;gap:4px}
+.ic-tk-n{font-size:9px;flex:1;font-weight:bold;color:#aaccee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ic-tk-pct{font-size:9px;font-weight:bold;min-width:22px;text-align:right}
+.ic-tk-eta{font-size:8px;color:#3a5870;min-width:26px;text-align:right}
+.ic-tk-bw{height:2px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden;margin:2px 0}
+.ic-tk-b{height:100%;border-radius:2px}
+.ic-esc{display:flex;align-items:center;gap:4px;padding:1px 7px 4px}
+.ic-esc-bw{flex:1;height:2px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden}
+.ic-esc-b{height:100%;border-radius:2px}.ic-esc-t{font-size:8px;min-width:54px;text-align:right}
+/* DETAIL SCREEN (replaces inc list) */
+#detail{display:none;position:absolute;inset:0;background:#030609;z-index:10;overflow-y:auto;flex-direction:column}
+#detail.show{display:flex}
+.det-back{padding:8px 10px;border-bottom:1px solid rgba(41,224,255,.1);display:flex;align-items:center;gap:8px;flex-shrink:0;cursor:pointer;background:#040810}
+.det-back:hover{background:rgba(41,224,255,.04)}
+.det-back-arrow{color:#29e0ff;font-size:13px}.det-back-txt{font-size:9px;color:#3a5870;letter-spacing:1px;text-transform:uppercase}
+.det-hdr{padding:11px 11px 8px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0}
+.det-type{font-size:7px;letter-spacing:2px;color:#9b6dff;margin-bottom:2px}
+.det-nm{font-size:14px;font-weight:bold;margin-bottom:2px}
+.det-sub{font-size:9px;color:#3a5870}
+.det-sec{padding:8px 11px;border-bottom:1px solid rgba(255,255,255,.04)}
+.det-sh{font-size:7px;letter-spacing:2px;color:#9b6dff;margin-bottom:6px;text-transform:uppercase}
+/* Priority meter */
+.priority-bar{height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-bottom:5px}
+.priority-fill{height:100%;border-radius:3px;transition:width .3s}
+.priority-rows{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.pr-row{display:flex;flex-direction:column;padding:5px 7px;background:rgba(255,255,255,.02);border-radius:5px}
+.pr-lbl{font-size:7px;color:#3a5870;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.pr-val{font-size:11px;font-weight:bold}
+/* Educational brief */
+.det-brief{font-size:11px;color:#aaccee;line-height:1.6;margin-bottom:5px}
+.det-ocr{display:inline-block;font-size:9px;color:#9b6dff;font-weight:bold;padding:2px 7px;background:rgba(155,109,255,.1);border-radius:4px;border:1px solid rgba(155,109,255,.2)}
+/* Consequence */
+.det-con{background:rgba(255,59,107,.04);border:1px solid rgba(255,59,107,.12);border-radius:6px;padding:8px 10px;font-size:10px;line-height:1.6}
+.det-con-hd{font-weight:bold;color:#ff8a20;margin-bottom:4px}
+/* Action buttons */
+.det-actions{display:flex;flex-direction:column;gap:6px;padding:8px 11px}
+.det-btn{padding:9px 12px;border-radius:7px;font-weight:bold;font-size:11px;cursor:pointer;border:none;text-align:left;transition:all .14s}
+.det-btn-assign{background:linear-gradient(90deg,#29e0ff,#9b6dff);color:#02040a}
+.det-btn-assign:hover{filter:brightness(1.1)}
+.det-btn-busy{background:rgba(255,59,107,.12);color:#ff3b6b;border:1px solid rgba(255,59,107,.25)!important}
+.det-btn-busy:hover{background:rgba(255,59,107,.22)}
+.det-btn-preempt{background:rgba(255,176,32,.12);color:#ffb020;border:1px solid rgba(255,176,32,.3)!important}
+.det-btn-preempt:hover{background:rgba(255,176,32,.22)}
+.det-btn-research{background:rgba(41,224,255,.08);color:#29e0ff;border:1px solid rgba(41,224,255,.25)!important}
+.det-btn-research:hover{background:rgba(41,224,255,.16)}
+.det-btn-skip{background:transparent;color:#3a5870;border:1px solid rgba(255,255,255,.1)!important;font-size:10px}
+.det-btn-skip:hover{color:#aaa;border-color:rgba(255,255,255,.2)!important}
+.det-btn-pause{background:transparent;color:#ffb020;border:1px solid rgba(255,176,32,.25)!important;font-size:10px}
+.det-impact{padding:5px 7px;background:rgba(255,255,255,.02);border-radius:5px;margin-top:-2px}
+.det-impact-row{display:flex;justify-content:space-between;font-size:9px;padding:1px 0}
+.det-impact-row span:first-child{color:#3a5870}
 /* GLOBE MARKERS */
-.inc-marker{position:absolute;transform:translate(-50%,-50%);pointer-events:none;
-  width:14px;height:14px;border-radius:50%;border:2px solid #00ffa3;
-  background:rgba(0,255,163,.25)}
-.inc-marker::after{content:'';position:absolute;inset:-5px;border-radius:50%;
-  border:1px solid;border-color:inherit;animation:mring 1.8s ease-out infinite}
-@keyframes mring{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.8);opacity:0}}
-.inc-marker.sev2{border-color:#ffb020;background:rgba(255,176,32,.25);animation-duration:1.3s}
-.inc-marker.sev3{border-color:#ff3b6b;background:rgba(255,59,107,.3)}
-.inc-marker.sev3::after{animation-duration:.8s}
-
-/* RESPONSE PANEL */
-#rp{position:fixed;top:50px;right:-400px;width:380px;bottom:0;z-index:30;
-  background:#030b15;border-left:1px solid rgba(41,224,255,.14);
-  transition:right .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column}
-#rp.open{right:0}
-.rp-hdr{padding:11px 13px;border-bottom:1px solid rgba(41,224,255,.1);position:sticky;top:0;background:#030b15;z-index:1}
-.rp-close{float:right;background:transparent;border:1px solid rgba(255,255,255,.1);
-  color:#3a5870;border-radius:5px;font-size:9px;padding:3px 7px;cursor:pointer}
-.rp-close:hover{color:#fff}
-.rp-tag{font-size:7px;letter-spacing:2px;color:#9b6dff;margin-bottom:2px}
-.rp-nm{font-size:14px;font-weight:bold;margin-bottom:2px}.rp-sub{font-size:10px;color:#3a5870}
-.rp-sec{padding:9px 13px;border-bottom:1px solid rgba(255,255,255,.04)}
-.rp-sh{font-size:7px;letter-spacing:2px;color:#9b6dff;margin-bottom:7px;text-transform:uppercase}
-/* educational brief */
-.rp-brief{font-size:12px;color:#aaccee;line-height:1.6;margin-bottom:6px}
-.rp-ocr-ref{font-size:9px;color:#9b6dff;font-weight:bold;margin-top:4px}
-/* consequence */
-.rp-con{background:rgba(255,59,107,.04);border:1px solid rgba(255,59,107,.14);
-  border-radius:7px;padding:9px 11px;margin-bottom:9px;font-size:11px;line-height:1.6}
-.rp-con-hd{font-weight:bold;color:#ff8a20;margin-bottom:5px}
-/* response options */
-.ro{border:1px solid rgba(255,255,255,.07);border-radius:8px;margin-bottom:9px;
-  background:rgba(255,255,255,.02);cursor:pointer;transition:border-color .13s;overflow:hidden}
-.ro:hover{border-color:rgba(41,224,255,.25)}
-.ro-h{display:flex;align-items:center;gap:7px;padding:9px 11px 5px}
-.ro-tm{font-size:13px;flex-shrink:0}.ro-info{flex:1}
-.ro-nm{font-size:12px;font-weight:bold;color:#e8f5ff}.ro-tl{font-size:10px;color:#3a5870}
-.ro-dur-b{text-align:right;flex-shrink:0}
-.ro-dur{font-size:13px;font-weight:bold}.ro-dur-l{font-size:8px;color:#3a5870;letter-spacing:1px}
-.ro-desc{padding:0 11px 5px;font-size:11px;color:#3a5870;line-height:1.5}
-.ro-impact{padding:5px 11px 6px;background:rgba(255,255,255,.015);border-top:1px solid rgba(255,255,255,.04)}
-.ro-imp-row{display:flex;justify-content:space-between;font-size:10px;margin-bottom:1px}
-.ro-imp-row span:first-child{color:#3a5870}.ro-risk{padding:0 11px 6px;font-size:10px;color:rgba(255,176,32,.7);font-style:italic}
-.ro-tags{display:flex;gap:4px;flex-wrap:wrap;padding:4px 11px 7px}
-.tag{padding:2px 6px;border-radius:20px;font-size:8px;font-weight:bold}
-.tg-ok{background:rgba(0,255,163,.1);color:#00ffa3;border:1px solid rgba(0,255,163,.2)}
-.tg-warn{background:rgba(255,176,32,.1);color:#ffb020;border:1px solid rgba(255,176,32,.2)}
-.tg-ocr{background:rgba(155,109,255,.1);color:#9b6dff;border:1px solid rgba(155,109,255,.2)}
-.tg-busy{background:rgba(255,59,107,.1);color:#ff3b6b;border:1px solid rgba(255,59,107,.2)}
-.tg-prep{background:rgba(155,109,255,.12);color:#bb88ff;border:1px solid rgba(155,109,255,.25)}
-.ro-btn{display:block;width:calc(100% - 22px);margin:0 11px 11px;padding:8px;
-  border:none;border-radius:7px;font-weight:bold;font-size:12px;cursor:pointer;letter-spacing:.5px}
-.go-go{background:linear-gradient(90deg,#29e0ff,#9b6dff);color:#02040a}
-.go-go:hover{filter:brightness(1.1)}
-.go-busy{background:rgba(255,59,107,.14);color:#ff3b6b;border:1px solid rgba(255,59,107,.28)!important;cursor:pointer}
-.go-busy:hover{background:rgba(255,59,107,.25)}
-
-/* RESEARCH PROMPT in log */
-.log-research{background:rgba(41,224,255,.04);border:1px solid rgba(41,224,255,.2);
-  border-radius:8px;padding:9px 11px;margin:4px 0;display:block}
-.log-research-hd{font-size:11px;font-weight:bold;color:#29e0ff;margin-bottom:3px}
-.log-research-body{font-size:10px;color:#aaccee;line-height:1.5;margin-bottom:7px}
-.log-research-acts{display:flex;gap:6px}
-.btn-research{font-size:10px;font-weight:bold;padding:4px 10px;border-radius:5px;
-  background:rgba(41,224,255,.15);color:#29e0ff;border:1px solid rgba(41,224,255,.4);cursor:pointer}
-.btn-research:hover{background:rgba(41,224,255,.28)}
-.btn-skip-research{font-size:10px;padding:4px 10px;border-radius:5px;
-  background:transparent;color:#3a5870;border:1px solid rgba(255,255,255,.1);cursor:pointer}
-.btn-skip-research:hover{color:#aaa}
-
+.inc-lbl{position:absolute;transform:translate(-50%,-200%);pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;transition:opacity .3s}
+.lbl-dot{width:12px;height:12px;border-radius:50%;border:2px solid #00ffa3;background:rgba(0,255,163,.25);position:relative}
+.lbl-dot::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:1.5px solid #00ffa3;animation:pr 1.8s ease-out infinite}
+@keyframes pr{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.8);opacity:0}}
+.lbl-dot.s2{border-color:#ffb020;background:rgba(255,176,32,.25)}.lbl-dot.s2::after{border-color:#ffb020;animation-duration:1.3s}
+.lbl-dot.s3{border-color:#ff3b6b;background:rgba(255,59,107,.3)}.lbl-dot.s3::after{border-color:#ff3b6b;animation-duration:.8s}
+.lbl-text{font-size:9px;font-weight:bold;padding:1px 5px;border-radius:3px;background:rgba(2,4,10,.8);margin-top:2px;white-space:nowrap;border:1px solid rgba(41,224,255,.2);color:#cce8ff}
+/* PREEMPT DIALOG */
+#pdlg{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.6);align-items:center;justify-content:center}
+#pdlg.show{display:flex}
+.pdlg-box{background:#040c16;border:1px solid rgba(41,224,255,.2);border-radius:10px;padding:18px 20px;max-width:360px;width:90%}
+.pdlg-h{font-size:12px;font-weight:bold;color:#ffb020;margin-bottom:7px}
+.pdlg-b{font-size:11px;color:#aaccee;line-height:1.6;margin-bottom:12px}
+.pdlg-btns{display:flex;gap:8px}
 /* LOG */
-.log-hdr{padding:5px 11px;border-bottom:1px solid rgba(41,224,255,.08);flex-shrink:0;
-  display:flex;justify-content:space-between;font-size:8px;letter-spacing:1px;color:#29e0ff}
-#log-out{flex:1;overflow-y:auto;padding:5px 11px;font-size:11px;line-height:1.5;min-height:0}
+.log-hdr{padding:4px 10px;border-bottom:1px solid rgba(41,224,255,.07);flex-shrink:0;display:flex;justify-content:space-between;font-size:7px;letter-spacing:1px;color:#29e0ff}
+#log-out{flex:1;overflow-y:auto;padding:4px 10px;font-size:10px;line-height:1.5;min-height:0}
 .lts{color:#00ffa3;font-weight:bold;display:block}.lte{color:#ff3b6b;display:block}
 .ltw{color:#ffb020;display:block}.lti{color:#7fe9c8;display:block}
 .ltnt{color:#88aaee;font-style:italic;display:block}.ltd{color:#3a5870;display:block}
-.lth{color:#29e0ff;font-weight:bold;display:block;border-top:1px solid rgba(41,224,255,.08);margin-top:3px;padding-top:3px}
-#log-in{display:flex;padding:4px 11px;border-top:1px solid rgba(41,224,255,.07);flex-shrink:0}
-#lprompt{color:#29e0ff;font-size:11px;margin-right:5px;user-select:none}
-#lcmd{flex:1;background:transparent;border:none;outline:none;color:#fff;font-size:11px}
-
-/* PREEMPT DIALOG */
-#pdlg{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.65);
-  align-items:center;justify-content:center}
-#pdlg.show{display:flex}
-.pdlg-box{background:#040c16;border:1px solid rgba(41,224,255,.2);border-radius:12px;
-  padding:20px 22px;max-width:380px;width:100%}
-.pdlg-h{font-size:13px;font-weight:bold;color:#ffb020;margin-bottom:8px}
-.pdlg-b{font-size:12px;color:#aaccee;line-height:1.6;margin-bottom:14px}
-.pdlg-btns{display:flex;gap:9px}
-
-/* LOADING / ERRORS */
-#loading{position:fixed;inset:0;background:#02040a;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:12px;z-index:100}
-.ld-spin{width:32px;height:32px;border:2px solid rgba(41,224,255,.12);border-top-color:#29e0ff;border-radius:50%;animation:spin 1s linear infinite}
+#log-in{display:flex;padding:3px 10px;border-top:1px solid rgba(41,224,255,.07);flex-shrink:0}
+#lprompt{color:#29e0ff;font-size:10px;margin-right:4px;user-select:none}
+#lcmd{flex:1;background:transparent;border:none;outline:none;color:#fff;font-size:10px}
+/* MISC */
+#loading{position:fixed;inset:0;background:#02040a;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.ld-spin{width:30px;height:30px;border:2px solid rgba(41,224,255,.1);border-top-color:#29e0ff;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.ld-t{font-size:10px;letter-spacing:3px;color:#29e0ff}.ld-s{font-size:11px;color:#3a5870}
-#ld-err{max-width:640px;padding:14px;background:#150505;border:1px solid #ff3b6b;border-radius:7px;
-  color:#ff9999;font-size:11px;white-space:pre-wrap;word-break:break-word;display:none}
-body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;
-  background:repeating-linear-gradient(0deg,rgba(0,0,0,.022),rgba(0,0,0,.022) 1px,transparent 1px,transparent 4px)}
+.ld-t{font-size:9px;letter-spacing:3px;color:#29e0ff}.ld-s{font-size:10px;color:#3a5870}
+#ld-err{max-width:600px;padding:12px;background:#150505;border:1px solid #ff3b6b;border-radius:6px;color:#ff9999;font-size:10px;white-space:pre-wrap;word-break:break-word;display:none}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;background:repeating-linear-gradient(0deg,rgba(0,0,0,.02),rgba(0,0,0,.02) 1px,transparent 1px,transparent 4px)}
 </style>
 </head>
 <body>
-
 <div id="loading">
   <div class="ld-spin"></div>
   <div class="ld-t">CYBERWATCH</div>
   <div class="ld-s" id="ld-msg">Starting...</div>
   <div id="ld-err"></div>
 </div>
-
-<div id="app" style="display:none;height:100%;display:none">
+<div id="app" style="display:none;height:100%">
   <div id="hud">
-    <div style="flex-shrink:0">
-      <div class="hl">CYBERWATCH</div>
-      <div style="font-size:9px;font-weight:bold;color:#29e0ff;letter-spacing:2px">2026-06-10-003</div>
-    </div>
+    <div style="flex-shrink:0"><div class="hl">CYBERWATCH</div><div style="font-size:9px;font-weight:bold;color:#29e0ff;letter-spacing:2px">2026-06-10-004</div></div>
     <div class="hdiv"></div>
     <div style="flex-shrink:0"><div class="hl">DEFCON</div><div class="hv" id="dc-v" style="color:#00ffa3;transition:color .5s">5</div></div>
     <div class="hdiv"></div>
-    <div style="flex-shrink:0"><div class="hl">OPS CLOCK</div><div class="hv" id="ops-v" style="font-size:11px;color:#cce8ff">D1 06:00</div></div>
+    <div style="flex-shrink:0"><div class="hl">OPS CLOCK</div><div class="hv" id="oc-v" style="font-size:10px">D1 06:00</div></div>
     <div class="hdiv"></div>
     <div style="flex-shrink:0"><div class="hl">SCORE</div><div class="hv" id="sc-v">0</div></div>
     <div class="hdiv"></div>
-    <div style="flex-shrink:0"><div class="hl">RESOLVED</div><div class="hv" id="rs-v" style="font-size:12px">0/0</div></div>
+    <div style="flex-shrink:0"><div class="hl">RESOLVED</div><div class="hv" id="rs-v" style="font-size:11px">0/0</div></div>
     <div class="hdiv"></div>
     <div style="flex-shrink:0"><div class="hl">MISSION</div><div class="hv" id="ms-v">10:00</div></div>
     <div style="flex:1"></div>
     <div class="hl" style="flex-shrink:0">MIN</div>
     <input id="dur-in" type="number" min="10" max="30" value="10"
-      style="width:36px;background:#0a1020;border:1px solid rgba(41,224,255,.2);color:#29e0ff;font-size:11px;padding:3px 4px;border-radius:5px;text-align:center">
+      style="width:34px;background:#0a1020;border:1px solid rgba(41,224,255,.2);color:#29e0ff;font-size:10px;padding:3px 4px;border-radius:5px;text-align:center">
     <button class="hbtn g" id="btnStart" disabled>▶ DEPLOY</button>
     <button class="hbtn" id="btnPause" disabled>❚❚</button>
     <button class="hbtn r" id="btnAbort" disabled>✕</button>
   </div>
-
   <div id="shell">
     <div id="sidebar">
-      <div class="sb-h">◆ OPS TEAMS</div>
+      <div class="sb-hdr">◆ OPS TEAMS</div>
       <div id="team-dash">
         <div class="tr" id="tr-network"></div>
         <div class="tr" id="tr-security"></div>
         <div class="tr" id="tr-identity"></div>
       </div>
-      <div id="hz-section">
-        <div class="hz-h"><span>◆ HORIZON SCANNER</span><span class="sb-ct" id="hz-ct">clear</span></div>
+      <div id="hz-wrap">
+        <div class="hz-hdr"><span>◆ HORIZON SCANNER</span><span class="sb-ct" id="hz-ct">clear</span></div>
         <div id="hz-list"><div class="hz-empty">No threats detected</div></div>
       </div>
-      <div class="sb-h-inc">
-        <span style="font-size:8px;letter-spacing:2px;color:#29e0ff">◆ ACTIVE INCIDENTS</span>
-        <span class="sb-ct" id="ic-ct">0</span>
+      <div class="sb-hdr" style="border-top:1px solid rgba(41,224,255,.08)"><span>◆ ACTIVE INCIDENTS</span><span class="sb-ct" id="ic-ct">0</span></div>
+      <div id="inc-list-wrap"></div>
+      <!-- Detail screen overlay -->
+      <div id="detail">
+        <div class="det-back" id="det-back-btn">
+          <span class="det-back-arrow">←</span>
+          <span class="det-back-txt">BACK TO LIST</span>
+        </div>
+        <div id="det-content"></div>
       </div>
-      <div id="inc-scroll"></div>
     </div>
-
     <div id="right">
       <div id="globe-wrap">
         <canvas id="c3d"></canvas>
         <div id="labels"></div>
       </div>
       <div id="log-area">
-        <div class="log-hdr"><span>◆ OPERATIONS LOG</span><span style="color:#3a5870">click cards · type help</span></div>
+        <div class="log-hdr"><span>◆ OPERATIONS LOG</span><span style="color:#3a5870">click incident/horizon cards · type help</span></div>
         <div id="log-out"></div>
         <div id="log-in"><span id="lprompt">ops ▸&nbsp;</span><input id="lcmd" type="text" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="help"></div>
       </div>
     </div>
   </div>
 </div>
-
-<!-- Response Panel -->
-<div id="rp">
-  <div class="rp-hdr">
-    <button class="rp-close" onclick="closeRP()">✕ close</button>
-    <div class="rp-tag" id="rp-tag">INCIDENT</div>
-    <div class="rp-nm" id="rp-nm">-</div>
-    <div class="rp-sub" id="rp-sub">-</div>
+<div id="pdlg"><div class="pdlg-box">
+  <div class="pdlg-h">⚠ TEAM CURRENTLY BUSY</div>
+  <div class="pdlg-b" id="pdlg-msg">This team is working on another task.</div>
+  <div class="pdlg-btns">
+    <button class="hbtn r" id="pdlg-confirm">STOP & REASSIGN</button>
+    <button class="hbtn" id="pdlg-cancel">KEEP CURRENT</button>
   </div>
-  <div id="rp-opts"></div>
-</div>
-
-<!-- Preempt Dialog -->
-<div id="pdlg">
-  <div class="pdlg-box">
-    <div class="pdlg-h">⚠ TEAM CURRENTLY BUSY</div>
-    <div class="pdlg-b" id="pdlg-msg">This team is working on another task.</div>
-    <div class="pdlg-btns">
-      <button class="hbtn r" onclick="confirmPreempt()">STOP & REASSIGN</button>
-      <button class="hbtn" onclick="cancelPreempt()">KEEP CURRENT</button>
-    </div>
-  </div>
-</div>
+</div></div>
 
 <script src="three.min.js"></script>
 <script>
 'use strict';
-var ERR = document.getElementById('ld-err');
-window.onerror = function(m,s,l,c,e){
-  ERR.style.display='block';
-  ERR.textContent='ERROR: '+m+'\nLine '+l+'\n'+(e?e.stack:'');
+window.onerror=function(m,s,l,c,e){
+  var el=document.getElementById('ld-err');
+  el.style.display='block';
+  el.textContent='ERROR: '+m+'\nLine '+l+'\n'+(e?e.stack:'');
 };
+try{
+// ══════════════════════════════════════════
+// MODULES — all 11 attack types
+// ══════════════════════════════════════════
+var M={};
+function def(name,icon,cat,ocrRef,brief,hz,pv,scenarios){
+  M[name]={icon:icon,cat:cat,ocrRef:ocrRef,brief:brief,hz:hz,pv:pv,scenarios:scenarios};
+}
+function sc(id,name,short,escs,escR,uMin,uMax,spread,responses){
+  return{id:id,name:name,short:short,escs:escs,escR:escR,uMin:uMin,uMax:uMax,spread:spread,responses:responses};
+}
+function rsp(id,name,team,dur,eff,pts,desc,risk,narr){
+  return{id:id,name:name,team:team,baseDuration:dur,effectiveness:eff,scorePts:pts,description:desc,duringRisk:risk,narrative:narr};
+}
 
-try {
+def('Phishing','\u2709','Social Engineering','OCR 1.3.3(c)',
+  'Phishing sends fake emails impersonating trusted organisations to steal credentials. It exploits human psychology — people trust authority figures. Technical defences like firewalls cannot stop phishing because it targets people, not systems.',
+  0.70,0.45,[
+  sc('mass','Mass Phishing Campaign','Bulk HMRC-impersonation emails to entire organisation',
+    ['Emails reaching all inboxes','Credentials being harvested','Admin credentials stolen'],28,5000,60000,'Phishing',[
+    rsp('gw','Block at Email Gateway','network',18,80,60,'Blacklist the malicious domain. Stops all new emails.','Users who already received the email remain at risk.',['Network Team accessing email gateway...','OCR 1.3.3(c): phishing exploits human trust. Email gateways filter against blacklists of known malicious domains.','Domain blacklisted. Matching emails quarantined.']),
+    rsp('full','Block + Notify + Enforce MFA','identity',50,100,100,'Block domain, alert staff, reset passwords, enable MFA.','Attack continues ~50s before full protection active.',['Identity Team coordinating full response...','OCR 1.3.3(c): MFA defeats phishing even when passwords are stolen.','All-staff alert sent. MFA enforced. Stolen credentials useless.'])
+  ]),
+  sc('spear','Spear Phishing','Targeted emails using personal data gathered via LinkedIn',
+    ['Senior staff targeted','Executive compromised','C-suite access obtained'],20,10,500,'Phishing',[
+    rsp('warn','Warn Targeted Staff','identity',12,85,70,'Phone all named targets before they click.','Targets may act before warning reaches them.',['Spear phishing uses OSINT — OCR 1.3.3(c)','Calling all 12 targets. Accounts locked pending reset.'])
+  ])
+]);
 
-// ── MODULES ──
-var MODULES = {
-  Phishing: {
-    icon:'\u2709', cat:'Social Engineering', col:'#ffb020',
-    brief:'Phishing sends fake emails that impersonate trusted organisations to steal credentials. It works by exploiting human trust — people naturally follow instructions from what looks like their bank or employer.',
-    ocrRef:'OCR H446 1.3.3(c) — Social engineering, network security threats',
-    scenarios:[
-      { id:'mass', name:'Mass Phishing Campaign',
-        short:'Bulk HMRC-impersonation emails to entire organisation',
-        escs:['Emails reaching inboxes','Credentials being harvested','Admin credentials stolen'],
-        escR:26, uMin:5000, uMax:60000, spread:'Phishing',
-        horizonChance:0.70, preventChance:0.45, prepBonus:0.25,
-        responses:[
-          { id:'gw', name:'Block at Email Gateway', team:'network', baseDuration:18,
-            effectiveness:80, scorePts:60, ocrRef:'1.3.3(c)',
-            description:'Blacklist the malicious domain at the email gateway — stops new emails instantly.',
-            duringRisk:'Users who already have the email remain at risk until notified.',
-            narrative:['Network Team accessing email gateway console...','OCR 1.3.3(c): Phishing exploits human psychology, not software vulnerabilities.','Domain malicious-invoice-247.xyz blacklisted. Matching emails quarantined.','Gateway active. Staff protected.']
-          },
-          { id:'full', name:'Full Response: Block + Notify + MFA', team:'identity', baseDuration:52,
-            effectiveness:100, scorePts:100, ocrRef:'1.3.3(c)',
-            description:'Block domain, alert all staff, force password resets, enforce MFA.',
-            duringRisk:'Attack continues for ~52s before full protection is active.',
-            narrative:['Identity Team coordinating full phishing response...','OCR 1.3.3(c): MFA defeats phishing even when passwords are stolen.','All-staff alert sent. At-risk accounts locked.','Password resets enforced. MFA enabled. Stolen credentials now useless.']
-          }
-        ]
-      },
-      { id:'spear', name:'Spear Phishing',
-        short:'Targeted emails using personal detail gathered via LinkedIn OSINT',
-        escs:['Senior staff targeted','Executive credentials compromised','C-suite access obtained'],
-        escR:20, uMin:10, uMax:500, spread:'Phishing',
-        horizonChance:0.35, preventChance:0.20, prepBonus:0.20,
-        responses:[
-          { id:'warn', name:'Warn Targeted Staff', team:'identity', baseDuration:12,
-            effectiveness:85, scorePts:70, ocrRef:'1.3.3(c)',
-            description:'Contact named targets by phone before they click — warn directly.',
-            duringRisk:'Some targets may act before the warning reaches them.',
-            narrative:['Spear phishing uses personal OSINT to appear convincing — OCR 1.3.3(c).','Calling all 12 identified targets directly. Accounts locked pending reset.']
-          },
-          { id:'lock', name:'Lock Accounts + Reset', team:'security', baseDuration:22,
-            effectiveness:90, scorePts:80, ocrRef:'1.3.3(c)',
-            description:'Proactively lock targeted accounts and force credential resets.',
-            duringRisk:'Brief outage for affected users during reset.',
-            narrative:['Security Ops locking all targeted accounts as a precaution...','OCR 1.3.3(c): Proactive account management limits damage from credential theft.','All accounts reset. MFA enforced. Attack neutralised.']
-          }
-        ]
-      }
-    ]
-  }
-};
+def('Ransomware','\uD83D\uDD12','Malware','OCR 1.3.3(c) + 1.3.1(c)',
+  'Ransomware encrypts files using asymmetric encryption — victims receive only the public key, which can encrypt but NOT decrypt. Only the attacker\'s private key can restore files. OCR 1.3.1(c): this is why paying the ransom is the only technical recovery option without backups.',
+  0.55,0.25,[
+  sc('worm','Network Worm Ransomware','Self-propagating — encrypting all network shares',
+    ['Encryption active on infected machines','File server encrypted','Domain controller locked out'],13,200,8000,'Ransomware',[
+    rsp('iso','Emergency Isolation','security',15,80,65,'Immediately isolate infected machines from network.','Encryption continues on isolated machines until process is killed.',['Security Ops executing isolation protocol...','OCR 1.3.3(c): isolate immediately — every second = more files encrypted.','Infected machines disconnected. Worm spread halted.']),
+    rsp('full','Isolate + Kill + Restore','security',70,100,100,'Full response: isolate, kill encryption process, restore from backup.','70s of active encryption before full resolution.',['Isolation complete. Kill process executing...','OCR 1.3.1(c): asymmetric encryption — public key encrypts, private key decrypts. Without attacker\'s private key, decryption is computationally infeasible.','Backup restored. Files recovered.'])
+  ])
+]);
 
-// ── TEAMS ──
-var TEAMS = {
-  network:  {id:'network',  name:'Network Team',  icon:'\uD83D\uDD35', task:null, paused:[]},
-  security: {id:'security', name:'Security Ops',  icon:'\uD83D\uDFE2', task:null, paused:[]},
-  identity: {id:'identity', name:'Identity Team', icon:'\uD83D\uDD34', task:null, paused:[]}
+def('SQL Injection','\uD83D\uDC89','Web Attack','OCR 1.3.2(d)',
+  'SQL injection inserts malicious SQL commands into input fields. A login form with input \'OR 1=1-- bypasses authentication entirely. OCR 1.3.2(d): parameterised queries fix this by treating user input as data, never as executable SQL code.',
+  0.60,0.35,[
+  sc('bypass','SQLi Login Bypass','Authentication bypassed via injected OR 1=1 clause',
+    ['Bypass attempts detected','Admin authentication bypassed','Full database accessed'],32,200,30000,'Credential Stuffing',[
+    rsp('waf','Deploy WAF Rules','network',22,75,60,'Web Application Firewall blocks common injection patterns.','Code remains vulnerable — adapted injection may bypass WAF.',['WAF blocking SQL injection patterns: OR 1=1, UNION SELECT, DROP TABLE.','OCR 1.3.2(d): this is temporary. Parameterised queries are the correct fix.']),
+    rsp('patch','Parameterise Queries','security',45,100,110,'Patch vulnerable code with parameterised queries — the OCR spec solution.','Database exploitable for ~45s while patch is deployed.',['Patching authentication queries with parameterised syntax...','OCR 1.3.2(d): WHERE email = ? — the ? placeholder separates query structure from data. Input cannot be interpreted as SQL code.','All queries patched. Injection permanently prevented.'])
+  ])
+]);
+
+def('DDoS','\u26A1','Network Attack','OCR 1.3.3(c)',
+  'Distributed Denial of Service floods a server with traffic from thousands of sources (a botnet), targeting AVAILABILITY — the A in the CIA triad. OCR 1.3.3(c): defences include null-routing (drops traffic before it reaches target) and rate limiting.',
+  0.65,0.50,[
+  sc('vol','Volumetric DDoS Flood','Botnet sending 847Gbps — exhausting all bandwidth',
+    ['Server degrading — 75% packet loss','Service intermittent','Total outage — zero connectivity'],16,5000,100000,'DDoS',[
+    rsp('nr','Upstream Null-Routing','network',14,90,75,'Tell upstream routers to drop attack packets before they use our bandwidth.','Service offline during null-routing — legitimate users also blocked.',['OCR 1.3.3(c): DDoS attacks AVAILABILITY — the A in the CIA triad.','Null-routing applied at carrier level. 847Gbps attack traffic dropped.','Service can now be restored behind the null-route.']),
+    rsp('rate','Null-Route + Rate Limit','network',32,100,90,'Null-route the attack then configure rate limiting to allow legitimate traffic.','32s of degraded service.',['Null-routing applied. Rate limiting configured: 100 req/s per IP.','Legitimate users (low rate) pass. Botnet IPs (high rate) throttled.'])
+  ])
+]);
+
+def('Brute Force','\uD83D\uDD28','Auth Attack','OCR 1.3.3(c)',
+  'Brute force attacks test thousands of password combinations per second. A dictionary attack uses common passwords; an 8-character lowercase password has 26^8 = 200 billion combinations. OCR 1.3.3(c): defences include account lockout, rate limiting, CAPTCHA, and MFA.',
+  0.60,0.30,[
+  sc('dict','Dictionary Attack','Top 100,000 passwords tested at 1M attempts/second',
+    ['Common passwords being tested','Multiple accounts locked','Admin password cracked'],22,100,5000,'Credential Stuffing',[
+    rsp('lock','Enforce Account Lockout','identity',16,90,70,'Lock accounts after 5 failed attempts — makes automated guessing impractical.',
+    'Accounts being targeted until lockout enforced.',['OCR 1.3.3(c): account lockout forces 15-min wait per 5 attempts.','At this rate, attacker needs centuries to try all passwords. Attack neutralised.']),
+    rsp('mfa','Implement MFA','security',35,100,100,'Configure MFA — makes brute force permanently ineffective even with correct password.',
+    'Team locked for 35s.','OCR 1.3.3(c): MFA = something you KNOW (password) + something you HAVE (phone). Even correct password is insufficient.'.split(','))
+  ])
+]);
+
+def('Zero-Day','\u2622','Advanced Exploit','OCR 1.3.3(c)',
+  'A zero-day exploits an unknown vulnerability with no patch available — zero days since the vendor was informed. OCR 1.3.3(c): signature-based antivirus CANNOT detect it because no signature exists yet. Isolation and defence-in-depth are the only immediate defences.',
+  0.45,0.10,[
+  sc('vpn','VPN Appliance Zero-Day','Critical unknown flaw in edge VPN device — perimeter breached',
+    ['VPN flaw actively exploited','Attacker authenticated to internal network','Lateral movement — internal servers accessed'],11,500,30000,'Trojan Backdoor',[
+    rsp('iso','Isolate VPN Appliance','security',15,85,75,'Take vulnerable VPN offline — no patch exists, isolation is the only defence.','Remote workers lose access. Attacker entry point eliminated.',['Zero-day: zero days since vendor was informed. No patch exists — OCR 1.3.3(c).','Isolation is defence-in-depth: remove the compromised layer.','VPN offline. Attacker entry point eliminated.'])
+  ])
+]);
+
+def('Social Engineering','\uD83C\uDFAD','Social Engineering','OCR 1.3.3(c)',
+  'Social engineering manipulates people into performing actions or disclosing credentials. It exploits human psychology — trust, authority, urgency, fear. OCR 1.3.3(c): technical defences are useless against this; user education and verification procedures are essential.',
+  0.65,0.20,[
+  sc('vish','IT Helpdesk Vishing','Phone call impersonating IT support requesting credentials',
+    ['Suspicious calls requesting password resets','Staff gave credentials to attacker','VPN access obtained via stolen credentials'],35,50,2000,'Phishing',[
+    rsp('alert','Broadcast Security Alert','identity',10,85,65,'Immediately warn all staff: IT will NEVER ask for passwords by phone.','Staff already on calls remain vulnerable.',['Broadcasting URGENT alert to all staff...','OCR 1.3.3(c): vishing (voice phishing) exploits trust in authority.','Alert: IT never asks for passwords. Hang up and report suspect calls.']),
+    rsp('cb','Mandatory Callback Verification','security',28,100,90,'Enforce out-of-band verification for all IT calls going forward.','28s to implement across all IT helpdesk channels.',['OCR 1.3.3(c): social engineering exploits HUMAN PSYCHOLOGY, not software.','Implementing callback verification: all IT calls must be verified via known-good number.'])
+  ])
+]);
+
+def('DNS Poisoning','\u2623','Network Attack','OCR 1.3.3(b) + 1.3.1(c)',
+  'DNS translates domain names to IP addresses. Cache poisoning injects fake records — users type bank.com but reach an attacker\'s server. OCR 1.3.3(b): DNS is part of internet structure. OCR 1.3.1(c): DNSSEC uses digital signatures to authenticate DNS responses.',
+  0.70,0.40,[
+  sc('cache','DNS Cache Poisoning','Corporate resolver injected — users silently redirected to fake sites',
+    ['Fake DNS records active','Staff redirected to credential-harvesting clones','Banking credentials harvested'],25,500,20000,'Phishing',[
+    rsp('flush','Flush Cache + Deploy DNSSEC','network',22,100,85,'Clear poisoned DNS entries and deploy cryptographic authentication.','Users remain redirected until cache fully flushed.',['DNS cache flushed across all corporate resolvers...','OCR 1.3.1(c): DNSSEC adds digital signatures to DNS records. Resolvers verify authenticity before trusting responses.','DNSSEC deployed. Cache poisoning now structurally impossible.'])
+  ])
+]);
+
+def('Trojan Backdoor','\uD83D\uDC34','Malware','OCR 1.3.3(c)',
+  'A trojan disguises itself as legitimate software. Unlike a worm, it does NOT self-replicate. It creates a backdoor and connects to a C2 (Command & Control) server for instructions. OCR 1.3.3(c) distinguishes: trojan (needs user to run it), worm (spreads autonomously), virus (attaches to files).',
+  0.55,0.15,[
+  sc('rat','Remote Access Trojan','Full remote control — attacker has keyboard, screen, file access',
+    ['C2 beacon traffic detected','Data exfiltration confirmed','APT: lateral movement to critical systems'],45,100,5000,'Trojan Backdoor',[
+    rsp('c2','Block C2 Beacon Traffic','network',18,75,60,'Block C2 communication — blinds attacker, but malware stays installed.','Trojan remains present until Security Ops removes it.',['OCR 1.3.3(c): C2 (Command & Control) server issues commands to infected machines.','C2 beacon to 94.142.x.x blocked. Attacker\'s remote control severed.']),
+    rsp('wipe','Scan + Isolate + Reinstall','security',60,100,100,'Full eradication: scan network, isolate infected hosts, clean reinstall.','60s of full attacker access during scan.',['Scanning for C2 beacon patterns across all machines...','OCR 1.3.3(c): trojan ≠ worm. Trojan needs user to run it; does NOT spread autonomously.','7 infected hosts found. Isolated. Clean OS reinstalled.'])
+  ])
+]);
+
+def('Man-in-the-Middle','\uD83D\uDC41','Network Attack','OCR 1.3.1(c)',
+  'A MITM attack positions the attacker between client and server, intercepting all communications. OCR 1.3.1(c): TLS (Transport Layer Security) encrypts the connection — intercepted packets are unreadable ciphertext. TLS certificates also verify server identity, preventing fake servers.',
+  0.60,0.35,[
+  sc('arp','ARP Poisoning','Rogue device intercepting all LAN traffic — reading everything silently',
+    ['All LAN traffic being intercepted','Session cookies harvested — accounts hijacked','Financial transactions intercepted and modified'],30,200,5000,'Credential Stuffing',[
+    rsp('seg','VLAN Segmentation','network',25,90,80,'Segment the affected VLAN to isolate the rogue device.','Interception continues until segmentation applied.',['ARP poisoning sends fake MAC-to-IP mappings — traffic flows through attacker. OCR 1.3.3(c).','Rogue device isolated. VLAN segmented.','OCR 1.3.1(c): TLS would have made the intercepted data unreadable ciphertext.']),
+    rsp('tls','Enforce HTTPS/TLS Everywhere','security',35,100,110,'Deploy HSTS headers — browsers refuse to connect without TLS.','35s to propagate.',['OCR 1.3.1(c): TLS provides encryption + authentication + integrity.','HSTS deployed. TLS enforcement active. Even if intercepted, data is unreadable.'])
+  ])
+]);
+
+def('Credential Stuffing','\uD83D\uDD11','Auth Attack','OCR 1.3.3(c)',
+  'Credential stuffing uses username/password pairs from previous data breaches. It works because approximately 85% of people reuse passwords across services. OCR 1.3.3(c): one breach therefore compromises accounts on many other platforms. MFA and unique passwords are the only defences.',
+  0.60,0.30,[
+  sc('dark','Dark Web Database Attack','14.7M credentials from breach database tested against all accounts',
+    ['2M attempts/hour from breach DB','847 accounts accessed — customer data at risk','Payment details accessed — GDPR breach'],20,5000,100000,'Phishing',[
+    rsp('lock','Lock Breach-Matched Accounts','identity',20,90,75,'Cross-reference accounts against breach DB and lock all matches.',
+    'Accounts with reused passwords not in breach DB still at risk.',['OCR 1.3.3(c): 85% of people reuse passwords. One breach compromises many services.','2,847 accounts matched. All locked. Password resets enforced. MFA activated.']),
+    rsp('mfa','Implement MFA Organisation-wide','security',40,100,120,'Configure MFA across all auth endpoints — permanently defeats credential stuffing.','40s of exposure.',['OCR 1.3.3(c): MFA defeats credential stuffing — even correct passwords are insufficient.','MFA deployed. Breach credentials now useless for access.'])
+  ])
+]);
+
+// ══════════════════════════════════════════
+// GAME CONSTANTS + STATE
+// ══════════════════════════════════════════
+var ACCEL=720, START_H=6;
+var TEAMS={
+  network: {id:'network',name:'Network Team',icon:'\uD83D\uDD35',task:null,paused:[]},
+  security:{id:'security',name:'Security Ops', icon:'\uD83D\uDFE2',task:null,paused:[]},
+  identity:{id:'identity',name:'Identity Team',icon:'\uD83D\uDD34',task:null,paused:[]}
 };
 function tCol(id){return{network:'#29e0ff',security:'#00ffa3',identity:'#ff3b6b'}[id]||'#aaa';}
-
-// ── CITIES ──
 var CITIES=[
-  {c:'London',    la:51.507,  lo:-0.128},  {c:'New York',  la:40.713,  lo:-74.006},
-  {c:'Tokyo',     la:35.676,  lo:139.650}, {c:'Paris',     la:48.856,  lo:2.352},
-  {c:'Sydney',    la:-33.868, lo:151.209}, {c:'Dubai',     la:25.204,  lo:55.271},
-  {c:'Singapore', la:1.352,   lo:103.820}, {c:'Frankfurt', la:50.110,  lo:8.682},
-  {c:'Sao Paulo', la:-23.550, lo:-46.633}, {c:'Toronto',   la:43.653,  lo:-79.383},
-  {c:'Mumbai',    la:19.076,  lo:72.878},  {c:'Berlin',    la:52.520,  lo:13.405},
-  {c:'Seoul',     la:37.566,  lo:126.978}, {c:'Amsterdam', la:52.367,  lo:4.904}
+  {c:'London',la:51.507,lo:-0.128},{c:'New York',la:40.713,lo:-74.006},
+  {c:'Tokyo',la:35.676,lo:139.650},{c:'Paris',la:48.856,lo:2.352},
+  {c:'Sydney',la:-33.868,lo:151.209},{c:'Dubai',la:25.204,lo:55.271},
+  {c:'Singapore',la:1.352,lo:103.820},{c:'Frankfurt',la:50.110,lo:8.682},
+  {c:'Sao Paulo',la:-23.550,lo:-46.633},{c:'Toronto',la:43.653,lo:-79.383},
+  {c:'Mumbai',la:19.076,lo:72.878},{c:'Berlin',la:52.520,lo:13.405},
+  {c:'Seoul',la:37.566,lo:126.978},{c:'Amsterdam',la:52.367,lo:4.904}
 ];
+var incidents=[],horizonItems=[],nextId=1,hzSeq=1;
+var score=0,resolvedCount=0,spawnedCount=0;
+var simRunning=false,simPaused=false,simDur=0,simT=0;
+var nextSpawnAt=null,lastTick=performance.now(),defcon=5;
+var tasks=[],taskSeq=1;
+var researchedTypes={},seenTypes={},activeResearches=[];
+var preemptPending=null,detailItem=null;
 
-// ── CONSTANTS ──
-var ACCEL = 720; // 1 real second = 12 sim minutes (fixed)
-var START_H = 6; // ops clock starts at 06:00 UTC
+// ══════════════════════════════════════════
+// THREE.JS GLOBE
+// ══════════════════════════════════════════
+var renderer,scene,camera,globe,threeOK=false,globeRot=0;
 
-// ── GAME STATE ──
-var incidents=[], horizonItems=[], nextId=1, hzSeq=1;
-var score=0, resolvedCount=0, spawnedCount=0;
-var simRunning=false, simPaused=false, simDur=0, simT=0;
-var nextSpawnAt=null, lastTick=performance.now(), defcon=5;
-var tasks=[], taskSeq=1;
-var researchedTypes={}, seenTypes={}, activeResearches=[];
-var preemptPending=null;
+// Correct formula matching THREE.SphereGeometry UV mapping
+function latLonToXYZ(lat,lon){
+  var u=(lon+180)/360, v=(90-lat)/180;
+  var phi=u*2*Math.PI, theta=v*Math.PI;
+  return[-Math.cos(phi)*Math.sin(theta), Math.cos(theta), Math.sin(phi)*Math.sin(theta)];
+}
 
-// ── GLOBE ──
-var renderer, scene, camera, earthMesh, globeRot=0, threeOK=false;
+function getScreenPos(inc){
+  if(!threeOK||!inc._3d||!renderer) return null;
+  var wp=new THREE.Vector3();
+  inc._3d.getWorldPosition(wp);
+  // camera at z=5, globe rotates. Point visible if z_world > threshold
+  if(wp.z<0.08) return null;
+  var v=wp.clone(); v.project(camera);
+  var w=renderer.domElement.clientWidth||600, h=renderer.domElement.clientHeight||400;
+  return{x:(v.x+1)*0.5*w, y:(-v.y+1)*0.5*h};
+}
 
-function initGlobe() {
-  if (typeof THREE === 'undefined') {
-    log('three.min.js not found — place it in same folder. Globe disabled.','ltw');
-    return;
-  }
-  try {
-    var wrap = document.getElementById('globe-wrap');
-    renderer = new THREE.WebGLRenderer({canvas:document.getElementById('c3d'),antialias:true,alpha:true});
+function initGlobe(){
+  if(typeof THREE==='undefined'){log('three.min.js missing — globe disabled','ltw');return;}
+  try{
+    renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c3d'),antialias:true,alpha:true});
     renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-    renderer.setSize(800,500);
+    renderer.setSize(600,400);
+    scene=new THREE.Scene();
+    camera=new THREE.PerspectiveCamera(40,1.5,0.1,100);
+    camera.position.set(0,0,5.0); // further back = smaller globe
 
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(38,1.6,0.1,100);
-    camera.position.set(0,0,3.6);
+    // GROUP — earth + markers rotate together
+    globe=new THREE.Group();
+    scene.add(globe);
 
-    var geo = new THREE.SphereGeometry(1,64,64);
-    var sunVec = new THREE.Vector3(1.0,0.18,0.35).normalize();
-    var loader = new THREE.TextureLoader();
-    var base = 'https://unpkg.com/three-globe/example/img/';
-    var dayT  = loader.load(base+'earth-blue-marble.jpg');
-    var nightT = loader.load(base+'earth-night.jpg');
-    dayT.encoding = THREE.sRGBEncoding;
-    nightT.encoding = THREE.sRGBEncoding;
+    var geo=new THREE.SphereGeometry(1,64,64);
+    var sun=new THREE.Vector3(1,0.18,0.35).normalize();
+    var loader=new THREE.TextureLoader();
+    var base='https://unpkg.com/three-globe/example/img/';
+    var dayT=loader.load(base+'earth-blue-marble.jpg');
+    var nightT=loader.load(base+'earth-night.jpg');
+    dayT.encoding=THREE.sRGBEncoding; nightT.encoding=THREE.sRGBEncoding;
 
-    var mat = new THREE.ShaderMaterial({
-      uniforms:{uDay:{value:dayT},uNight:{value:nightT},uSun:{value:sunVec}},
+    var mat=new THREE.ShaderMaterial({
+      uniforms:{uDay:{value:dayT},uNight:{value:nightT},uSun:{value:sun}},
       vertexShader:'varying vec2 vUv;varying vec3 vN;void main(){vUv=uv;vN=normalize(mat3(modelMatrix)*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
       fragmentShader:'precision mediump float;uniform sampler2D uDay,uNight;uniform vec3 uSun;varying vec2 vUv;varying vec3 vN;void main(){float c=dot(vN,normalize(uSun));float d=smoothstep(-.18,.28,c);vec3 day=texture2D(uDay,vUv).rgb;vec3 night=texture2D(uNight,vUv).rgb*1.7;float tw=smoothstep(-.18,.05,c)*(1.-smoothstep(.05,.3,c));gl_FragColor=vec4(mix(night,day,d)+vec3(.35,.18,.08)*tw,1.);}'
     });
-    earthMesh = new THREE.Mesh(geo,mat);
-    scene.add(earthMesh);
-    scene.add(new THREE.AmbientLight(0x404060,0.4));
+    globe.add(new THREE.Mesh(geo,mat));
+    scene.add(new THREE.AmbientLight(0x404060,0.3));
 
+    // ResizeObserver for correct sizing
     new ResizeObserver(function(entries){
       var cr=entries[0].contentRect;
       var w=Math.floor(cr.width), h=Math.floor(cr.height);
-      if(w>10&&h>10){
+      if(w>20&&h>20){
         renderer.setSize(w,h);
         camera.aspect=w/h;
         camera.updateProjectionMatrix();
       }
-    }).observe(wrap);
+    }).observe(document.getElementById('globe-wrap'));
 
     threeOK=true;
-    log('Globe active.','lti');
-  } catch(e) {
-    log('Globe init error: '+e.message,'ltw');
-  }
+    log('Globe active (Three.js r'+THREE.REVISION+')','lti');
+  }catch(e){log('Globe error: '+e.message,'ltw');}
 }
 
-// Project lat/lon to screen coords
-function project(lat,lon) {
-  if (!threeOK||!camera||!renderer) return null;
-  var phi=(90-lat)*Math.PI/180, theta=(lon+180)*Math.PI/180;
-  var x0=-Math.cos(theta)*Math.sin(phi), y0=Math.cos(phi), z0=Math.sin(theta)*Math.sin(phi);
-  var c=Math.cos(globeRot), s=Math.sin(globeRot);
-  var rx=x0*c+z0*s, ry=y0, rz=-x0*s+z0*c;
-  if(rz<0.12) return null;
-  var v=new THREE.Vector3(rx,ry,rz);
-  v.project(camera);
-  var rect=document.getElementById('c3d').getBoundingClientRect();
-  return {x:(v.x*0.5+0.5)*rect.width, y:(-v.y*0.5+0.5)*rect.height};
+function makeMarker(inc){
+  if(!threeOK||!globe) return;
+  var xyz=latLonToXYZ(inc.lat,inc.lon);
+  var geo=new THREE.SphereGeometry(0.022,8,8);
+  var col=inc.sev===1?0x00ffa3:inc.sev===2?0xffb020:0xff3b6b;
+  var mat=new THREE.MeshBasicMaterial({color:col});
+  var mesh=new THREE.Mesh(geo,mat);
+  mesh.position.set(xyz[0]*1.01,xyz[1]*1.01,xyz[2]*1.01);
+  globe.add(mesh); inc._3d=mesh;
+  // HTML label
+  var lbl=document.createElement('div');
+  lbl.className='inc-lbl'; lbl.id='lbl-'+inc.id;
+  lbl.innerHTML='<div class="lbl-dot s'+inc.sev+'"></div>'+
+    '<div class="lbl-text">#'+inc.id+' '+inc.name.substring(0,18)+(inc.name.length>18?'...':'')+'</div>';
+  document.getElementById('labels').appendChild(lbl);
+  inc._lbl=lbl;
 }
-
-function updateMarkers() {
+function removeMarker(inc){
+  if(inc._3d&&globe){globe.remove(inc._3d);inc._3d=null;}
+  if(inc._lbl){inc._lbl.remove();inc._lbl=null;}
+}
+function updateLabels(){
   incidents.forEach(function(inc){
-    if (!inc._marker) return;
-    if (inc.resolved) { inc._marker.style.display='none'; return; }
-    var p=project(inc.lat,inc.lon);
-    if (!p) { inc._marker.style.display='none'; return; }
-    inc._marker.style.display='block';
-    inc._marker.style.left=p.x+'px';
-    inc._marker.style.top=p.y+'px';
-    inc._marker.className='inc-marker sev'+inc.sev;
+    var lbl=inc._lbl; if(!lbl) return;
+    if(inc.resolved){lbl.style.opacity='0';return;}
+    var p=getScreenPos(inc);
+    if(!p){lbl.style.opacity='0';return;}
+    lbl.style.opacity='1';
+    lbl.style.left=p.x+'px';
+    lbl.style.top=p.y+'px';
+    lbl.querySelector('.lbl-dot').className='lbl-dot s'+inc.sev;
+  });
+}
+function updateMarkerColors(){
+  incidents.forEach(function(inc){
+    if(!inc._3d) return;
+    var col=inc.sev===1?0x00ffa3:inc.sev===2?0xffb020:0xff3b6b;
+    inc._3d.material.color.setHex(col);
   });
 }
 
-function makeMarker(inc) {
-  var d=document.createElement('div');
-  d.className='inc-marker sev'+inc.sev;
-  document.getElementById('labels').appendChild(d);
-  inc._marker=d;
-}
-function removeMarker(inc) {
-  if(inc._marker){inc._marker.remove();inc._marker=null;}
-}
-
-// ── TASK ENGINE ──
-function getResearchBonus(type) { return researchedTypes[type]?0.90:1.0; }
-
-function createTask(inc,resp) {
+// ══════════════════════════════════════════
+// TASK ENGINE
+// ══════════════════════════════════════════
+function createTask(inc,resp){
   var v=0.65+Math.random()*0.75;
-  var prepMult = inc.prepared?0.75:1.0;
-  var resMult = getResearchBonus(inc.type);
-  var dur = Math.round(resp.baseDuration*v*prepMult*resMult);
-  return {
-    id:taskSeq++, incId:inc.id, team:resp.team,
-    responseName:resp.name, ocrRef:resp.ocrRef,
-    actualDur:dur, elapsed:0, progress:0, scorePts:resp.scorePts,
-    narrative:resp.narrative||[], narrativeIdx:0, compApplied:false
-  };
+  var pm=inc.prepared?0.75:1, rm=researchedTypes[inc.type]?0.9:1;
+  return{id:taskSeq++,incId:inc.id,team:resp.team,
+    responseName:resp.name,ocrRef:resp.ocrRef||'',
+    actualDur:Math.round(resp.baseDuration*v*pm*rm),
+    elapsed:0,progress:0,scorePts:resp.scorePts,
+    narrative:resp.narrative||[],narrativeIdx:0,compApplied:false};
 }
-
-window.assignTask = function(incId,respId) {
-  try {
-    var inc=incidents.find(function(i){return i.id===incId;});
-    if(!inc||inc.resolved){log('Incident not found or already resolved.','ltw');return;}
-    var sc=inc._sc;
-    if(!sc){log('Scenario data missing for this incident.','ltw');return;}
-    var resp=sc.responses.find(function(r){return r.id===respId;});
-    if(!resp){log('Response option not found.','ltw');return;}
-    var team=TEAMS[resp.team];
-    if(!team){log('Team not found: '+resp.team,'ltw');return;}
-    if(team.task) {
-      preemptPending={inc:inc,resp:resp};
-      document.getElementById('pdlg-msg').textContent=
-        team.name+' is working on "'+team.task.responseName+'" (#'+team.task.incId+') at '+
-        Math.round(team.task.progress)+'%. Stop it and reassign?';
-      document.getElementById('pdlg').classList.add('show');
-      return;
-    }
-    doAssign(inc,resp);
-  } catch(e) { log('Error assigning task: '+e.message,'lte'); }
-};
-
-function doAssign(inc,resp) {
+function doAssign(inc,resp){
   var team=TEAMS[resp.team];
   var task=createTask(inc,resp);
-  team.task=task; tasks.push(task);
-  inc.activeTaskId=task.id;
-  var prepNote=inc.prepared?' [PREPARED -25% time]':'';
-  var resNote=researchedTypes[inc.type]?' [RESEARCHED -10%]':'';
-  log(team.icon+' '+team.name+' → '+resp.name+' on #'+inc.id+' (~'+task.actualDur+'s)'+prepNote+resNote,'lts');
-  closeRP(); renderTeams(); renderIncidents();
-}
-
-window.confirmPreempt=function(){
-  document.getElementById('pdlg').classList.remove('show');
-  if(!preemptPending) return;
-  var p=preemptPending; preemptPending=null;
-  var team=TEAMS[p.resp.team];
-  if(team.task) { forfeit(team.task); }
-  doAssign(p.inc,p.resp);
-};
-window.cancelPreempt=function(){
-  document.getElementById('pdlg').classList.remove('show');
-  preemptPending=null;
-};
-
-window.pauseTask=function(teamId){
-  try {
-    var team=TEAMS[teamId]; if(!team.task) return;
-    var task=team.task;
-    var inc=incidents.find(function(i){return i.id===task.incId;});
-    if(inc){if(!inc.pausedTasks)inc.pausedTasks=[];inc.pausedTasks.push(task);inc.activeTaskId=null;}
-    team.paused.push(task); team.task=null;
-    var idx=tasks.indexOf(task); if(idx>-1) tasks.splice(idx,1);
-    log('⏸ Paused: '+task.responseName+' at '+Math.round(task.progress)+'%','ltw');
-    renderTeams(); renderIncidents();
-  } catch(e){log('Pause error: '+e.message,'lte');}
-};
-
-window.resumeTask=function(teamId,taskId){
-  try {
-    var team=TEAMS[teamId];
-    var task=team.paused.find(function(t){return t.id===taskId;});
-    if(!task) return;
-    if(team.task) {
-      preemptPending={resumeTeam:teamId,resumeTaskId:taskId};
-      document.getElementById('pdlg-msg').textContent=
-        team.name+' is busy. Stop current task to resume this one?';
-      document.getElementById('pdlg').classList.add('show');
-      return;
-    }
-    doResume(team,task);
-  } catch(e){log('Resume error: '+e.message,'lte');}
-};
-
-function doResume(team,task) {
-  team.paused=team.paused.filter(function(t){return t.id!==task.id;});
-  var inc=incidents.find(function(i){return i.id===task.incId;});
-  if(inc){inc.pausedTasks=(inc.pausedTasks||[]).filter(function(t){return t.id!==task.id;});inc.activeTaskId=task.id;}
-  team.task=task;
-  if(!tasks.includes(task)) tasks.push(task);
-  log('▶ Resumed: '+task.responseName+' from '+Math.round(task.progress)+'%','lti');
+  team.task=task; tasks.push(task); inc.activeTaskId=task.id;
+  var note=(inc.prepared?'[PREP -25%] ':'')+(researchedTypes[inc.type]?'[RESEARCHED -10%] ':'');
+  log(team.icon+' '+team.name+' \u2192 '+resp.name+' on #'+inc.id+' (~'+task.actualDur+'s) '+note,'lts');
   renderTeams(); renderIncidents();
+  if(detailItem&&detailItem.inc&&detailItem.inc.id===inc.id) refreshDetail();
 }
-
-function forfeit(task) {
-  var team=TEAMS[task.team]; if(team.task===task)team.task=null;
-  var idx=tasks.indexOf(task); if(idx>-1)tasks.splice(idx,1);
+function forfeitTask(task){
+  var team=TEAMS[task.team]; if(team.task===task) team.task=null;
+  var idx=tasks.indexOf(task); if(idx>-1) tasks.splice(idx,1);
   var inc=incidents.find(function(i){return i.id===task.incId;});
-  if(inc&&inc.activeTaskId===task.id)inc.activeTaskId=null;
+  if(inc&&inc.activeTaskId===task.id) inc.activeTaskId=null;
 }
-
-function updateTasks(dt) {
+function updateTasks(dt){
   var done=[];
   tasks.forEach(function(task){
-    if(task.hzTask) return; // handled by horizon
-    task.elapsed+=dt;
-    task.progress=Math.min(100,(task.elapsed/task.actualDur)*100);
+    if(task.hzTask) return;
+    task.elapsed+=dt; task.progress=Math.min(100,(task.elapsed/task.actualDur)*100);
     if(!task.compApplied&&task.progress>=50&&Math.random()<0.18){
       task.compApplied=true;
-      var extra=Math.round(task.actualDur*0.2);
-      task.actualDur+=extra;
-      log('⚠ Complication: '+task.responseName+' extended by '+extra+'s','ltw');
+      var ex=Math.round(task.actualDur*0.2); task.actualDur+=ex;
+      log('\u26A0 Complication: +'+ex+'s on '+task.responseName,'ltw');
     }
-    var interval=task.narrative.length?task.actualDur/task.narrative.length:999;
-    if(task.narrativeIdx<task.narrative.length&&task.elapsed>=task.narrativeIdx*interval){
-      log('  '+task.narrative[task.narrativeIdx],'ltnt');
-      task.narrativeIdx++;
+    var iv=task.narrative.length?task.actualDur/task.narrative.length:999;
+    if(task.narrativeIdx<task.narrative.length&&task.elapsed>=task.narrativeIdx*iv){
+      log('  '+task.narrative[task.narrativeIdx],'ltnt'); task.narrativeIdx++;
     }
     if(task.progress>=100) done.push(task);
   });
   done.forEach(function(task){
     var team=TEAMS[task.team]; team.task=null;
-    var idx=tasks.indexOf(task); if(idx>-1)tasks.splice(idx,1);
-    score+=task.scorePts;
-    document.getElementById('sc-v').textContent=score;
+    var idx=tasks.indexOf(task); if(idx>-1) tasks.splice(idx,1);
+    score+=task.scorePts; document.getElementById('sc-v').textContent=score;
     log(team.icon+' '+team.name+' DONE: '+task.responseName+' (+'+task.scorePts+'pts)','lts');
     var inc=incidents.find(function(i){return i.id===task.incId;});
     if(inc&&!inc.resolved){
       inc.resolved=true; resolvedCount++;
       document.getElementById('rs-v').textContent=resolvedCount+'/'+spawnedCount;
       calcDefcon(); renderIncidents(); removeMarker(inc);
+      if(detailItem&&detailItem.inc&&detailItem.inc.id===inc.id) closeDetail();
     }
   });
   if(done.length) renderTeams();
 }
-
-// ── RESEARCH MECHANIC ──
-function checkNewType(type) {
-  if(seenTypes[type]||researchedTypes[type]) return;
-  seenTypes[type]=true;
-  showResearchPrompt(type);
-}
-
-function showResearchPrompt(type) {
-  var mod=MODULES[type];
-  var d=document.createElement('div');
-  d.className='log-research';
-  d.id='rp-research-'+type;
-  d.innerHTML='<div class="log-research-hd">\uD83D\uDD2C NEW THREAT CLASS IDENTIFIED: '+type.toUpperCase()+'</div>'+
-    '<div class="log-research-body">Invest 75 pts + 20s to research this attack type. All future '+type+' incidents will resolve 10% faster.\n'+
-    (mod?mod.ocrRef:'')+'</div>'+
-    '<div class="log-research-acts">'+
-    '<button class="btn-research" onclick="doResearch(\''+type+'\')">RESEARCH — 75 pts &middot; 20s</button>'+
-    '<button class="btn-skip-research" onclick="skipResearch(\''+type+'\')">Skip for now</button>'+
-    '</div>';
-  document.getElementById('log-out').appendChild(d);
-  document.getElementById('log-out').scrollTop=9999;
-}
-
-window.doResearch=function(type){
-  try {
-    if(score<75){log('Need 75 pts to research. Earn more first.','ltw');return;}
-    score-=75;
-    document.getElementById('sc-v').textContent=score;
-    activeResearches.push({type:type,completesAt:simT+20});
-    log('\uD83D\uDD2C Researching '+type+'... (20s background analysis)','lti');
-    var el=document.getElementById('rp-research-'+type);
-    if(el)el.remove();
-  } catch(e){log('Research error: '+e.message,'lte');}
-};
-
-window.skipResearch=function(type){
-  log('Research skipped for '+type+'. Will prompt again on next encounter.','ltd');
-  delete seenTypes[type]; // will re-trigger prompt next time
-  var el=document.getElementById('rp-research-'+type);
-  if(el)el.remove();
-};
-
-function updateResearches() {
-  var done=[];
-  activeResearches.forEach(function(r){if(simT>=r.completesAt)done.push(r);});
+// ══════════════════════════════════════════
+// RESEARCH
+// ══════════════════════════════════════════
+function checkNewType(type){if(seenTypes[type]||researchedTypes[type]) return; seenTypes[type]=true;}
+function updateResearches(){
+  var done=[]; activeResearches.forEach(function(r){if(simT>=r.completesAt) done.push(r);});
   done.forEach(function(r){
     activeResearches=activeResearches.filter(function(ar){return ar!==r;});
     researchedTypes[r.type]=true;
-    log('\u2705 Research complete: '+r.type+'. Future resolve times -10%.','lts');
+    log('\u2705 Research: '+r.type+' complete. Future resolve times -10%.','lts');
   });
 }
-
-// ── HORIZON SCANNER ──
-function tryHorizon(type,sc,city) {
+// ══════════════════════════════════════════
+// HORIZON SCANNER
+// ══════════════════════════════════════════
+function tryHorizon(type,scenario,city){
   var delay=18+Math.random()*20;
-  var isPrev=Math.random()<(sc.preventChance||0.4);
-  var item={
-    id:hzSeq++, type:type, sc:sc, city:city,
-    dropAt:simT+delay, delay:delay,
-    mode:isPrev?'prevention':'preparation',
-    preempting:false, preemptDone:false, preemptTask:null
-  };
+  var mod=M[type]; var pv=mod?mod.pv:0.35;
+  var item={id:hzSeq++,type:type,scenario:scenario,city:city,
+    dropAt:simT+delay,delay:delay,
+    mode:Math.random()<pv?'prevention':'preparation',
+    preempting:false,preemptDone:false,preemptTask:null,prepped:false};
   horizonItems.push(item);
-  var modeLabel=isPrev?'\u2705 Prevention possible (65% chance)':'\uD83D\uDCCB Preparation possible (reduces resolve time)';
-  log('\uD83D\uDCE1 HORIZON: '+sc.name+' \u00B7 '+city.c+' \u00B7 '+Math.round(delay)+'s \u00B7 '+modeLabel,'ltw');
+  log('\uD83D\uDCE1 HORIZON: '+scenario.name+' \u00B7 '+city.c+' \u00B7 '+Math.round(delay)+'s \u00B7 '+(item.mode==='prevention'?'prevention possible':'preparation mode'),'ltw');
   renderHorizon();
 }
-
-window.preemptHorizon=function(hzId){
-  try {
-    var item=horizonItems.find(function(i){return i.id===hzId;});
-    if(!item||item.preempting||item.preemptDone) return;
-    var team=TEAMS.network;
-    if(team.task){log('Network Team busy — cannot pre-empt right now.','ltw');return;}
-    item.preempting=true;
-    var dur=8+Math.random()*7;
-    var task={id:taskSeq++,incId:null,hzId:hzId,team:'network',hzTask:true,
-      responseName:'Pre-empt: '+item.sc.name,
-      actualDur:dur,elapsed:0,progress:0,scorePts:0,
-      narrative:['Investigating threat intelligence feed...','Checking indicators of compromise...'],
-      narrativeIdx:0,compApplied:false};
-    team.task=task; tasks.push(task); item.preemptTask=task;
-    log('\uD83D\uDD0D Network Team pre-empting: '+item.sc.name+' at '+item.city.c,'lti');
-    renderTeams(); renderHorizon();
-  } catch(e){log('Pre-empt error: '+e.message,'lte');}
-};
-
-function updateHorizon(dt) {
-  // Tick preempt tasks
+function updateHorizon(dt){
+  // tick preempt tasks
   var hzTasks=tasks.filter(function(t){return t.hzTask;});
   var hzDone=[];
   hzTasks.forEach(function(task){
-    task.elapsed+=dt;
-    task.progress=Math.min(100,(task.elapsed/task.actualDur)*100);
-    var interval=task.narrative.length?task.actualDur/task.narrative.length:999;
-    if(task.narrativeIdx<task.narrative.length&&task.elapsed>=task.narrativeIdx*interval){
-      log('  '+task.narrative[task.narrativeIdx],'ltnt');
-      task.narrativeIdx++;
-    }
+    task.elapsed+=dt; task.progress=Math.min(100,(task.elapsed/task.actualDur)*100);
     if(task.progress>=100) hzDone.push(task);
   });
   hzDone.forEach(function(task){
-    var team=TEAMS.network; team.task=null;
-    var idx=tasks.indexOf(task); if(idx>-1)tasks.splice(idx,1);
-    var item=horizonItems.find(function(i){return i.hzId===task.hzId||i.preemptTask===task;});
+    var team=TEAMS.network; if(team.task===task) team.task=null;
+    var idx=tasks.indexOf(task); if(idx>-1) tasks.splice(idx,1);
+    var item=horizonItems.find(function(i){return i.preemptTask===task;});
     if(!item){renderTeams();return;}
-    item.preemptDone=true; item.preempting=false;
+    item.preemptDone=true;
     if(item.mode==='prevention'&&Math.random()<0.65){
       score+=75; document.getElementById('sc-v').textContent=score;
-      log('\u2705 PRE-EMPT SUCCESS: '+item.sc.name+' at '+item.city.c+' neutralised (+75pts)','lts');
+      log('\u2705 PRE-EMPT SUCCESS: '+item.scenario.name+' at '+item.city.c+' neutralised (+75pts)','lts');
       horizonItems=horizonItems.filter(function(i){return i.id!==item.id;});
-    } else if(item.mode==='prevention') {
-      log('\u26A0\uFE0F Pre-empt failed to prevent — '+item.sc.name+' dropping active now','lte');
+    } else if(item.mode==='prevention'){
+      log('\u26A0 Pre-empt failed — dropping active: '+item.scenario.name,'lte');
       horizonItems=horizonItems.filter(function(i){return i.id!==item.id;});
-      spawnActive(item.type,item.sc,item.city,false);
+      doSpawnActive(item.type,item.scenario,item.city,false);
     } else {
-      // preparation mode: still spawns but with prep bonus
-      log('\uD83D\uDCCB Playbooks prepared for '+item.sc.name+'. Resolve time -25% when it goes active.','lti');
-      item.prepped=true; // flag so when it drops, it spawns prepared
+      log('\uD83D\uDCCB Prepared: '+item.scenario.name+'. Resolve time -25% when active.','lti');
+      item.prepped=true;
     }
     renderTeams(); renderHorizon();
   });
-
-  // Drop timed-out horizon items
-  var toDrop=[];
-  horizonItems.forEach(function(item){
-    if(item.preemptDone||item.preempting) return;
-    if(simT>=item.dropAt) toDrop.push(item);
-  });
+  // drop horizon items
+  var toDrop=horizonItems.filter(function(item){return!item.preemptDone&&!item.preempting&&simT>=item.dropAt;});
   toDrop.forEach(function(item){
     horizonItems=horizonItems.filter(function(i){return i.id!==item.id;});
-    log('\u2B07 ACTIVE: '+item.sc.name+' \u00B7 '+item.city.c,'lte');
-    spawnActive(item.type,item.sc,item.city,item.prepped);
+    log('\u2B07 ACTIVE: '+item.scenario.name+' \u00B7 '+item.city.c,'lte');
+    doSpawnActive(item.type,item.scenario,item.city,item.prepped);
+    if(detailItem&&detailItem.hzItem&&detailItem.hzItem.id===item.id) closeDetail();
   });
   if(toDrop.length) renderHorizon();
 }
-
-function renderHorizon() {
+function renderHorizon(){
   var list=document.getElementById('hz-list');
   document.getElementById('hz-ct').textContent=horizonItems.length?horizonItems.length+' incoming':'clear';
   if(!horizonItems.length){list.innerHTML='<div class="hz-empty">No threats detected</div>';return;}
   list.innerHTML=horizonItems.map(function(item){
-    var tl=Math.max(0,item.dropAt-simT);
-    var pct=Math.min(100,((item.delay-tl)/item.delay)*100);
-    var hot=tl<8, warm=tl<18&&!hot;
-    var netFree=!TEAMS.network.task;
-    var modeHtml=item.mode==='prevention'?
-      '<div class="hz-mode prev">\u2705 Prevention possible if pre-empted</div>':
-      '<div class="hz-mode prep">\uD83D\uDCCB Preparation: reduces resolve time -25%</div>';
-    return '<div class="hz-item'+(hot?' hz-hot':'')+'">'+
-      '<div class="hz-row1">'+
-        '<span class="hz-ico">'+(MODULES[item.type]?MODULES[item.type].icon:'?')+'</span>'+
-        '<span class="hz-nm">'+item.sc.name+'</span>'+
-        '<span class="hz-t'+(hot?' hot':warm?' warm':' cool')+'">'+Math.round(tl)+'s</span>'+
+    var tl=Math.max(0,item.dropAt-simT), pct=Math.min(100,((item.delay-tl)/item.delay)*100);
+    var hot=tl<8;
+    var mod=M[item.type];
+    return '<div class="hz-row'+(hot?' hot':'')+'" data-action="open-hz" data-hz-id="'+item.id+'">'+
+      '<div class="hz-row-top">'+
+        '<span class="hz-ico">'+(mod?mod.icon:'?')+'</span>'+
+        '<span class="hz-nm">'+item.scenario.name+'</span>'+
+        '<span class="hz-t" style="color:'+(hot?'#ff3b6b':tl<18?'#ffb020':'#3a5870')+'">'+Math.round(tl)+'s</span>'+
       '</div>'+
-      '<div class="hz-mode" style="font-size:9px;color:#3a5870;margin-top:1px">'+item.city.c+'</div>'+
-      (item.preempting?'<div class="hz-mode prep">\u23F3 Network Team investigating...</div>':modeHtml)+
-      '<div class="hz-bar-w"><div class="hz-bar" style="width:'+pct+'%"></div></div>'+
-      '<div class="hz-acts">'+
-        (!item.preempting&&!item.preemptDone?
-          '<button class="hz-preempt"'+(netFree?'':' disabled')+' onclick="preemptHorizon('+item.id+')">'+
-          (netFree?'\uD83D\uDD0D PRE-EMPT':'Network Busy')+'</button>':'')+
-      '</div>'+
+      '<div class="hz-city">'+item.city.c+' \u00B7 '+(item.preempting?'\uD83D\uDD0D investigating...':item.mode)+'</div>'+
+      '<div class="hz-bw"><div class="hz-b" style="width:'+pct+'%"></div></div>'+
       '</div>';
   }).join('');
 }
-
-// ── SPAWN ──
-// Adjusted pacing: aggressive start, overwhelming by midpoint
-function getSpawnGap() {
-  var t=simT/simDur; // 0-1 through mission
-  // ramp: 0-15% slow, 15-40% medium, 40%+ intense
-  if(t<0.08) return [5,9];
-  if(t<0.15) return [11,17];
-  if(t<0.30) return [8,13];
-  if(t<0.50) return [5,9];
-  if(t<0.70) return [4,7];
-  return [3,5];
-}
-function schedNext(first) {
-  if(first){nextSpawnAt=simT+4+Math.random()*4;}
-  else{var g=getSpawnGap();nextSpawnAt=simT+g[0]+Math.random()*(g[1]-g[0]);}
-}
-
-function minActive(){
+// ══════════════════════════════════════════
+// SPAWN
+// ══════════════════════════════════════════
+function getGap(){
   var t=simT/simDur;
-  if(t<0.05)return 1;
-  if(t<0.15)return 2;
-  if(t<0.35)return 3;
-  if(t<0.55)return 4;
-  return 5;
+  if(t<0.08) return[5,9]; if(t<0.15) return[10,16]; if(t<0.30) return[7,12];
+  if(t<0.50) return[5,8]; if(t<0.70) return[3,6]; return[2,4];
 }
+function schedNext(first){var g=first?[4,7]:getGap();nextSpawnAt=simT+g[0]+Math.random()*(g[1]-g[0]);}
+function minActive(){var t=simT/simDur;if(t<0.05)return 1;if(t<0.15)return 2;if(t<0.35)return 3;if(t<0.55)return 4;return 5;}
 
-function spawnCycle() {
-  var allSc=[];
-  Object.keys(MODULES).forEach(function(type){
-    MODULES[type].scenarios.forEach(function(sc){
-      if(sc.responses&&sc.responses.length) allSc.push({type:type,sc:sc});
-    });
-  });
+function spawnCycle(){
+  var allSc=[]; Object.keys(M).forEach(function(type){M[type].scenarios.forEach(function(s){if(s.responses&&s.responses.length) allSc.push({type:type,s:s});});});
   if(!allSc.length) return;
   var pick=allSc[Math.floor(Math.random()*allSc.length)];
-  var usedCities=incidents.filter(function(i){return !i.resolved;}).map(function(i){return i.city;});
-  var inHorizon=horizonItems.map(function(h){return h.city.c;});
-  var cands=CITIES.filter(function(c){return usedCities.indexOf(c.c)===-1&&inHorizon.indexOf(c.c)===-1;});
+  var used=incidents.filter(function(i){return !i.resolved;}).map(function(i){return i.city;});
+  var inHz=horizonItems.map(function(h){return h.city.c;});
+  var cands=CITIES.filter(function(c){return used.indexOf(c.c)===-1&&inHz.indexOf(c.c)===-1;});
   if(!cands.length) cands=CITIES;
   var city=cands[Math.floor(Math.random()*cands.length)];
-  var sc=pick.sc;
-  var hz=typeof sc.horizonChance==='number'?sc.horizonChance:0.5;
-  // early game: slightly more horizon, late game: more bypasses
-  var bypassBoost=Math.max(0,(simT/simDur)-0.4)*0.3;
-  if(Math.random()<hz-bypassBoost) {
-    tryHorizon(pick.type,sc,city);
-  } else {
-    log('\u26A1 BYPASS: '+sc.name+' \u00B7 '+city.c+' appeared without warning','lte');
-    spawnActive(pick.type,sc,city,false);
-  }
+  var mod=M[pick.type]; var hz=mod?mod.hz:0.5;
+  var bypassBoost=Math.max(0,(simT/simDur-0.4)*0.25);
   checkNewType(pick.type);
+  if(Math.random()<hz-bypassBoost) tryHorizon(pick.type,pick.s,city);
+  else{log('\u26A1 BYPASS: '+pick.s.name+' \u00B7 '+city.c+' — no warning','lte'); doSpawnActive(pick.type,pick.s,city,false);}
 }
-
-function spawnActive(type,sc,city,prepared) {
-  var pMult=simT/simDur;
-  var sev=Math.random()<Math.min(0.35,0.08+pMult*0.35)?2:1;
-  var users=Math.floor(sc.uMin+Math.random()*(sc.uMax-sc.uMin));
-  var inc={
-    id:nextId++, type:type, city:city.c, lat:city.la, lon:city.lo,
-    name:sc.name, sev:sev, users:users,
-    escAge:0, escRate:sc.escR*(0.65+Math.random()*0.6)*(1-pMult*0.3),
-    resolved:false, activeTaskId:null, pausedTasks:[], _sc:sc,
-    prepared:!!prepared
-  };
+function doSpawnActive(type,scenario,city,prepared){
+  var t=simT/simDur, sev=Math.random()<Math.min(0.35,0.08+t*0.35)?2:1;
+  var users=Math.floor(scenario.uMin+Math.random()*(scenario.uMax-scenario.uMin));
+  var inc={id:nextId++,type:type,city:city.c,lat:city.la,lon:city.lo,
+    name:scenario.name,sev:sev,users:users,
+    escAge:0,escRate:scenario.escR*(0.65+Math.random()*0.6)*(1-t*0.25),
+    resolved:false,activeTaskId:null,pausedTasks:[],_sc:scenario,prepared:!!prepared};
   incidents.push(inc); spawnedCount++;
   document.getElementById('rs-v').textContent=resolvedCount+'/'+spawnedCount;
-  var prepNote=prepared?' [PREPARED \u2014 resolve time -25%]':'';
-  log('\uD83D\uDEA8 ACTIVE #'+inc.id+': '+sc.name+' \u00B7 '+city.c+' \u00B7 Sev '+sev+' \u00B7 ~'+users.toLocaleString()+prepNote,'ltw');
+  log('\uD83D\uDEA8 ACTIVE #'+inc.id+': '+scenario.name+' \u00B7 '+city.c+' \u00B7 Sev '+sev+(prepared?' [PREPARED]':''),'ltw');
   makeMarker(inc); calcDefcon(); renderIncidents();
 }
-
-function doEscalation(dt) {
-  var changed=false;
-  var pMult=simT/simDur;
+function doEscalation(dt){
+  var changed=false, t=simT/simDur;
   incidents.forEach(function(inc){
     if(inc.resolved||inc.activeTaskId) return;
-    inc.escAge+=dt*(1+pMult*0.8); // escalation accelerates through mission
+    inc.escAge+=dt*(1+t*0.9);
     if(inc.escAge>=inc.escRate&&inc.sev<3){
       inc.sev++; inc.escAge=0; changed=true;
       log('\uD83D\uDD34 #'+inc.id+' \u2192 Sev '+inc.sev+': '+inc._sc.escs[inc.sev-1],'lte');
       if(inc.sev===3){score=Math.max(0,score-30);document.getElementById('sc-v').textContent=score;}
     }
   });
-  if(changed){calcDefcon();renderIncidents();}
+  if(changed){calcDefcon();renderIncidents();updateMarkerColors();}
 }
-
-function doSpread(dt) {
+function doSpread(dt){
   incidents.forEach(function(inc){
     if(inc.resolved||inc.sev<3) return;
     inc.spreadTimer=(inc.spreadTimer||0)+dt;
-    if(inc.spreadTimer<14) return;
-    inc.spreadTimer=0;
-    if(Math.random()<0.28){
-      var usedCities=incidents.filter(function(i){return !i.resolved;}).map(function(i){return i.city;});
-      var cands=CITIES.filter(function(c){return usedCities.indexOf(c.c)===-1;});
+    if(inc.spreadTimer<13) return; inc.spreadTimer=0;
+    if(Math.random()<0.3){
+      var used=incidents.filter(function(i){return !i.resolved;}).map(function(i){return i.city;});
+      var cands=CITIES.filter(function(c){return used.indexOf(c.c)===-1;});
       if(!cands.length) return;
       var dst=cands[Math.floor(Math.random()*cands.length)];
       score=Math.max(0,score-50); document.getElementById('sc-v').textContent=score;
       log('\u26A1 SPREAD: #'+inc.id+' \u2192 '+dst.c+' (-50pts)','lte');
-      spawnActive(inc.type,inc._sc,dst,false);
+      doSpawnActive(inc.type,inc._sc,dst,false);
     }
   });
 }
-
-function checkMin() {
-  var a=incidents.filter(function(i){return !i.resolved;}).length;
-  var n=minActive();
-  if(a<n) spawnCycle();
-}
-
-function calcDefcon() {
+function checkMin(){var a=incidents.filter(function(i){return !i.resolved;}).length;if(a<minActive())spawnCycle();}
+function calcDefcon(){
   var a=incidents.filter(function(i){return !i.resolved;});
   var s3=a.filter(function(i){return i.sev===3;}).length;
-  var d=5;
-  if(a.length>=1)d=4; if(a.length>=3||s3>=1)d=3;
-  if(a.length>=5||s3>=2)d=2; if(s3>=3||a.length>=8)d=1;
+  var d=5; if(a.length>=1)d=4; if(a.length>=3||s3>=1)d=3; if(a.length>=5||s3>=2)d=2; if(s3>=3||a.length>=8)d=1;
   defcon=d;
   var cols=['#00ffa3','#29e0ff','#ffe020','#ff8a20','#ff3b6b'];
-  document.getElementById('dc-v').textContent=d;
-  document.getElementById('dc-v').style.color=cols[5-d];
+  document.getElementById('dc-v').textContent=d; document.getElementById('dc-v').style.color=cols[5-d];
 }
-
-// ── RENDER TEAMS ──
-function renderTeams() {
+// ══════════════════════════════════════════
+// RENDER TEAMS
+// ══════════════════════════════════════════
+function renderTeams(){
   Object.values(TEAMS).forEach(function(team){
     var el=document.getElementById('tr-'+team.id); if(!el) return;
     var t=team.task, col=tCol(team.id);
-    var html='<div class="tr-h"><span class="tr-ico">'+team.icon+'</span><span class="tr-name">'+team.name+'</span>';
+    var h='<div class="tr-h"><span class="tr-ico">'+team.icon+'</span><span class="tr-nm">'+team.name+'</span>';
     if(t&&!t.hzTask){
       var eta=Math.max(0,t.actualDur-t.elapsed);
-      html+='<span class="tb tb-busy">'+Math.round(t.progress)+'%</span></div>';
-      html+='<div class="tr-task">'+t.responseName+(t.incId?' \u00B7 #'+t.incId:'')+'</div>';
-      html+='<div class="tr-prog-row"><div class="tr-bar-w"><div class="tr-bar" style="width:'+t.progress.toFixed(1)+'%;background:'+col+'"></div></div>';
-      html+='<span class="tr-eta" style="color:'+col+'">~'+Math.round(eta)+'s</span></div>';
-      html+='<button class="sm-btn btn-pause" onclick="pauseTask(\''+team.id+'\')">⏸ pause</button>';
-    } else if(t&&t.hzTask) {
-      html+='<span class="tb tb-busy">PRE-EMPT</span></div>';
-      html+='<div class="tr-task">'+t.responseName+'</div>';
-      html+='<div class="tr-prog-row"><div class="tr-bar-w"><div class="tr-bar" style="width:'+t.progress.toFixed(1)+'%;background:#9b6dff"></div></div>';
-      html+='<span class="tr-eta" style="color:#9b6dff">~'+Math.round(Math.max(0,t.actualDur-t.elapsed))+'s</span></div>';
-    } else {
-      html+='<span class="tb tb-free">FREE</span></div>';
+      h+='<span class="tb tb-busy">'+Math.round(t.progress)+'%</span></div>';
+      h+='<div class="tr-task">'+t.responseName+(t.incId?' \u00B7 #'+t.incId:'')+'</div>';
+      h+='<div class="tr-prow"><div class="tr-bw"><div class="tr-b" style="width:'+t.progress.toFixed(1)+'%;background:'+col+'"></div></div><span class="tr-eta" style="color:'+col+'">~'+Math.round(eta)+'s</span></div>';
+      h+='<button class="sm-btn sbp" data-action="pause-team" data-team-id="'+team.id+'">⏸ pause</button>';
+    }else if(t&&t.hzTask){
+      h+='<span class="tb tb-busy">PRE-EMPT</span></div>';
+      h+='<div class="tr-task">'+t.responseName+'</div>';
+      h+='<div class="tr-prow"><div class="tr-bw"><div class="tr-b" style="width:'+t.progress.toFixed(1)+'%;background:#9b6dff"></div></div><span class="tr-eta" style="color:#9b6dff">~'+Math.round(Math.max(0,t.actualDur-t.elapsed))+'s</span></div>';
+    }else{
+      h+='<span class="tb tb-free">FREE</span></div>';
       team.paused.forEach(function(pt){
-        html+='<div style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,.04)">';
-        html+='<div class="tr-task" style="color:#ffb020">\u23F8 '+pt.responseName+' \u00B7 #'+pt.incId+' \u00B7 '+Math.round(pt.progress)+'%</div>';
-        html+='<button class="sm-btn btn-resume" onclick="resumeTask(\''+team.id+'\','+pt.id+')">&#9654; resume</button>';
-        html+='</div>';
+        h+='<div style="margin-top:3px;padding-top:3px;border-top:1px solid rgba(255,255,255,.04)"><div class="tr-task" style="color:#ffb020">\u23F8 '+pt.responseName+' \u00B7 '+Math.round(pt.progress)+'%</div>';
+        h+='<button class="sm-btn sbr" data-action="resume-task" data-team-id="'+team.id+'" data-task-id="'+pt.id+'">&#9654; resume</button></div>';
       });
     }
-    el.innerHTML=html;
+    el.innerHTML=h;
   });
 }
-
-// ── RENDER INCIDENTS ──
-function renderIncidents() {
-  var scroll=document.getElementById('inc-scroll');
+// ══════════════════════════════════════════
+// RENDER INCIDENTS
+// ══════════════════════════════════════════
+function renderIncidents(){
+  var wrap=document.getElementById('inc-list-wrap');
   var active=incidents.filter(function(i){return !i.resolved;});
   document.getElementById('ic-ct').textContent=active.length;
-  if(!incidents.length){scroll.innerHTML='<div style="padding:12px;font-size:10px;color:#3a5870;text-align:center">Monitoring...</div>';return;}
-  var sorted=active.slice().sort(function(a,b){
-    return(b.sev-a.sev)||(b.escAge/b.escRate)-(a.escAge/a.escRate);
-  }).concat(incidents.filter(function(i){return i.resolved;}).slice(-2));
-  scroll.innerHTML=sorted.map(function(inc){
+  if(!incidents.length){wrap.innerHTML='<div style="padding:10px;font-size:9px;color:#3a5870;text-align:center">Monitoring...</div>';return;}
+  var sorted=active.slice().sort(function(a,b){return(b.sev-a.sev)||(b.escAge/b.escRate)-(a.escAge/a.escRate);})
+    .concat(incidents.filter(function(i){return i.resolved;}).slice(-2));
+  wrap.innerHTML=sorted.map(function(inc){
     if(!inc._sc) return '';
     var task=inc.activeTaskId?tasks.find(function(t){return t.id===inc.activeTaskId;}):null;
-    var hasPaused=inc.pausedTasks&&inc.pausedTasks.length;
+    var hp=inc.pausedTasks&&inc.pausedTasks.length;
     var tte=!inc.resolved&&inc.sev<3?Math.max(0,inc.escRate-inc.escAge):null;
-    var escPct=inc.escRate?Math.min(100,(inc.escAge/inc.escRate)*100):0;
-    var escCol=escPct>80?'#ff3b6b':escPct>55?'#ffb020':'#00ffa3';
-    var html='<div class="ic'+(inc.resolved?' ic-done':' s'+inc.sev)+(inc.prepared?' prepared':'')+ '" id="ic-'+inc.id+'">';
-    html+='<div class="ic-h"><span style="font-size:12px">'+(MODULES[inc.type]?MODULES[inc.type].icon:'?')+'</span>'+
-      '<span class="ic-nm">#'+inc.id+' '+inc.name+'</span>'+
-      '<span class="ic-sev '+(inc.resolved?'svd':'sv'+inc.sev)+'">'+(inc.resolved?'\u2713 DONE':'SEV '+inc.sev)+'</span></div>';
-    html+='<div class="ic-loc">'+inc.city+' \u00B7 ~'+inc.users.toLocaleString()+' users</div>';
-    if(inc.prepared&&!inc.resolved) html+='<div class="ic-prepared-badge">\uD83D\uDCCB Playbooks ready \u2014 -25% resolve time</div>';
+    var ep=inc.escRate?Math.min(100,(inc.escAge/inc.escRate)*100):0;
+    var ec=ep>80?'#ff3b6b':ep>55?'#ffb020':'#00ffa3';
+    var mod=M[inc.type];
+    var h='<div class="ic'+(inc.resolved?' done':' s'+inc.sev)+'" data-action="open-inc" data-inc-id="'+inc.id+'">';
+    h+='<div class="ic-h"><span class="ic-ico">'+(mod?mod.icon:'?')+'</span><span class="ic-nm">#'+inc.id+' '+inc.name+'</span><span class="ic-sev '+(inc.resolved?'svd':'sv'+inc.sev)+'">'+(inc.resolved?'\u2713 DONE':'SEV '+inc.sev)+'</span></div>';
+    h+='<div class="ic-sub">'+inc.city+' \u00B7 ~'+inc.users.toLocaleString()+' users'+(inc.prepared?' \u00B7 PREPARED':'')+'</div>';
     if(!inc.resolved){
       if(task&&!task.hzTask){
-        var col2=tCol(task.team), eta2=Math.max(0,task.actualDur-task.elapsed);
-        html+='<div class="ic-task"><div class="ic-task-row">'+
-          '<span style="font-size:11px">'+TEAMS[task.team].icon+'</span>'+
-          '<span class="ic-task-n">'+task.responseName+'</span>'+
-          '<span class="ic-task-pct" style="color:'+col2+'">'+Math.round(task.progress)+'%</span>'+
-          '<span class="ic-task-eta">~'+Math.round(eta2)+'s</span></div>'+
-          '<div class="ic-task-bar-w"><div class="ic-task-bar" style="width:'+task.progress.toFixed(1)+'%;background:'+col2+'"></div></div></div>';
-      } else {
-        html+='<div class="ic-unassigned"><span></span>UNASSIGNED</div>';
-        if(hasPaused) inc.pausedTasks.forEach(function(pt){
-          html+='<div class="ic-task" style="border-top:1px solid rgba(255,176,32,.12)">'+
-            '<div class="ic-task-row"><span style="font-size:11px">\u23F8</span>'+
-            '<span class="ic-task-n" style="color:#ffb020">'+pt.responseName+'</span>'+
-            '<span class="ic-task-pct" style="color:#ffb020">'+Math.round(pt.progress)+'%</span></div>'+
-            '<div class="ic-task-bar-w"><div class="ic-task-bar" style="width:'+pt.progress.toFixed(1)+'%;background:#ffb020"></div></div></div>';
+        var eta2=Math.max(0,task.actualDur-task.elapsed),col2=tCol(task.team);
+        h+='<div class="ic-tk"><div class="ic-tk-row"><span>'+TEAMS[task.team].icon+'</span><span class="ic-tk-n">'+task.responseName+'</span><span class="ic-tk-pct" style="color:'+col2+'">'+Math.round(task.progress)+'%</span><span class="ic-tk-eta">~'+Math.round(eta2)+'s</span></div>';
+        h+='<div class="ic-tk-bw"><div class="ic-tk-b" style="width:'+task.progress.toFixed(1)+'%;background:'+col2+'"></div></div></div>';
+      }else{
+        h+='<div class="ic-ua">UNASSIGNED — click to assess &amp; respond</div>';
+        if(hp) inc.pausedTasks.forEach(function(pt){
+          h+='<div class="ic-tk"><div class="ic-tk-row"><span>\u23F8</span><span class="ic-tk-n" style="color:#ffb020">'+pt.responseName+'</span><span class="ic-tk-pct" style="color:#ffb020">'+Math.round(pt.progress)+'%</span></div>';
+          h+='<div class="ic-tk-bw"><div class="ic-tk-b" style="width:'+pt.progress.toFixed(1)+'%;background:#ffb020"></div></div></div>';
         });
-        html+='<div class="ic-rbtn" onclick="openRP('+inc.id+')">&#9670; SEE RESPONSE OPTIONS</div>';
       }
-      if(inc.sev<3){
-        var escLabel=tte!==null?'Sev '+(inc.sev+1)+' in ~'+Math.round(tte)+'s':'';
-        html+='<div class="ic-esc-row"><div class="ic-esc-w"><div class="ic-esc-b" style="width:'+escPct+'%;background:'+escCol+'"></div></div>'+
-          '<div class="ic-esc-t" style="color:'+(tte<12?'#ff3b6b':tte<25?'#ffb020':'#3a5870')+'">'+escLabel+'</div></div>';
+      if(inc.sev<3&&tte!==null){
+        h+='<div class="ic-esc"><div class="ic-esc-bw"><div class="ic-esc-b" style="width:'+ep+'%;background:'+ec+'"></div></div>';
+        h+='<div class="ic-esc-t" style="color:'+(tte<12?'#ff3b6b':tte<25?'#ffb020':'#3a5870')+'">Sev '+(inc.sev+1)+' ~'+Math.round(tte)+'s</div></div>';
       }
     }
-    return html+'</div>';
+    return h+'</div>';
   }).join('');
-  scroll.querySelectorAll('.ic').forEach(function(el){
-    el.addEventListener('click',function(e){
-      if(e.target.closest('.ic-rbtn')||e.target.closest('.sm-btn')) return;
-      var m=el.id.match(/ic-(\d+)/); if(m) openRP(parseInt(m[1]));
-    });
-  });
 }
-
-// ── RESPONSE PANEL ──
-window.openRP=function(incId){
-  try {
-    var inc=incidents.find(function(i){return i.id===incId;});
-    if(!inc||inc.resolved) return;
-    var sc=inc._sc, mod=MODULES[inc.type];
-    document.getElementById('rp-tag').textContent='INCIDENT #'+inc.id+' \u00B7 '+inc.type.toUpperCase();
-    document.getElementById('rp-nm').textContent=(mod?mod.icon:'')+' '+inc.name;
-    document.getElementById('rp-sub').textContent=inc.city+' \u00B7 Sev '+inc.sev+' \u00B7 ~'+inc.users.toLocaleString()+' users at risk'+(inc.prepared?' [PREPARED]':'');
-    var tte=inc.sev<3?Math.max(0,inc.escRate-inc.escAge):null;
-    // Educational brief
-    var briefHtml='<div class="rp-sec"><div class="rp-sh">WHAT IS THIS ATTACK?</div>'+
-      '<div class="rp-brief">'+(mod?mod.brief:sc.short)+'</div>'+
-      (mod&&mod.ocrRef?'<div class="rp-ocr-ref">\uD83D\uDCDA '+mod.ocrRef+'</div>':'')+
-      '</div>';
-    // Consequences
-    var conHtml='<div class="rp-sec"><div class="rp-sh">IF YOU DO NOTHING</div><div class="rp-con">';
-    if(inc.sev===3){
-      conHtml+='<div class="rp-con-hd">\uD83D\uDD34 SEV 3 \u2014 SPREADING EVERY ~14 SECONDS</div>'+
-        '\u26A1 Each spread spawns a new incident in another city (-50pts)<br>Assign a team immediately.';
-    } else if(tte!==null){
-      conHtml+='<div class="rp-con-hd">\u26A0\uFE0F ESCALATION IN ~'+Math.round(tte)+'s</div>'+
-        '\u25B6 Escalates to Sev '+(inc.sev+1)+(inc.sev===2?' \u2014 begins spreading':' \u2014 harder to resolve')+'<br>'+
-        '\u25B6 Escalation penalty: -30pts';
-    } else {
-      conHtml+='Assign a team to resolve this incident.';
+// ══════════════════════════════════════════
+// DETAIL SCREEN
+// ══════════════════════════════════════════
+function urgencyScore(inc){
+  if(inc.resolved) return 0;
+  var base=inc.sev*30;
+  var tte=inc.sev<3?Math.max(0,inc.escRate-inc.escAge):0;
+  var urgency=inc.sev===3?100:Math.min(95,base+Math.max(0,100-(tte/inc.escRate)*100)*0.4);
+  var userScore=Math.min(20,inc.users/5000);
+  return Math.min(100,Math.round(urgency+userScore+(inc.prepared?-5:0)));
+}
+function openDetailInc(incId){
+  var inc=incidents.find(function(i){return i.id===incId;});
+  if(!inc||inc.resolved) return;
+  detailItem={inc:inc};
+  renderDetailInc(inc);
+  document.getElementById('detail').classList.add('show');
+}
+function openDetailHz(hzId){
+  var item=horizonItems.find(function(i){return i.id===hzId;});
+  if(!item) return;
+  detailItem={hzItem:item};
+  renderDetailHz(item);
+  document.getElementById('detail').classList.add('show');
+}
+function closeDetail(){document.getElementById('detail').classList.remove('show');detailItem=null;}
+function refreshDetail(){
+  if(!detailItem) return;
+  if(detailItem.inc) renderDetailInc(detailItem.inc);
+  else if(detailItem.hzItem) renderDetailHz(detailItem.hzItem);
+}
+function renderDetailInc(inc){
+  var sc=inc._sc, mod=M[inc.type];
+  var urg=urgencyScore(inc), urgCol=urg>75?'#ff3b6b':urg>50?'#ffb020':'#00ffa3';
+  var task=inc.activeTaskId?tasks.find(function(t){return t.id===inc.activeTaskId;}):null;
+  var tte=inc.sev<3?Math.max(0,inc.escRate-inc.escAge):null;
+  var researched=!!researchedTypes[inc.type], seen=!!seenTypes[inc.type];
+  var h='<div class="det-hdr">';
+  h+='<div class="det-type">'+(mod?mod.cat.toUpperCase():inc.type.toUpperCase())+' \u00B7 INCIDENT #'+inc.id+'</div>';
+  h+='<div class="det-nm">'+(mod?mod.icon:'')+' '+inc.name+'</div>';
+  h+='<div class="det-sub">'+inc.city+' \u00B7 Sev '+inc.sev+' \u00B7 ~'+inc.users.toLocaleString()+' users'+(inc.prepared?' \u00B7 \uD83D\uDCCB PREPARED':'')+' \u00B7 '+(inc.type in researchedTypes?'\u2705 Researched':'\uD83D\uDD2C Unresearched')+'</div>';
+  h+='</div>';
+  // Priority
+  h+='<div class="det-sec"><div class="det-sh">PRIORITY ASSESSMENT</div>';
+  h+='<div class="priority-bar"><div class="priority-fill" style="width:'+urg+'%;background:'+urgCol+'"></div></div>';
+  h+='<div class="priority-rows">';
+  h+='<div class="pr-row"><div class="pr-lbl">Urgency</div><div class="pr-val" style="color:'+urgCol+'">'+urg+' / 100</div></div>';
+  h+='<div class="pr-row"><div class="pr-lbl">Severity</div><div class="pr-val" style="color:'+(inc.sev===3?'#ff3b6b':inc.sev===2?'#ffb020':'#00ffa3')+'">SEV '+inc.sev+'</div></div>';
+  h+='<div class="pr-row"><div class="pr-lbl">Users at Risk</div><div class="pr-val">'+inc.users.toLocaleString()+'</div></div>';
+  if(tte!==null) h+='<div class="pr-row"><div class="pr-lbl">Escalates</div><div class="pr-val" style="color:'+(tte<15?'#ff3b6b':'#ffb020')+'">~'+Math.round(tte)+'s</div></div>';
+  if(inc.sev===3) h+='<div class="pr-row"><div class="pr-lbl">Spreading</div><div class="pr-val" style="color:#ff3b6b">ACTIVE</div></div>';
+  h+='</div></div>';
+  // What is it
+  h+='<div class="det-sec"><div class="det-sh">WHAT IS THIS ATTACK?</div>';
+  h+='<div class="det-brief">'+(mod?mod.brief:sc.short)+'</div>';
+  if(mod) h+='<span class="det-ocr">\uD83D\uDCDA '+mod.ocrRef+'</span>';
+  h+='</div>';
+  // Consequence
+  h+='<div class="det-sec"><div class="det-sh">IF YOU DO NOTHING</div><div class="det-con">';
+  if(inc.sev===3){h+='<div class="det-con-hd">\uD83D\uDD34 SEV 3 — SPREADING NOW</div>Spawns new incident every ~13s in another city. Each spread = -50pts.';}
+  else if(tte!==null){h+='<div class="det-con-hd">\u26A0 Escalates to Sev '+(inc.sev+1)+' in ~'+Math.round(tte)+'s</div>'+(inc.sev===2?'At Sev 3 it begins spreading. ':'')+'Escalation penalty: -30pts.';}
+  h+='</div></div>';
+  // Actions
+  h+='<div class="det-actions">';
+  if(!researched&&!activeResearches.find(function(r){return r.type===inc.type;})){
+    h+='<button class="det-btn det-btn-research" data-action="do-research" data-type="'+inc.type+'">\uD83D\uDD2C Research "'+inc.type+'" — costs 75 pts, 20s background. Future resolves -10%.</button>';
+  } else if(activeResearches.find(function(r){return r.type===inc.type;})){
+    h+='<button class="det-btn det-btn-research" disabled style="opacity:.5">\uD83D\uDD2C Researching '+inc.type+'...</button>';
+  } else {
+    h+='<div style="font-size:9px;color:#3a5870;padding:2px 0">\u2705 '+inc.type+' researched — -10% applied to all options</div>';
+  }
+  if(task&&!task.hzTask){
+    var eta3=Math.max(0,task.actualDur-task.elapsed);
+    h+='<div style="font-size:10px;color:#aaccee;padding:5px 0">'+TEAMS[task.team].icon+' '+TEAMS[task.team].name+' is handling this — '+Math.round(task.progress)+'% complete, ~'+Math.round(eta3)+'s remaining</div>';
+    h+='<button class="det-btn det-btn-pause" data-action="pause-team" data-team-id="'+task.team+'">⏸ Pause '+TEAMS[task.team].name+' (preserves progress)</button>';
+  } else {
+    if(inc.pausedTasks&&inc.pausedTasks.length){
+      inc.pausedTasks.forEach(function(pt){
+        h+='<button class="det-btn det-btn-research" data-action="resume-task" data-team-id="'+pt.team+'" data-task-id="'+pt.id+'">\u25B6 Resume: '+pt.responseName+' ('+Math.round(pt.progress)+'% complete)</button>';
+      });
     }
-    conHtml+='</div></div>';
-    // Options
-    var optsHtml='<div class="rp-sec"><div class="rp-sh">RESPONSE OPTIONS</div>';
-    sc.responses.forEach(function(resp){
-      var team=TEAMS[resp.team], busy=!!team.task;
-      var col2=tCol(resp.team);
-      var prepMult=inc.prepared?0.75:1.0;
-      var resMult=researchedTypes[inc.type]?0.9:1.0;
-      var estLo=Math.round(resp.baseDuration*0.65*prepMult*resMult);
-      var estHi=Math.round(resp.baseDuration*1.4*prepMult*resMult);
-      optsHtml+='<div class="ro">'+
-        '<div class="ro-h"><span class="ro-tm">'+team.icon+'</span>'+
-        '<div class="ro-info"><div class="ro-nm">'+resp.name+'</div><div class="ro-tl">'+team.name+(busy?' \u2014 BUSY':' \u2014 FREE')+'</div></div>'+
-        '<div class="ro-dur-b"><div class="ro-dur" style="color:'+col2+'">'+estLo+'\u2013'+estHi+'s</div><div class="ro-dur-l">EST RANGE</div></div></div>'+
-        '<div class="ro-desc">'+resp.description+'</div>'+
-        '<div class="ro-impact">'+
-          '<div class="ro-imp-row"><span>Score on complete</span><span style="color:#00ffa3">+'+resp.scorePts+' pts</span></div>'+
-          '<div class="ro-imp-row"><span>Effectiveness</span><span style="color:'+(resp.effectiveness>=90?'#00ffa3':'#ffb020')+'">'+resp.effectiveness+'%</span></div>'+
-          '<div class="ro-imp-row"><span>Spec ref</span><span style="color:#9b6dff">'+resp.ocrRef+'</span></div>'+
-          (inc.prepared?'<div class="ro-imp-row"><span>Prepared bonus</span><span style="color:#9b6dff">-25% time</span></div>':'')+
-          (researchedTypes[inc.type]?'<div class="ro-imp-row"><span>Research bonus</span><span style="color:#9b6dff">-10% time</span></div>':'')+
-        '</div>'+
-        '<div class="ro-risk">\u26A0\uFE0F During response: '+resp.duringRisk+'</div>'+
-        '<div class="ro-tags">'+
-          '<span class="tag tg-ok">'+resp.effectiveness+'% effective</span>'+
-          '<span class="tag tg-ocr">'+resp.ocrRef+'</span>'+
-          (busy?'<span class="tag tg-busy">TEAM BUSY</span>':'')+
-          (inc.prepared?'<span class="tag tg-prep">PREPARED</span>':'')+
-        '</div>'+
-        '<button class="ro-btn '+(busy?'go-busy':'go-go')+'" onclick="assignTask('+incId+',\''+resp.id+'\')">'+(busy?'\u26A0 STOP & REASSIGN':'\u25B8 ASSIGN TO '+team.name.toUpperCase())+'</button>'+
-        '</div>';
+    (sc.responses||[]).forEach(function(resp){
+      var team=TEAMS[resp.team], busy=!!team.task, col=tCol(resp.team);
+      var pm=inc.prepared?0.75:1, rm=researchedTypes[inc.type]?0.9:1;
+      var estLo=Math.round(resp.baseDuration*0.65*pm*rm), estHi=Math.round(resp.baseDuration*1.4*pm*rm);
+      h+='<button class="det-btn '+(busy?'det-btn-busy':'det-btn-assign')+'" data-action="assign" data-inc-id="'+inc.id+'" data-resp-id="'+resp.id+'">';
+      h+=team.icon+' '+(busy?'[BUSY] ':'')+resp.name+'<br>';
+      h+='<span style="font-size:9px;font-weight:normal;opacity:.8">'+team.name+' \u00B7 ~'+estLo+'\u2013'+estHi+'s \u00B7 +'+resp.scorePts+'pts \u00B7 '+resp.effectiveness+'% effective</span></button>';
+      h+='<div class="det-impact">';
+      h+='<div class="det-impact-row"><span>During response:</span><span>'+resp.duringRisk+'</span></div>';
+      h+='</div>';
     });
-    optsHtml+='</div>';
-    document.getElementById('rp-opts').innerHTML=briefHtml+conHtml+optsHtml;
-    document.getElementById('rp').classList.add('open');
-  } catch(e){log('Error opening response panel: '+e.message,'lte');}
-};
-window.closeRP=function(){document.getElementById('rp').classList.remove('open');};
-
-// ── OPS LOG ──
-var logEl=document.getElementById('log-out');
-function log(msg,cls){
-  var d=document.createElement('div');
-  d.className=cls||'lti';
-  d.textContent=msg;
-  logEl.appendChild(d);
-  logEl.scrollTop=9999;
+  }
+  h+='</div>';
+  document.getElementById('det-content').innerHTML=h;
 }
+function renderDetailHz(item){
+  var mod=M[item.type], sc=item.scenario;
+  var tl=Math.max(0,item.dropAt-simT);
+  var researched=!!researchedTypes[item.type];
+  var h='<div class="det-hdr">';
+  h+='<div class="det-type">HORIZON SCANNER \u00B7 '+item.mode.toUpperCase()+'</div>';
+  h+='<div class="det-nm">'+(mod?mod.icon:'')+' '+sc.name+'</div>';
+  h+='<div class="det-sub">'+item.city.c+' \u00B7 Drops active in ~'+Math.round(tl)+'s \u00B7 '+(item.preempting?'\uD83D\uDD0D investigating...':item.mode==='prevention'?'Prevention possible':'Preparation mode')+'</div>';
+  h+='</div>';
+  h+='<div class="det-sec"><div class="det-sh">WHAT IS THIS ATTACK?</div>';
+  h+='<div class="det-brief">'+(mod?mod.brief:sc.short)+'</div>';
+  if(mod) h+='<span class="det-ocr">\uD83D\uDCDA '+mod.ocrRef+'</span>';
+  h+='</div>';
+  h+='<div class="det-sec"><div class="det-sh">PRE-EMPT OPTIONS</div>';
+  h+='<div class="det-con"><div class="det-con-hd">'+(item.mode==='prevention'?'\u2705 Prevention mode (65% chance)':'\uD83D\uDCCB Preparation mode (reduces resolve time -25%)')+'</div>';
+  h+=item.mode==='prevention'?'Network Team investigates for 8-15s. 65% chance the incident never goes active (+75pts). 35% chance it spawns anyway.':'Network Team prepares response playbooks for 8-15s. Incident will still go active but your team resolves it 25% faster.';
+  h+='</div></div>';
+  h+='<div class="det-actions">';
+  if(!researched&&!activeResearches.find(function(r){return r.type===item.type;})){
+    h+='<button class="det-btn det-btn-research" data-action="do-research" data-type="'+item.type+'">\uD83D\uDD2C Research "'+item.type+'" now — costs 75pts, reduces future resolves -10%</button>';
+  }
+  if(!item.preempting&&!item.preemptDone){
+    var netFree=!TEAMS.network.task;
+    h+='<button class="det-btn '+(netFree?'det-btn-preempt':'det-btn-busy')+'" '+(netFree?'':'disabled ')+
+      'data-action="preempt-hz" data-hz-id="'+item.id+'">';
+    h+='\uD83D\uDD0D '+(netFree?'Pre-empt Now — Network Team investigates (~10s)':'Network Team busy — cannot pre-empt now');
+    h+='</button>';
+  } else if(item.preempting){
+    h+='<div style="font-size:10px;color:#9b6dff;padding:5px 0">\uD83D\uDD0D Network Team investigating... will drop automatically if not neutralised.</div>';
+  }
+  h+='<button class="det-btn det-btn-skip" data-action="close-detail">Monitor — let it become active</button>';
+  h+='</div>';
+  document.getElementById('det-content').innerHTML=h;
+}
+
+// ══════════════════════════════════════════
+// DELEGATED EVENT LISTENERS (no onclick attrs)
+// ══════════════════════════════════════════
+function handleAction(action,el){
+  try{
+    if(action==='open-inc'){var id=parseInt(el.dataset.incId);if(!isNaN(id))openDetailInc(id);}
+    else if(action==='open-hz'){var hid=parseInt(el.dataset.hzId);if(!isNaN(hid))openDetailHz(hid);}
+    else if(action==='close-detail'){closeDetail();}
+    else if(action==='assign'){
+      var incId=parseInt(el.dataset.incId), respId=el.dataset.respId;
+      var inc=incidents.find(function(i){return i.id===incId;});
+      if(!inc||inc.resolved){log('Incident not found.','ltw');return;}
+      var resp=inc._sc.responses.find(function(r){return r.id===respId;});
+      if(!resp){log('Response not found: '+respId,'ltw');return;}
+      var team=TEAMS[resp.team];
+      if(team.task){preemptPending={inc:inc,resp:resp};document.getElementById('pdlg-msg').textContent=team.name+' is on "'+team.task.responseName+'" at '+Math.round(team.task.progress)+'%. Stop and reassign?';document.getElementById('pdlg').classList.add('show');}
+      else doAssign(inc,resp);
+    }
+    else if(action==='pause-team'){var teamId=el.dataset.teamId;var team=TEAMS[teamId];if(team&&team.task){var t=team.task;var inc2=incidents.find(function(i){return i.id===t.incId;});if(inc2){if(!inc2.pausedTasks)inc2.pausedTasks=[];inc2.pausedTasks.push(t);inc2.activeTaskId=null;}team.paused.push(t);forfeitTask(t);log('\u23F8 Paused: '+t.responseName+' at '+Math.round(t.progress)+'%','ltw');renderTeams();renderIncidents();if(detailItem&&detailItem.inc)refreshDetail();}}
+    else if(action==='resume-task'){var teamId2=el.dataset.teamId,taskId=parseInt(el.dataset.taskId);var team2=TEAMS[teamId2];var task2=team2.paused.find(function(t){return t.id===taskId;});if(!task2) return;if(team2.task){preemptPending={resumeTeam:teamId2,resumeTaskId:taskId};document.getElementById('pdlg-msg').textContent=team2.name+' is busy. Stop current task to resume this one?';document.getElementById('pdlg').classList.add('show');}else{team2.paused=team2.paused.filter(function(t){return t.id!==taskId;});var inc3=incidents.find(function(i){return i.id===task2.incId;});if(inc3){inc3.pausedTasks=(inc3.pausedTasks||[]).filter(function(t){return t.id!==taskId;});inc3.activeTaskId=task2.id;}team2.task=task2;if(!tasks.includes(task2))tasks.push(task2);log('\u25B6 Resumed: '+task2.responseName,'lti');renderTeams();renderIncidents();}}
+    else if(action==='preempt-hz'){var hzId2=parseInt(el.dataset.hzId);var item=horizonItems.find(function(i){return i.id===hzId2;});if(!item||item.preempting) return;var netTeam=TEAMS.network;if(netTeam.task){log('Network Team busy.','ltw');return;}item.preempting=true;var dur=8+Math.random()*7;var task3={id:taskSeq++,incId:null,hzId:hzId2,team:'network',hzTask:true,responseName:'Pre-empt: '+item.scenario.name,actualDur:dur,elapsed:0,progress:0,scorePts:0,narrative:['Checking threat intelligence feeds...','Analysing indicators of compromise...'],narrativeIdx:0,compApplied:false};netTeam.task=task3;tasks.push(task3);item.preemptTask=task3;log('\uD83D\uDD0D Pre-empting: '+item.scenario.name,'lti');renderTeams();renderHorizon();refreshDetail();}
+    else if(action==='do-research'){var type=el.dataset.type;if(score<75){log('Need 75pts to research.','ltw');return;}score-=75;document.getElementById('sc-v').textContent=score;activeResearches.push({type:type,completesAt:simT+20});log('\uD83D\uDD2C Researching '+type+'... (20s background)','lti');refreshDetail();}
+  }catch(e){log('Action error ['+action+']: '+e.message,'lte');}
+}
+// Set up all delegated listeners
+['sidebar','team-dash','hz-list','inc-list-wrap','det-content','det-back-btn'].forEach(function(id){
+  var el=document.getElementById(id); if(!el) return;
+  el.addEventListener('click',function(e){
+    var btn=e.target.closest('[data-action]');
+    if(btn) handleAction(btn.dataset.action,btn);
+  });
+});
+document.getElementById('pdlg-confirm').addEventListener('click',function(){
+  document.getElementById('pdlg').classList.remove('show');
+  if(!preemptPending) return;
+  var p=preemptPending; preemptPending=null;
+  if(p.resumeTeam){
+    var team=TEAMS[p.resumeTeam],task=team.paused.find(function(t){return t.id===p.resumeTaskId;});
+    if(task&&team.task) forfeitTask(team.task);
+    if(task){team.paused=team.paused.filter(function(t){return t.id!==p.resumeTaskId;});var inc=incidents.find(function(i){return i.id===task.incId;});if(inc)inc.activeTaskId=task.id;team.task=task;if(!tasks.includes(task))tasks.push(task);log('\u25B6 Resumed: '+task.responseName,'lti');renderTeams();renderIncidents();}
+  } else if(p.inc&&p.resp){
+    var team2=TEAMS[p.resp.team]; if(team2.task) forfeitTask(team2.task); doAssign(p.inc,p.resp);
+  }
+});
+document.getElementById('pdlg-cancel').addEventListener('click',function(){document.getElementById('pdlg').classList.remove('show');preemptPending=null;});
+// ══════════════════════════════════════════
+// OPS LOG + COMMANDS
+// ══════════════════════════════════════════
+var logEl=document.getElementById('log-out');
+function log(msg,cls){var d=document.createElement('div');d.className=cls||'lti';d.textContent=msg;logEl.appendChild(d);logEl.scrollTop=9999;}
 var lcmd=document.getElementById('lcmd');
 lcmd.addEventListener('keydown',function(e){
   if(e.key!=='Enter') return;
@@ -1110,58 +993,25 @@ lcmd.addEventListener('keydown',function(e){
   var cmd=v.toLowerCase();
   if(cmd==='help'){log('scan | triage | teams | horizon | status | clear','lti');return;}
   if(cmd==='clear'){logEl.innerHTML='';return;}
-  if(cmd==='scan'){
-    var a=incidents.filter(function(i){return !i.resolved;});
-    if(!a.length){log('All clear.','lti');return;}
-    a.forEach(function(i){
-      var t=i.activeTaskId?tasks.find(function(t){return t.id===i.activeTaskId;}):null;
-      var tte2=i.sev<3?Math.max(0,i.escRate-i.escAge):null;
-      log('  #'+i.id+' '+i.name+' \u00B7 '+i.city+' \u00B7 Sev '+i.sev+(t?' ['+TEAMS[t.team].icon+Math.round(t.progress)+'%]':' [UNASSIGNED]')+(tte2!==null?' \u00B7 esc ~'+Math.round(tte2)+'s':''),i.sev===3?'lte':'ltw');
-    });
-    return;
-  }
-  if(cmd==='triage'){
-    var ua=incidents.filter(function(i){return !i.resolved&&!i.activeTaskId;});
-    if(!ua.length){log('All incidents assigned.','lts');return;}
-    ua.sort(function(a,b){return(b.sev-a.sev)||(b.escAge/b.escRate)-(a.escAge/a.escRate);});
-    log('Priority (unassigned):','lti');
-    ua.slice(0,5).forEach(function(i,n){
-      var tte3=i.sev<3?Math.max(0,i.escRate-i.escAge):0;
-      log('  '+(n+1)+'. #'+i.id+' '+i.name+' Sev'+i.sev+' \u00B7 '+i.city+(tte3?' \u00B7 esc ~'+Math.round(tte3)+'s':''),i.sev===3?'lte':'ltw');
-    });
-    return;
-  }
-  if(cmd==='horizon'){
-    if(!horizonItems.length){log('Horizon clear.','lti');return;}
-    horizonItems.forEach(function(h){log('  '+h.sc.name+' \u00B7 '+h.city.c+' \u00B7 '+Math.round(Math.max(0,h.dropAt-simT))+'s \u00B7 '+h.mode,'ltw');});
-    return;
-  }
-  if(cmd==='teams'){
-    Object.values(TEAMS).forEach(function(t){
-      if(t.task)log('  '+t.icon+' '+t.name+': BUSY \u2014 '+t.task.responseName+' ('+Math.round(t.task.progress)+'%, ~'+Math.round(Math.max(0,t.task.actualDur-t.task.elapsed))+'s left)','ltw');
-      else log('  '+t.icon+' '+t.name+': FREE','lti');
-    });
-    return;
-  }
+  if(cmd==='scan'){var a=incidents.filter(function(i){return !i.resolved;});if(!a.length){log('All clear.','lti');return;}a.forEach(function(i){var t=i.activeTaskId?tasks.find(function(t2){return t2.id===i.activeTaskId;}):null;var tte=i.sev<3?Math.max(0,i.escRate-i.escAge):null;log('  #'+i.id+' '+i.name+' \u00B7 '+i.city+' \u00B7 Sev '+i.sev+(t?' ['+TEAMS[t.team].icon+Math.round(t.progress)+'%]':' [UNASSIGNED]')+(tte!==null?' \u00B7 esc ~'+Math.round(tte)+'s':''),i.sev===3?'lte':'ltw');});return;}
+  if(cmd==='triage'){var ua=incidents.filter(function(i){return !i.resolved&&!i.activeTaskId;});if(!ua.length){log('All assigned.','lts');return;}ua.sort(function(a,b){return urgencyScore(b)-urgencyScore(a);});ua.slice(0,5).forEach(function(i,n){var tte2=i.sev<3?Math.max(0,i.escRate-i.escAge):0;log('  '+(n+1)+'. #'+i.id+' '+i.name+' Sev'+i.sev+' \u00B7 '+i.city+(tte2?' \u00B7 esc ~'+Math.round(tte2)+'s':''),i.sev===3?'lte':'ltw');});return;}
+  if(cmd==='teams'){Object.values(TEAMS).forEach(function(t){if(t.task)log('  '+t.icon+' '+t.name+': BUSY \u2014 '+t.task.responseName+' ('+Math.round(t.task.progress)+'%, ~'+Math.round(Math.max(0,t.task.actualDur-t.task.elapsed))+'s)','ltw');else log('  '+t.icon+' '+t.name+': FREE','lti');});return;}
+  if(cmd==='horizon'){if(!horizonItems.length){log('Horizon clear.','lti');return;}horizonItems.forEach(function(h){log('  '+h.scenario.name+' \u00B7 '+h.city.c+' \u00B7 '+Math.round(Math.max(0,h.dropAt-simT))+'s \u00B7 '+h.mode,'ltw');});return;}
   if(cmd==='status'){log('Score: '+score+' | Resolved: '+resolvedCount+'/'+spawnedCount+' | DEFCON: '+defcon,'lti');return;}
   log('Unknown: '+cmd,'ltd');
 });
-
-// ── WORLD CLOCK ──
-function worldClock(){
-  var tm=START_H*60+(simT*ACCEL)/60;
-  return{day:Math.floor(tm/(24*60))+1,hh:Math.floor((tm%(24*60))/60),mm:Math.floor(tm%60)};
-}
-
-// ── GAME CONTROLS ──
+// ══════════════════════════════════════════
+// GAME CONTROLS + LOOP
+// ══════════════════════════════════════════
 function fmt(s){s=Math.max(0,s);var m=Math.floor(s/60),sec=Math.floor(s%60);return(m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;}
+function worldClock(){var tm=START_H*60+(simT*ACCEL)/60;return{day:Math.floor(tm/(24*60))+1,hh:Math.floor((tm%(24*60))/60),mm:Math.floor(tm%60)};}
 
 function startGame(){
   var mins=Math.max(10,Math.min(30,parseInt(document.getElementById('dur-in').value)||10));
-  simDur=mins*60; simRunning=true; simPaused=false; simT=0;
-  score=0; resolvedCount=0; spawnedCount=0; defcon=5; nextId=1; hzSeq=1;
-  incidents=[]; horizonItems=[]; tasks=[]; taskSeq=1;
-  activeResearches=[]; researchedTypes={}; seenTypes={};
+  simDur=mins*60;simRunning=true;simPaused=false;simT=0;
+  score=0;resolvedCount=0;spawnedCount=0;defcon=5;nextId=1;hzSeq=1;
+  incidents=[];horizonItems=[];tasks=[];taskSeq=1;
+  activeResearches=[];researchedTypes={};seenTypes={};preemptPending=null;
   Object.values(TEAMS).forEach(function(t){t.task=null;t.paused=[];});
   document.getElementById('sc-v').textContent='0';
   document.getElementById('rs-v').textContent='0/0';
@@ -1170,88 +1020,57 @@ function startGame(){
   document.getElementById('btnAbort').disabled=false;
   document.getElementById('btnPause').textContent='\u275A\u275A';
   document.getElementById('labels').innerHTML='';
-  calcDefcon(); renderTeams(); renderIncidents(); renderHorizon();
+  closeDetail();
+  calcDefcon();renderTeams();renderIncidents();renderHorizon();
   log('','lts');
-  log('\u2550\u2550\u2550 CYBERWATCH ACTIVE \u00B7 '+mins+' min \u00B7 \xD7'+ACCEL+' sim time \u2550\u2550\u2550','lts');
-  log('Horizon Scanner active. Watch for incoming threats.','lti');
-  log('Click incident cards \u00B7 Pre-empt from horizon \u00B7 Research new attack types','ltd');
+  log('\u2550\u2550\u2550 CYBERWATCH ACTIVE \u00B7 '+mins+' min \u00B7 \xD7'+ACCEL+' \u2550\u2550\u2550','lts');
+  log('11 attack types loaded. Click any card to assess, research, and respond.','lti');
+  log('Horizon Scanner active. Pre-empt threats before they go live.','ltd');
   schedNext(true); lastTick=performance.now();
 }
-
 document.getElementById('btnStart').addEventListener('click',startGame);
-document.getElementById('btnPause').addEventListener('click',function(){
-  if(!simRunning) return;
-  simPaused=!simPaused;
-  document.getElementById('btnPause').textContent=simPaused?'\u25B6':'\u275A\u275A';
-  if(!simPaused)lastTick=performance.now();
-});
-document.getElementById('btnAbort').addEventListener('click',function(){
-  simRunning=false;
-  document.getElementById('btnPause').disabled=true;
-  log('ABORTED. Score: '+score+' | '+resolvedCount+'/'+spawnedCount+' resolved','lte');
-});
+document.getElementById('btnPause').addEventListener('click',function(){if(!simRunning)return;simPaused=!simPaused;document.getElementById('btnPause').textContent=simPaused?'\u25B6':'\u275A\u275A';if(!simPaused)lastTick=performance.now();});
+document.getElementById('btnAbort').addEventListener('click',function(){simRunning=false;document.getElementById('btnPause').disabled=true;log('ABORTED. Score: '+score+' | '+resolvedCount+'/'+spawnedCount+' resolved','lte');});
 
-// ── MAIN LOOP ──
 function animate(){
   requestAnimationFrame(animate);
-  var now=performance.now();
-  var dt=Math.min(0.05,(now-lastTick)/1000);
-  lastTick=now;
-
-  if(threeOK&&renderer&&earthMesh){
-    earthMesh.rotation.y=globeRot;
+  var now=performance.now(),dt=Math.min(0.05,(now-lastTick)/1000);lastTick=now;
+  if(threeOK&&renderer&&globe){
+    globe.rotation.y=globeRot;
     renderer.render(scene,camera);
-    updateMarkers();
+    updateLabels();
   }
-
   if(simRunning&&!simPaused){
     simT+=dt;
-    // Globe rotation synced to sim time (ACCEL×)
-    globeRot=(simT*ACCEL/86400)*Math.PI*2; // one rotation per 24 sim hours
-
+    globeRot=(simT*ACCEL/86400)*Math.PI*2;
     document.getElementById('ms-v').textContent=fmt(Math.max(0,simDur-simT));
-    var w=worldClock();
-    document.getElementById('ops-v').textContent='D'+w.day+' '+(w.hh<10?'0':'')+w.hh+':'+(w.mm<10?'0':'')+w.mm;
-
+    var w=worldClock();document.getElementById('oc-v').textContent='D'+w.day+' '+(w.hh<10?'0':'')+w.hh+':'+(w.mm<10?'0':'')+w.mm;
     if(nextSpawnAt!==null&&simT>=nextSpawnAt){spawnCycle();schedNext(false);}
-    // Ensure minimum active incidents
-    if(Math.round(simT*5)%5===0) checkMin();
-
-    updateTasks(dt);
-    updateHorizon(dt);
-    updateResearches();
-    doEscalation(dt);
-    doSpread(dt);
+    if(Math.round(simT*4)%4===0) checkMin();
+    updateTasks(dt);updateHorizon(dt);updateResearches();doEscalation(dt);doSpread(dt);
     renderTeams();
-
-    if(simT>=simDur){
-      simRunning=false;
-      document.getElementById('btnPause').disabled=true;
-      log('\u2550\u2550\u2550 MISSION COMPLETE \u2550\u2550\u2550','lts');
-      log('Score: '+score+' \u00B7 Resolved: '+resolvedCount+'/'+spawnedCount+' \u00B7 DEFCON: '+defcon,'lts');
+    if(detailItem){
+      if(detailItem.inc&&!detailItem.inc.resolved) refreshDetail();
+      else if(detailItem.hzItem) refreshDetail();
     }
+    if(simT>=simDur){simRunning=false;document.getElementById('btnPause').disabled=true;log('\u2550\u2550\u2550 MISSION COMPLETE \u2550\u2550\u2550','lts');log('Score: '+score+' \u00B7 Resolved: '+resolvedCount+'/'+spawnedCount,'lts');}
   }
 }
-
-// ── INIT ──
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
 initGlobe();
-renderTeams(); renderIncidents(); renderHorizon();
+renderTeams();renderIncidents();renderHorizon();
 document.getElementById('ld-msg').textContent='Ready.';
 document.getElementById('loading').style.display='none';
 document.getElementById('app').style.display='block';
 document.getElementById('btnStart').disabled=false;
-log('CYBERWATCH 2026-06-10-003','lts');
-log('Globe: '+(threeOK?'active ('+THREE.REVISION+')':'disabled \u2014 three.min.js missing'),'lti');
-log('Horizon Scanner \u00B7 Research system \u00B7 Pre-empt modes \u00B7 Real-time \xD7'+ACCEL,'ltd');
-log('Press DEPLOY to start mission.','ltd');
+log('CYBERWATCH 2026-06-10-004','lts');
+log('11 attack types \u00B7 Globe: '+(threeOK?'active':'disabled \u2014 three.min.js missing'),'lti');
+log('Click cards to open detail screen \u00B7 Research reduces resolve time','ltd');
+log('Press DEPLOY.','ltd');
 animate();
-
-} catch(err) {
-  document.getElementById('ld-err').style.display='block';
-  document.getElementById('ld-err').textContent='STARTUP ERROR:\n'+err.message+'\n\n'+(err.stack||'');
-  document.getElementById('ld-msg').style.color='#ff3b6b';
-  document.getElementById('ld-msg').textContent='Failed \u2014 see below';
-}
+}catch(err){document.getElementById('ld-err').style.display='block';document.getElementById('ld-err').textContent='STARTUP ERROR:\n'+err.message+'\n\n'+(err.stack||'');document.getElementById('ld-msg').style.color='#ff3b6b';document.getElementById('ld-msg').textContent='Failed \u2014 see error below';}
 </script>
 </body>
 </html>
