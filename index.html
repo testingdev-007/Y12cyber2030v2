@@ -3,138 +3,308 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CYBERWATCH 2026-06-10-001</title>
+<title>CYBERWATCH 2026-06-10-002</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#02040a;color:#cce8ff;font-family:Arial,sans-serif;overflow:hidden;height:100vh}
-#loading{position:fixed;inset:0;background:#02040a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:100}
-#ld-title{font-size:22px;font-weight:bold;color:#29e0ff;letter-spacing:4px}
-#ld-msg{font-size:13px;color:#3a5870}
-#ld-error{max-width:700px;padding:20px;background:#1a0505;border:1px solid #ff3b6b;border-radius:8px;color:#ff8888;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-word;display:none}
-#app{display:none;height:100vh;display:none}
-#hud{height:50px;background:#040810;border-bottom:1px solid rgba(41,224,255,.15);display:flex;align-items:center;gap:14px;padding:0 16px}
-.hv{font-size:18px;font-weight:bold}
-.hl{font-size:9px;color:#3a5870;text-transform:uppercase;letter-spacing:1px}
-.hdiv{width:1px;height:28px;background:rgba(41,224,255,.12)}
-#main{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 50px)}
-#sidebar{border-right:1px solid rgba(41,224,255,.12);overflow-y:auto;background:#040810}
-.sh{padding:9px 13px;font-size:9px;letter-spacing:2px;color:#29e0ff;border-bottom:1px solid rgba(41,224,255,.08)}
-#team-dash{border-bottom:1px solid rgba(41,224,255,.08)}
-.tr{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.03)}
-.tr-h{display:flex;align-items:center;gap:7px}
-.tr-ico{font-size:14px}
-.tr-name{font-size:12px;font-weight:bold;flex:1}
-.tr-badge{font-size:9px;padding:2px 7px;border-radius:20px;font-weight:bold}
-.tb-free{background:rgba(0,255,163,.1);color:#00ffa3}
-.tb-busy{background:rgba(255,176,32,.1);color:#ffb020}
-.tr-info{font-size:10px;color:#3a5870;margin-top:4px}
-.tr-bar-wrap{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:4px}
-.tr-bar{height:100%;border-radius:2px;transition:width .3s}
-.sm-btn{font-size:9px;font-weight:bold;padding:3px 8px;border-radius:5px;border:1px solid;cursor:pointer;margin-top:5px;background:transparent;color:#ffb020;border-color:rgba(255,176,32,.4)}
-.sm-btn:hover{background:rgba(255,176,32,.1)}
-#inc-list{padding:6px}
-.ic{border-radius:9px;margin-bottom:6px;cursor:pointer;border-left:3px solid #3a5870;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-left:3px solid #3a5870;overflow:hidden;transition:all .15s}
-.ic:hover{background:rgba(41,224,255,.04)}
-.ic.s1{border-left-color:#00ffa3}.ic.s2{border-left-color:#ffb020}.ic.s3{border-left-color:#ff3b6b}
-.ic.done{opacity:.25;pointer-events:none}
-.ic-h{display:flex;align-items:center;gap:7px;padding:8px 10px 4px}
-.ic-nm{font-size:13px;font-weight:bold;flex:1}
-.ic-sev{font-size:8px;padding:2px 6px;border-radius:20px;font-weight:bold}
-.sv1{background:rgba(0,255,163,.1);color:#00ffa3}.sv2{background:rgba(255,176,32,.12);color:#ffb020}.sv3{background:rgba(255,59,107,.14);color:#ff3b6b}
-.ic-sub{font-size:10px;color:#3a5870;padding:0 10px 4px}
-.ic-esc{font-size:10px;padding:0 10px 3px}
-.ic-resp-btn{margin:0 10px 9px;padding:6px 10px;background:rgba(41,224,255,.07);border:1px solid rgba(41,224,255,.22);border-radius:7px;cursor:pointer;font-size:11px;font-weight:bold;color:#29e0ff;transition:all .14s}
-.ic-resp-btn:hover{background:rgba(41,224,255,.15)}
-.ic-prog-wrap{height:3px;background:rgba(255,255,255,.04);margin:0 10px 8px;border-radius:2px;overflow:hidden}
-.ic-prog{height:100%;border-radius:2px;transition:width .3s}
-#globe-area{position:relative;background:#01020a}
-canvas{position:absolute;inset:0;width:100%;height:100%}
-#rp{position:fixed;top:50px;right:-380px;width:360px;bottom:0;background:#040810;border-left:1px solid rgba(41,224,255,.15);transition:right .3s;overflow-y:auto;z-index:20}
-#rp.open{right:0}
-.rp-hdr{padding:14px 15px;border-bottom:1px solid rgba(41,224,255,.1);position:sticky;top:0;background:#040810}
-.rp-close{float:right;background:transparent;border:1px solid rgba(255,255,255,.1);color:#3a5870;border-radius:6px;font-size:10px;padding:3px 9px;cursor:pointer}
-.rp-close:hover{color:#fff}
-.rp-tag{font-size:8px;letter-spacing:2px;color:#9b6dff;margin-bottom:3px}
-.rp-nm{font-size:16px;font-weight:bold;margin-bottom:2px}
-.rp-sub{font-size:10px;color:#3a5870}
-.rp-sec{padding:12px 15px}
-.rp-sh{font-size:8px;letter-spacing:2px;color:#9b6dff;margin-bottom:9px}
-.ro{border:1px solid rgba(255,255,255,.07);border-radius:9px;margin-bottom:10px;background:rgba(255,255,255,.02);cursor:pointer;transition:border-color .14s}
-.ro:hover{border-color:rgba(41,224,255,.28)}
-.ro-h{display:flex;align-items:center;gap:8px;padding:10px 12px 6px}
-.ro-t{font-size:13px}
-.ro-nm{font-size:13px;font-weight:bold}
-.ro-tl{font-size:10px;color:#3a5870}
-.ro-dur{text-align:right;font-size:13px;font-weight:bold}
-.ro-desc{padding:0 12px 6px;font-size:11px;color:#3a5870;line-height:1.5}
-.ro-ocr{padding:0 12px 6px;font-size:9px;color:#9b6dff;font-weight:bold}
-.ro-go{display:block;width:calc(100% - 24px);margin:0 12px 11px;padding:8px;border:none;border-radius:8px;background:linear-gradient(90deg,#29e0ff,#9b6dff);color:#02040a;font-weight:bold;font-size:12px;cursor:pointer;letter-spacing:.5px}
-.ro-go:hover{filter:brightness(1.1)}
-#log-area{position:absolute;bottom:0;left:0;right:0;height:200px;background:rgba(2,4,10,.95);border-top:1px solid rgba(41,224,255,.1);display:flex;flex-direction:column}
-#log-out{flex:1;overflow-y:auto;padding:8px 13px;font-family:monospace;font-size:11px;line-height:1.5}
-.lti{color:#7fe9c8}.lts{color:#00ffa3;font-weight:bold}.lte{color:#ff3b6b}.ltw{color:#ffb020}.ltd{color:#3a5870}.ltnt{color:#88aaee;font-style:italic}
-#log-in-row{display:flex;padding:5px 13px;border-top:1px solid rgba(41,224,255,.08);flex-shrink:0}
-#log-in-row span{color:#29e0ff;font-family:monospace;font-size:12px;margin-right:5px}
-#lcmd{flex:1;background:transparent;border:none;outline:none;color:#fff;font-family:monospace;font-size:12px}
-.hbtn{background:transparent;border:1px solid rgba(41,224,255,.2);border-radius:8px;color:#cce8ff;font-size:10px;padding:6px 12px;cursor:pointer;font-weight:bold;letter-spacing:.5px}
+html,body{height:100%;background:#02040a;color:#cce8ff;font-family:Arial,sans-serif;overflow:hidden}
+
+/* ── LAYOUT ── */
+#hud{height:50px;background:#040810;border-bottom:1px solid rgba(41,224,255,.15);
+  display:flex;align-items:center;gap:12px;padding:0 14px;flex-shrink:0}
+#shell{display:flex;height:calc(100vh - 50px);overflow:hidden}
+#sidebar{width:300px;flex-shrink:0;border-right:1px solid rgba(41,224,255,.12);
+  display:flex;flex-direction:column;background:#030609;overflow:hidden}
+#right{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#globe-wrap{flex:1;position:relative;background:#01020a;overflow:hidden;min-height:0}
+#c3d{position:absolute;inset:0;display:block}
+#log-area{height:170px;flex-shrink:0;border-top:1px solid rgba(41,224,255,.1);
+  display:flex;flex-direction:column;background:#030609}
+
+/* ── HUD ── */
+.hv{font-size:16px;font-weight:bold}
+.hl{font-size:8px;color:#3a5870;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px}
+.hdiv{width:1px;height:30px;background:rgba(41,224,255,.1);flex-shrink:0}
+.hbtn{background:transparent;border:1px solid rgba(41,224,255,.2);border-radius:7px;
+  color:#cce8ff;font-size:10px;padding:6px 11px;cursor:pointer;font-weight:bold;letter-spacing:.5px;white-space:nowrap}
 .hbtn:hover:not(:disabled){background:rgba(41,224,255,.1);border-color:#29e0ff;color:#29e0ff}
 .hbtn:disabled{opacity:.2;cursor:not-allowed}
-.hbtn.g{color:#00ffa3;border-color:rgba(0,255,163,.2)}.hbtn.g:hover:not(:disabled){background:rgba(0,255,163,.08)}
-.hbtn.r{color:#ff3b6b;border-color:rgba(255,59,107,.2)}.hbtn.r:hover:not(:disabled){background:rgba(255,59,107,.07)}
+.hbtn.g{color:#00ffa3;border-color:rgba(0,255,163,.25)}
+.hbtn.g:hover:not(:disabled){background:rgba(0,255,163,.08)}
+.hbtn.r{color:#ff3b6b;border-color:rgba(255,59,107,.25)}
+#dur-input{width:38px;background:#0a1020;border:1px solid rgba(41,224,255,.2);
+  color:#29e0ff;font-size:12px;padding:4px 5px;border-radius:6px;text-align:center}
+
+/* ── SIDEBAR SECTIONS ── */
+.sb-h{padding:8px 12px;font-size:8px;letter-spacing:2px;color:#29e0ff;
+  border-bottom:1px solid rgba(41,224,255,.08);flex-shrink:0;
+  display:flex;justify-content:space-between;align-items:center}
+.sb-h-ct{color:#3a5870;font-family:Arial;font-size:9px;font-weight:normal;letter-spacing:0}
+
+/* ── TEAMS ── */
+#team-dash{flex-shrink:0}
+.tr{padding:7px 11px;border-bottom:1px solid rgba(255,255,255,.03)}
+.tr-h{display:flex;align-items:center;gap:6px}
+.tr-ico{font-size:13px;flex-shrink:0}
+.tr-name{font-size:12px;font-weight:bold;flex:1;color:#ddeeff}
+.tr-badge{font-size:8px;padding:2px 6px;border-radius:20px;font-weight:bold;flex-shrink:0}
+.tb-free{background:rgba(0,255,163,.1);color:#00ffa3}
+.tb-busy{background:rgba(255,176,32,.1);color:#ffb020}
+.tr-task{font-size:10px;color:#3a5870;margin-top:3px;font-weight:500}
+.tr-progress-row{display:flex;align-items:center;gap:7px;margin-top:3px}
+.tr-bar-wrap{flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.tr-bar{height:100%;border-radius:2px;transition:width .3s}
+.tr-eta{font-size:10px;font-weight:bold;flex-shrink:0;min-width:28px;text-align:right}
+.tr-pct{font-size:9px;color:#3a5870;flex-shrink:0;min-width:24px}
+.sm-btn{font-size:9px;font-weight:bold;padding:2px 7px;border-radius:4px;border:1px solid;
+  cursor:pointer;margin-top:4px;background:transparent;font-family:Arial}
+.sm-pause{color:#ffb020;border-color:rgba(255,176,32,.35)}
+.sm-pause:hover{background:rgba(255,176,32,.1)}
+.sm-resume{color:#00ffa3;border-color:rgba(0,255,163,.3)}
+.sm-resume:hover{background:rgba(0,255,163,.07)}
+
+/* ── HORIZON SCANNER ── */
+#hz-section{flex-shrink:0;border-bottom:1px solid rgba(255,176,32,.15)}
+.hz-h{padding:7px 12px;font-size:8px;letter-spacing:2px;color:#ffb020;
+  border-bottom:1px solid rgba(255,176,32,.1);display:flex;justify-content:space-between;align-items:center;background:rgba(255,176,32,.02)}
+.hz-empty{padding:8px 12px;font-size:10px;color:#3a5870;text-align:center}
+.hz-item{padding:7px 11px;border-bottom:1px solid rgba(255,255,255,.03);
+  border-left:3px solid #ffb020;background:rgba(255,176,32,.02);transition:all .2s}
+.hz-item.hz-hot{border-left-color:#ff3b6b;background:rgba(255,59,107,.04);animation:hzpulse 1s infinite}
+@keyframes hzpulse{0%,100%{background:rgba(255,59,107,.04)}50%{background:rgba(255,59,107,.09)}}
+.hz-top{display:flex;align-items:center;gap:6px}
+.hz-ico{font-size:13px;flex-shrink:0}
+.hz-nm{font-size:12px;font-weight:bold;flex:1;color:#ffe4aa}
+.hz-timer{font-family:monospace;font-size:12px;font-weight:bold;flex-shrink:0}
+.hz-timer.hot{color:#ff3b6b;animation:hzpulse 0.6s infinite}
+.hz-city{font-size:10px;color:#3a5870;margin-top:2px}
+.hz-actions{display:flex;gap:5px;margin-top:5px}
+.hz-btn-preempt{font-size:9px;font-weight:bold;padding:3px 9px;border-radius:5px;
+  background:rgba(255,176,32,.15);color:#ffb020;border:1px solid rgba(255,176,32,.4);cursor:pointer}
+.hz-btn-preempt:hover{background:rgba(255,176,32,.28)}
+.hz-btn-monitor{font-size:9px;font-weight:bold;padding:3px 9px;border-radius:5px;
+  background:transparent;color:#3a5870;border:1px solid rgba(255,255,255,.1);cursor:pointer}
+.hz-btn-monitor:hover{color:#fff}
+.hz-preempting{font-size:10px;color:#9b6dff;font-style:italic;margin-top:3px}
+.hz-drop-bar-wrap{height:2px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden;margin-top:4px}
+.hz-drop-bar{height:100%;border-radius:2px;background:#ffb020;transition:width .3s}
+
+/* ── INCIDENTS ── */
+#inc-scroll{overflow-y:auto;flex:1 1 0}
+.no-incs{padding:14px;font-size:11px;color:#3a5870;text-align:center}
+
+.ic{border-radius:8px;margin:5px;cursor:pointer;overflow:hidden;
+  border:1px solid rgba(255,255,255,.04);border-left:3px solid #3a5870;
+  background:rgba(255,255,255,.015);transition:all .13s}
+.ic:hover{background:rgba(41,224,255,.04)}
+.ic.s1{border-left-color:#00ffa3}.ic.s2{border-left-color:#ffb020}
+.ic.s3{border-left-color:#ff3b6b;animation:sev3pulse 1.5s ease-in-out infinite}
+@keyframes sev3pulse{0%,100%{border-left-color:#ff3b6b}50%{border-left-color:#ff8888}}
+.ic.ic-done{opacity:.22;pointer-events:none;animation:none;filter:grayscale(.7)}
+.ic-h{display:flex;align-items:center;gap:7px;padding:7px 9px 3px}
+.ic-nm{font-size:12px;font-weight:bold;flex:1;color:#e4f4ff;line-height:1.2}
+.ic-sev{font-size:8px;padding:2px 6px;border-radius:20px;font-weight:bold;flex-shrink:0}
+.sv1{background:rgba(0,255,163,.1);color:#00ffa3}
+.sv2{background:rgba(255,176,32,.12);color:#ffb020}
+.sv3{background:rgba(255,59,107,.14);color:#ff3b6b}
+.svd{background:rgba(58,88,112,.1);color:#3a5870}
+.ic-loc{font-size:9px;color:#3a5870;padding:0 9px 3px}
+/* UNASSIGNED indicator */
+.ic-unassigned{padding:3px 9px 5px;font-size:9px;color:#ff8a20;font-weight:bold;letter-spacing:.5px;
+  display:flex;align-items:center;gap:4px}
+.ic-unassigned::before{content:'●';font-size:7px;animation:blink .9s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.1}}
+/* IN-PROGRESS indicator */
+.ic-task-strip{padding:4px 9px 3px;background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.04)}
+.ic-task-row{display:flex;align-items:center;gap:6px}
+.ic-task-t{font-size:11px;flex-shrink:0}
+.ic-task-n{font-size:10px;font-weight:bold;flex:1;color:#aaccee}
+.ic-task-pct{font-size:10px;font-weight:bold;min-width:24px;text-align:right}
+.ic-task-eta{font-size:10px;color:#3a5870;min-width:30px;text-align:right}
+.ic-task-bar-wrap{height:3px;background:rgba(255,255,255,.05);overflow:hidden;border-radius:2px;margin-top:3px;margin-bottom:4px}
+.ic-task-bar{height:100%;border-radius:2px;transition:width .3s}
+/* ESCALATION bar */
+.ic-esc-row{padding:0 9px 5px;display:flex;align-items:center;gap:6px;font-size:10px}
+.ic-esc-bar-w{flex:1;height:2px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden}
+.ic-esc-bar{height:100%;border-radius:2px;transition:width .3s}
+.ic-esc-t{min-width:50px;text-align:right;font-size:9px}
+/* Response button */
+.ic-resp-btn{margin:0 9px 7px;padding:5px 9px;background:rgba(41,224,255,.06);
+  border:1px solid rgba(41,224,255,.2);border-radius:7px;cursor:pointer;
+  font-size:10px;font-weight:bold;color:#29e0ff;transition:all .13s;text-align:center}
+.ic-resp-btn:hover{background:rgba(41,224,255,.14)}
+
+/* ── RESPONSE PANEL ── */
+#rp{position:fixed;top:50px;right:-410px;width:390px;bottom:0;z-index:30;
+  background:#030b15;border-left:1px solid rgba(41,224,255,.15);
+  transition:right .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column}
+#rp.open{right:0}
+.rp-hdr{padding:12px 14px;border-bottom:1px solid rgba(41,224,255,.1);position:sticky;top:0;background:#030b15;z-index:1}
+.rp-close{float:right;background:transparent;border:1px solid rgba(255,255,255,.1);
+  color:#3a5870;border-radius:6px;font-size:9px;padding:3px 8px;cursor:pointer}
+.rp-close:hover{color:#fff}
+.rp-tag{font-size:8px;letter-spacing:2px;color:#9b6dff;margin-bottom:3px}
+.rp-nm{font-size:15px;font-weight:bold;margin-bottom:2px}
+.rp-sub{font-size:10px;color:#3a5870}
+.rp-sec{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04)}
+.rp-sh{font-size:8px;letter-spacing:2px;color:#9b6dff;margin-bottom:8px;text-transform:uppercase}
+/* Consequence warning */
+.rp-consequence{background:rgba(255,59,107,.05);border:1px solid rgba(255,59,107,.15);
+  border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:11px;line-height:1.6}
+.rp-con-row{display:flex;gap:7px;align-items:flex-start;margin-bottom:3px}
+.rp-con-row:last-child{margin-bottom:0}
+.rp-con-ico{flex-shrink:0;color:#ff8a20}
+/* Response options */
+.ro{border:1px solid rgba(255,255,255,.07);border-radius:9px;margin-bottom:10px;
+  background:rgba(255,255,255,.02);overflow:hidden;cursor:pointer;transition:border-color .13s}
+.ro:hover{border-color:rgba(41,224,255,.25)}
+.ro-h{display:flex;align-items:center;gap:8px;padding:10px 12px 6px}
+.ro-team-icon{font-size:14px;flex-shrink:0}
+.ro-info{flex:1}
+.ro-nm{font-size:13px;font-weight:bold;color:#e8f5ff}
+.ro-tl{font-size:10px;color:#3a5870}
+.ro-dur-block{text-align:right;flex-shrink:0}
+.ro-dur{font-size:14px;font-weight:bold}
+.ro-dur-lbl{font-size:8px;color:#3a5870;letter-spacing:1px}
+.ro-desc{padding:0 12px 6px;font-size:11px;color:#3a5870;line-height:1.5}
+/* Impact section */
+.ro-impact{padding:6px 12px 8px;background:rgba(255,255,255,.015);border-top:1px solid rgba(255,255,255,.04)}
+.ro-impact-row{display:flex;justify-content:space-between;font-size:10px;padding:1px 0;color:#aaaacc}
+.ro-impact-row span:first-child{color:#3a5870}
+.ro-tags{display:flex;gap:4px;flex-wrap:wrap;padding:6px 12px 8px}
+.tag{padding:2px 7px;border-radius:20px;font-size:9px;font-weight:bold}
+.tag-ok{background:rgba(0,255,163,.1);color:#00ffa3;border:1px solid rgba(0,255,163,.2)}
+.tag-warn{background:rgba(255,176,32,.1);color:#ffb020;border:1px solid rgba(255,176,32,.2)}
+.tag-ocr{background:rgba(155,109,255,.1);color:#9b6dff;border:1px solid rgba(155,109,255,.2)}
+.tag-busy{background:rgba(255,59,107,.1);color:#ff3b6b;border:1px solid rgba(255,59,107,.2)}
+.ro-risk{padding:0 12px 7px;font-size:10px;color:rgba(255,176,32,.7);font-style:italic}
+.ro-go{display:block;width:calc(100% - 24px);margin:0 12px 12px;padding:9px;border:none;
+  border-radius:8px;font-weight:bold;font-size:12px;cursor:pointer;letter-spacing:.5px;transition:filter .13s}
+.ro-go.go-go{background:linear-gradient(90deg,#29e0ff,#9b6dff);color:#02040a}
+.ro-go.go-go:hover{filter:brightness(1.1)}
+.ro-go.go-busy{background:rgba(255,59,107,.14);color:#ff3b6b;border:1px solid rgba(255,59,107,.28)!important;cursor:pointer}
+.ro-go.go-busy:hover{background:rgba(255,59,107,.25)}
+
+/* ── OPS LOG ── */
+.log-hdr{padding:6px 12px;border-bottom:1px solid rgba(41,224,255,.08);flex-shrink:0;
+  display:flex;justify-content:space-between;font-size:8px;letter-spacing:1px;color:#29e0ff}
+#log-out{flex:1;overflow-y:auto;padding:6px 12px;font-family:monospace;font-size:11px;line-height:1.5;min-height:0}
+.lts{color:#00ffa3;font-weight:bold;display:block}
+.lte{color:#ff3b6b;display:block}.ltw{color:#ffb020;display:block}
+.lti{color:#7fe9c8;display:block}.ltnt{color:#88aaee;font-style:italic;display:block}
+.ltd{color:#3a5870;display:block}
+#log-in-row{display:flex;padding:4px 12px;border-top:1px solid rgba(41,224,255,.07);flex-shrink:0}
+#lprompt{color:#29e0ff;font-family:monospace;font-size:11px;margin-right:5px;user-select:none}
+#lcmd{flex:1;background:transparent;border:none;outline:none;color:#fff;font-family:monospace;font-size:11px}
+
+/* ── MISC ── */
+#ld-err{max-width:650px;padding:16px;background:#150505;border:1px solid #ff3b6b;
+  border-radius:8px;color:#ff9999;font-family:monospace;font-size:11px;white-space:pre-wrap;
+  word-break:break-word;margin-top:12px;display:none}
+#loading{position:fixed;inset:0;background:#02040a;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;z-index:100}
+.ld-spin{width:36px;height:36px;border:2px solid rgba(41,224,255,.15);
+  border-top-color:#29e0ff;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-txt{font-size:10px;letter-spacing:3px;color:#29e0ff}
+.ld-sub{font-size:11px;color:#3a5870}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.025),rgba(0,0,0,.025) 1px,transparent 1px,transparent 4px)}
 </style>
 </head>
 <body>
 
 <div id="loading">
-  <div id="ld-title">CYBERWATCH</div>
-  <div id="ld-msg">Starting up...</div>
-  <div id="ld-error"></div>
+  <div class="ld-spin"></div>
+  <div class="ld-txt">CYBERWATCH</div>
+  <div class="ld-sub" id="ld-msg">Starting...</div>
+  <div id="ld-err"></div>
 </div>
 
-<div id="app">
+<div id="app" style="display:none;height:100%">
+  <!-- HUD -->
   <div id="hud">
-    <div>
+    <div style="flex-shrink:0">
       <div class="hl">CYBERWATCH</div>
-      <div style="font-size:11px;font-weight:bold;color:#29e0ff;letter-spacing:2px">2026-06-10-001</div>
+      <div style="font-size:10px;font-weight:bold;color:#29e0ff;letter-spacing:2px">2026-06-10-002</div>
     </div>
     <div class="hdiv"></div>
-    <div><div class="hl">DEFCON</div><div class="hv" id="dc-val" style="color:#00ffa3">5</div></div>
+    <div style="flex-shrink:0">
+      <div class="hl">DEFCON</div>
+      <div class="hv" id="dc-v" style="color:#00ffa3;transition:color .5s">5</div>
+    </div>
     <div class="hdiv"></div>
-    <div><div class="hl">SCORE</div><div class="hv" id="score-v">0</div></div>
+    <div style="flex-shrink:0">
+      <div class="hl">SCORE</div>
+      <div class="hv" id="sc-v">0</div>
+    </div>
     <div class="hdiv"></div>
-    <div><div class="hl">RESOLVED</div><div class="hv" id="res-v">0/0</div></div>
+    <div style="flex-shrink:0">
+      <div class="hl">RESOLVED</div>
+      <div class="hv" id="rs-v" style="font-size:13px">0/0</div>
+    </div>
     <div class="hdiv"></div>
-    <div><div class="hl">MISSION</div><div class="hv" id="miss-v">10:00</div></div>
+    <div style="flex-shrink:0">
+      <div class="hl">MISSION</div>
+      <div class="hv" id="ms-v">10:00</div>
+    </div>
     <div style="flex:1"></div>
-    <div class="hl" style="flex-shrink:0">DUR MIN</div>
-    <input id="dur" type="number" min="10" max="30" value="10" style="width:40px;background:#0a1020;border:1px solid rgba(41,224,255,.2);color:#29e0ff;font-size:12px;padding:4px 6px;border-radius:6px;text-align:center">
+    <div class="hl" style="flex-shrink:0">DUR</div>
+    <input id="dur-input" type="number" min="10" max="30" value="10">
     <button class="hbtn g" id="btnStart" disabled>▶ DEPLOY</button>
     <button class="hbtn" id="btnPause" disabled>❚❚</button>
-    <button class="hbtn r" id="btnAbort" disabled>✕ ABORT</button>
+    <button class="hbtn r" id="btnAbort" disabled>✕</button>
   </div>
 
-  <div id="main">
+  <!-- SHELL -->
+  <div id="shell">
+    <!-- SIDEBAR -->
     <div id="sidebar">
-      <div class="sh">◆ OPS TEAMS</div>
+      <!-- Teams -->
+      <div class="sb-h">◆ OPS TEAMS</div>
       <div id="team-dash">
         <div class="tr" id="tr-network"></div>
         <div class="tr" id="tr-security"></div>
         <div class="tr" id="tr-identity"></div>
       </div>
-      <div class="sh">◆ INCIDENTS <span id="ic-ct" style="color:#3a5870;font-family:Arial">0 ACTIVE</span></div>
-      <div id="inc-list"></div>
+
+      <!-- Horizon Scanner -->
+      <div id="hz-section">
+        <div class="hz-h">
+          <span>◆ HORIZON SCANNER</span>
+          <span class="sb-h-ct" id="hz-ct">0 INCOMING</span>
+        </div>
+        <div id="hz-list"><div class="hz-empty">No threats on radar</div></div>
+      </div>
+
+      <!-- Active Incidents -->
+      <div class="sb-h" style="border-top:1px solid rgba(41,224,255,.08)">
+        <span>◆ ACTIVE INCIDENTS</span>
+        <span class="sb-h-ct" id="ic-ct">0</span>
+      </div>
+      <div id="inc-scroll"></div>
     </div>
 
-    <div id="globe-area">
-      <canvas id="c3d"></canvas>
+    <!-- RIGHT PANEL -->
+    <div id="right">
+      <div id="globe-wrap">
+        <canvas id="c3d"></canvas>
+      </div>
       <div id="log-area">
+        <div class="log-hdr">
+          <span>◆ OPERATIONS LOG</span>
+          <span style="color:#3a5870">click incident cards to respond · type help</span>
+        </div>
         <div id="log-out"></div>
-        <div id="log-in-row"><span>ops ▸</span><input id="lcmd" type="text" placeholder="type help" autocomplete="off"></div>
+        <div id="log-in-row">
+          <span id="lprompt">ops ▸&nbsp;</span>
+          <input id="lcmd" type="text" placeholder="help" autocomplete="off" autocorrect="off" spellcheck="false">
+        </div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Response Panel -->
 <div id="rp">
   <div class="rp-hdr">
     <button class="rp-close" onclick="closeRP()">✕ close</button>
@@ -145,237 +315,179 @@ canvas{position:absolute;inset:0;width:100%;height:100%}
   <div id="rp-opts"></div>
 </div>
 
-<!-- LOCAL Three.js — put three.min.js in the same folder as this file -->
 <script src="three.min.js"></script>
-
 <script>
-// ═══════════════════════════════════════════════
-// CYBERWATCH 2026-06-10-001
-// Baseline: 1 module, local three.js, visible errors
-// ═══════════════════════════════════════════════
-
-function showError(err) {
-  var el = document.getElementById('ld-error');
-  el.style.display = 'block';
-  el.textContent = 'JavaScript Error:\n' + err.message + '\n\nStack:\n' + (err.stack || 'no stack');
-  document.getElementById('ld-msg').textContent = 'Failed to start — see error below';
-  document.getElementById('ld-msg').style.color = '#ff3b6b';
-}
-
-window.onerror = function(msg, src, line, col, err) {
-  showError(err || {message: msg + ' (line ' + line + ')', stack: src + ':' + line});
+// ═══════════════════════════════════════
+// CYBERWATCH 2026-06-10-002
+// ═══════════════════════════════════════
+var ERR = document.getElementById('ld-err');
+window.onerror = function(m, s, l, c, e) {
+  ERR.style.display = 'block';
+  ERR.textContent = 'JS ERROR: ' + m + '\nLine: ' + l + '\n' + (e && e.stack ? e.stack : '');
 };
 
 try {
 
-// ── MODULE DATA (one module, Phishing) ──
-var MOD = {
-  icon: String.fromCodePoint(0x2709),
-  cat: 'Social Engineering',
-  scenarios: [
-    {
-      id: 'mass',
-      name: 'Mass Phishing Campaign',
-      short: 'Bulk emails impersonating HMRC sent to entire organisation',
-      escs: [
-        'Phishing emails in all inboxes — credentials at risk',
-        'Users clicking links — credential harvest underway',
-        'ADMIN CREDENTIALS STOLEN — full network access obtained'
-      ],
-      escR: 28,
-      uMin: 5000,
-      uMax: 60000,
-      spread: 'Phishing',
-      responses: [
-        {
-          id: 'gateway',
-          name: 'Block at Email Gateway',
-          team: 'network',
-          baseDuration: 18,
-          effectiveness: 80,
-          scorePts: 60,
-          ocrRef: '1.3.3(c)',
-          description: 'Blacklist the malicious domain at the email gateway. Stops new emails instantly.',
-          duringRisk: 'Users who already received emails remain at risk.',
-          narrative: [
-            'Network Team accessing email gateway console...',
-            'OCR 1.3.3(c): Phishing exploits human psychology, not software vulnerabilities.',
-            'Blacklisting domain at DNS level. Quarantining all matching emails.',
-            'Gateway active. Staff protected from further lures.'
-          ]
-        },
-        {
-          id: 'full',
-          name: 'Full Response: Block + Notify + MFA',
-          team: 'identity',
-          baseDuration: 55,
-          effectiveness: 100,
-          scorePts: 100,
-          ocrRef: '1.3.3(c)',
-          description: 'Block domain, alert all staff, force password resets, enable MFA.',
-          duringRisk: 'Attack continues for ~55s before full protection is active.',
-          narrative: [
-            'Identity Team coordinating full phishing response...',
-            'OCR 1.3.3(c): MFA defeats phishing even when passwords are stolen.',
-            'Broadcasting alert: DO NOT click links from invoice-247.xyz.',
-            'Password resets enforced. MFA enabled. Stolen credentials now useless.'
-          ]
-        }
-      ]
-    },
-    {
-      id: 'spear',
-      name: 'Spear Phishing',
-      short: 'Targeted emails using personal detail gathered via LinkedIn',
-      escs: [
-        'Targeted senior staff — credentials at risk',
-        'Executive has clicked — compromise likely',
-        'C-SUITE CREDENTIALS STOLEN'
-      ],
-      escR: 22,
-      uMin: 10,
-      uMax: 500,
-      spread: 'Phishing',
-      responses: [
-        {
-          id: 'alert',
-          name: 'Alert Targeted Individuals',
-          team: 'identity',
-          baseDuration: 12,
-          effectiveness: 85,
-          scorePts: 70,
-          ocrRef: '1.3.3(c)',
-          description: 'Contact all named targets directly via phone — warn before they click.',
-          duringRisk: 'Targets may have already acted before warning reaches them.',
-          narrative: [
-            'Spear phishing uses personal detail to appear convincing — OCR 1.3.3(c).',
-            'Calling all 12 identified targets. Accounts locked pending reset.'
-          ]
-        }
-      ]
-    }
-  ]
+// ── MODULE DATA ──
+var MODULES = {
+  Phishing: {
+    icon: String.fromCodePoint(0x2709), cat: 'Social Engineering',
+    scenarios: [
+      {
+        id: 'mass', name: 'Mass Phishing Campaign',
+        short: 'Bulk HMRC-impersonation emails sent to entire organisation',
+        escs: ['Emails reaching inboxes', 'Credentials harvested', 'Admin access obtained'],
+        escR: 28, uMin: 5000, uMax: 60000, spread: 'Phishing',
+        horizonChance: 0.65, // likely to appear in horizon first
+        responses: [
+          { id: 'gateway', name: 'Block at Email Gateway', team: 'network', baseDuration: 18,
+            effectiveness: 80, scorePts: 60, ocrRef: 'OCR 1.3.3(c)',
+            description: 'Blacklist the malicious domain at the email gateway.',
+            duringRisk: 'Users who already received emails remain vulnerable.',
+            narrative: [
+              'Network Team accessing email gateway console...',
+              'OCR 1.3.3(c): Phishing exploits human psychology, not software vulnerabilities.',
+              'Blacklisting domain malicious-invoice-247.xyz. Quarantining all matching emails.',
+              'Gateway active. Staff now protected from further lures.'
+            ]
+          },
+          { id: 'full', name: 'Full Response: Block + Notify + MFA', team: 'identity', baseDuration: 55,
+            effectiveness: 100, scorePts: 100, ocrRef: 'OCR 1.3.3(c)',
+            description: 'Block domain, alert all staff, force password resets, enforce MFA.',
+            duringRisk: 'Attack continues for ~55s before full protection is active.',
+            narrative: [
+              'Identity Team coordinating full phishing incident response...',
+              'OCR 1.3.3(c): MFA defeats phishing even when passwords are stolen.',
+              'All-staff alert sent. Accounts at risk are being locked.',
+              'Password resets enforced. MFA enabled organisation-wide.',
+              'Stolen credentials now useless to attacker. Incident resolved.'
+            ]
+          }
+        ]
+      },
+      {
+        id: 'spear', name: 'Spear Phishing',
+        short: 'Targeted emails using personal data gathered via LinkedIn OSINT',
+        escs: ['Senior staff targeted', 'Executive credential compromise', 'C-suite access obtained'],
+        escR: 22, uMin: 10, uMax: 500, spread: 'Phishing',
+        horizonChance: 0.4, // harder to detect in advance
+        responses: [
+          { id: 'warn', name: 'Warn Targeted Staff', team: 'identity', baseDuration: 12,
+            effectiveness: 85, scorePts: 70, ocrRef: 'OCR 1.3.3(c)',
+            description: 'Contact all named targets by phone before they click.',
+            duringRisk: 'Some targets may act before the warning reaches them.',
+            narrative: [
+              'Spear phishing uses personal OSINT to appear convincing — OCR 1.3.3(c).',
+              'Calling all 12 identified targets via phone. Accounts locked pending reset.'
+            ]
+          }
+        ]
+      }
+    ]
+  }
 };
 
-// Register the module
-window.CW_MODULES = { Phishing: MOD };
-
-// ── CONSTANTS ──
+// ── TEAMS ──
 var TEAMS = {
-  network:  { id: 'network',  name: 'Network Team',  icon: '🔵', task: null },
-  security: { id: 'security', name: 'Security Ops',  icon: '🟢', task: null },
-  identity: { id: 'identity', name: 'Identity Team', icon: '🔴', task: null }
+  network:  { id: 'network',  name: 'Network Team',  icon: String.fromCodePoint(0x1F535), task: null, paused: [] },
+  security: { id: 'security', name: 'Security Ops',  icon: String.fromCodePoint(0x1F7E2), task: null, paused: [] },
+  identity: { id: 'identity', name: 'Identity Team', icon: String.fromCodePoint(0x1F534), task: null, paused: [] }
 };
 function tCol(id) {
-  return { network: '#29e0ff', security: '#00ffa3', identity: '#ff3b6b' }[id] || '#fff';
+  return { network: '#29e0ff', security: '#00ffa3', identity: '#ff3b6b' }[id] || '#aaaaff';
 }
 
+// ── CITIES ──
 var CITIES = [
-  {c:'London', la:51.507, lo:-0.128}, {c:'New York', la:40.713, lo:-74.006},
-  {c:'Tokyo', la:35.676, lo:139.650}, {c:'Paris', la:48.856, lo:2.352},
-  {c:'Sydney', la:-33.868, lo:151.209}, {c:'Dubai', la:25.204, lo:55.271},
-  {c:'Singapore', la:1.352, lo:103.820}, {c:'Frankfurt', la:50.110, lo:8.682},
-  {c:'São Paulo', la:-23.550, lo:-46.633}, {c:'Toronto', la:43.653, lo:-79.383}
+  {c:'London',   la:51.507,  lo:-0.128},  {c:'New York', la:40.713,  lo:-74.006},
+  {c:'Tokyo',    la:35.676,  lo:139.650}, {c:'Paris',    la:48.856,  lo:2.352},
+  {c:'Sydney',   la:-33.868, lo:151.209}, {c:'Dubai',    la:25.204,  lo:55.271},
+  {c:'Singapore',la:1.352,   lo:103.820}, {c:'Frankfurt',la:50.110,  lo:8.682},
+  {c:'São Paulo',la:-23.550, lo:-46.633}, {c:'Toronto',  la:43.653,  lo:-79.383},
+  {c:'Mumbai',   la:19.076,  lo:72.878},  {c:'Berlin',   la:52.520,  lo:13.405}
 ];
 
 // ── GAME STATE ──
-var incidents = [], nextId = 1, score = 0, resolvedCount = 0, spawnedCount = 0;
+var incidents = [], horizonItems = [], nextId = 1, horizonSeq = 1;
+var score = 0, resolvedCount = 0, spawnedCount = 0;
 var simRunning = false, simPaused = false, simDur = 0, simT = 0;
-var nextSpawnAt = null, lastTick = performance.now();
-var defcon = 5, tasks = [], taskSeq = 1;
+var nextSpawnAt = null, lastTick = performance.now(), defcon = 5;
+var tasks = [], taskSeq = 1;
 
 // ── THREE.JS GLOBE ──
-var renderer, scene, camera, earthMesh, sunDir;
-var c3d = document.getElementById('c3d');
-var globeArea = document.getElementById('globe-area');
+var renderer, scene, camera, earthMesh, globeRot = 0;
+var threeOK = false;
 
 function initGlobe() {
   if (typeof THREE === 'undefined') {
-    log('WARNING: three.min.js not found — globe disabled. Put three.min.js in the same folder.', 'ltw');
-    c3d.style.display = 'none';
+    log('three.min.js not found. Globe disabled. Place three.min.js next to this HTML.', 'ltw');
     return;
   }
-
-  var w = globeArea.clientWidth, h = globeArea.clientHeight - 200;
-  renderer = new THREE.WebGLRenderer({ canvas: c3d, antialias: true, alpha: true });
-  renderer.setSize(w, h);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-  scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(42, w / h, 0.1, 100);
-  camera.position.set(0, 0, 3.2);
-
-  // Sphere geometry
-  var geo = new THREE.SphereGeometry(1, 64, 64);
-
-  // Try to load NASA textures; fall back to flat material
-  var mat;
   try {
+    renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c3d'), antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Start with any non-zero size; ResizeObserver will correct it
+    renderer.setSize(800, 400);
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(42, 2, 0.1, 100);
+    camera.position.set(0, 0, 3.2);
+
+    var geo = new THREE.SphereGeometry(1, 64, 64);
+    var sunDir = new THREE.Vector3(1.0, 0.18, 0.35).normalize();
     var loader = new THREE.TextureLoader();
-    loader.crossOrigin = 'anonymous';
     var base = 'https://unpkg.com/three-globe/example/img/';
-    var dayTex = loader.load(base + 'earth-blue-marble.jpg');
+    var dayTex   = loader.load(base + 'earth-blue-marble.jpg');
     var nightTex = loader.load(base + 'earth-night.jpg');
     dayTex.encoding = THREE.sRGBEncoding;
     nightTex.encoding = THREE.sRGBEncoding;
-    sunDir = new THREE.Vector3(1.0, 0.18, 0.35).normalize();
 
-    mat = new THREE.ShaderMaterial({
-      uniforms: {
-        uDay:   { value: dayTex },
-        uNight: { value: nightTex },
-        uSun:   { value: sunDir }
-      },
+    var mat = new THREE.ShaderMaterial({
+      uniforms: { uDay:{value:dayTex}, uNight:{value:nightTex}, uSun:{value:sunDir} },
       vertexShader: [
-        'varying vec2 vUv;',
-        'varying vec3 vN;',
+        'varying vec2 vUv; varying vec3 vN;',
         'void main(){',
-        '  vUv = uv;',
-        '  vN = normalize(mat3(modelMatrix) * normal);',
-        '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);',
+        '  vUv=uv;',
+        '  vN=normalize(mat3(modelMatrix)*normal);',
+        '  gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);',
         '}'
       ].join('\n'),
       fragmentShader: [
         'precision mediump float;',
-        'uniform sampler2D uDay, uNight;',
-        'uniform vec3 uSun;',
-        'varying vec2 vUv;',
-        'varying vec3 vN;',
+        'uniform sampler2D uDay,uNight; uniform vec3 uSun;',
+        'varying vec2 vUv; varying vec3 vN;',
         'void main(){',
-        '  float c = dot(vN, normalize(uSun));',
-        '  float d = smoothstep(-0.18, 0.28, c);',
-        '  vec3 day = texture2D(uDay, vUv).rgb;',
-        '  vec3 night = texture2D(uNight, vUv).rgb * 1.7;',
-        '  float tw = smoothstep(-0.18,0.05,c) * (1.0-smoothstep(0.05,0.30,c));',
-        '  gl_FragColor = vec4(mix(night,day,d) + vec3(0.35,0.18,0.08)*tw, 1.0);',
+        '  float c=dot(vN,normalize(uSun));',
+        '  float d=smoothstep(-0.18,0.28,c);',
+        '  vec3 day=texture2D(uDay,vUv).rgb;',
+        '  vec3 night=texture2D(uNight,vUv).rgb*1.7;',
+        '  float tw=smoothstep(-0.18,0.05,c)*(1.0-smoothstep(0.05,0.3,c));',
+        '  gl_FragColor=vec4(mix(night,day,d)+vec3(0.35,0.18,0.08)*tw,1.0);',
         '}'
       ].join('\n')
     });
+    earthMesh = new THREE.Mesh(geo, mat);
+    scene.add(earthMesh);
+    scene.add(new THREE.AmbientLight(0x404060, 0.4));
+
+    // ResizeObserver — fires when globe-wrap gets its real dimensions
+    var globeWrap = document.getElementById('globe-wrap');
+    var ro = new ResizeObserver(function(entries) {
+      var e = entries[0];
+      var w = Math.floor(e.contentRect.width);
+      var h = Math.floor(e.contentRect.height);
+      if (w > 10 && h > 10) {
+        renderer.setSize(w, h);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      }
+    });
+    ro.observe(globeWrap);
+    threeOK = true;
+    log('Globe active. Three.js ' + THREE.REVISION, 'lti');
   } catch(e) {
-    mat = new THREE.MeshPhongMaterial({ color: 0x2244aa, emissive: 0x001133 });
-    log('Shader load failed, using flat material: ' + e.message, 'ltw');
+    log('Globe error: ' + e.message, 'ltw');
   }
-
-  earthMesh = new THREE.Mesh(geo, mat);
-  scene.add(earthMesh);
-
-  // Ambient + directional light (for fallback material)
-  scene.add(new THREE.AmbientLight(0x404060, 0.5));
-  var dl = new THREE.DirectionalLight(0xffffff, 1.0);
-  dl.position.set(5, 3, 5);
-  scene.add(dl);
-
-  window.addEventListener('resize', onResize);
-  onResize();
-}
-
-function onResize() {
-  if (!renderer) return;
-  var w = globeArea.clientWidth;
-  var h = globeArea.clientHeight - 200;
-  renderer.setSize(w, h);
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
 }
 
 // ── TASK ENGINE ──
@@ -386,12 +498,11 @@ function createTask(inc, resp) {
     responseName: resp.name, ocrRef: resp.ocrRef,
     actualDur: Math.round(resp.baseDuration * v),
     elapsed: 0, progress: 0, scorePts: resp.scorePts,
-    narrative: resp.narrative || [], narrativeIdx: 0,
-    compApplied: false
+    narrative: resp.narrative || [], narrativeIdx: 0, compApplied: false
   };
 }
 
-function assignTask(incId, respId) {
+window.assignTask = function(incId, respId) {
   var inc = incidents.find(function(i){ return i.id === incId; });
   if (!inc || inc.resolved) return;
   var sc = inc._sc;
@@ -399,24 +510,48 @@ function assignTask(incId, respId) {
   if (!resp) return;
   var team = TEAMS[resp.team];
   if (team.task) {
-    if (!confirm(team.name + ' is busy on another task. Stop it and reassign?')) return;
-    completeOrPauseTask(team.task, false);
+    if (!confirm(team.name + ' is currently working on another task at ' + Math.round(team.task.progress) + '% complete.\n\nStop and reassign? Their progress will be lost.')) return;
+    forfeitTask(team.task);
   }
   var task = createTask(inc, resp);
   team.task = task; tasks.push(task);
   inc.activeTaskId = task.id;
-  log(team.icon + ' ' + team.name + ' assigned to #' + inc.id + ' ' + inc.name + ' (~' + task.actualDur + 's)', 'lts');
+  log(team.icon + ' ' + team.name + ' assigned: ' + resp.name + ' on #' + inc.id + ' (~' + task.actualDur + 's)', 'lts');
   closeRP(); renderTeams(); renderIncidents();
-}
+  if (demoWait === 'assign') { demoWait = null; setTimeout(advanceDemo, 600); }
+};
 
-function completeOrPauseTask(task, resolved) {
+window.pauseTask = function(teamId) {
+  var team = TEAMS[teamId]; if (!team.task) return;
+  var task = team.task;
+  log('⏸ ' + team.name + ' paused: ' + task.responseName + ' at ' + Math.round(task.progress) + '%', 'ltw');
+  var inc = incidents.find(function(i){ return i.id === task.incId; });
+  if (inc) { if (!inc.pausedTasks) inc.pausedTasks = []; inc.pausedTasks.push(task); inc.activeTaskId = null; }
+  team.paused.push(task); team.task = null;
+  var idx = tasks.indexOf(task); if (idx > -1) tasks.splice(idx, 1);
+  renderTeams(); renderIncidents();
+};
+
+window.resumeTask = function(teamId, taskId) {
+  var team = TEAMS[teamId];
+  var task = team.paused.find(function(t){ return t.id === taskId; });
+  if (!task) return;
+  if (team.task && !confirm(team.name + ' is busy. Stop current task to resume this one?')) return;
+  if (team.task) forfeitTask(team.task);
+  team.paused = team.paused.filter(function(t){ return t.id !== taskId; });
+  var inc = incidents.find(function(i){ return i.id === task.incId; });
+  if (inc) { inc.pausedTasks = (inc.pausedTasks||[]).filter(function(t){return t.id!==taskId;}); inc.activeTaskId = task.id; }
+  team.task = task;
+  if (!tasks.includes(task)) tasks.push(task);
+  log('▶ Resumed: ' + task.responseName + ' on #' + task.incId + ' from ' + Math.round(task.progress) + '%', 'lti');
+  renderTeams(); renderIncidents();
+};
+
+function forfeitTask(task) {
   var team = TEAMS[task.team]; team.task = null;
   var idx = tasks.indexOf(task); if (idx > -1) tasks.splice(idx, 1);
-  if (resolved) {
-    score += task.scorePts;
-    document.getElementById('score-v').textContent = score;
-    log(team.icon + ' ' + team.name + ' DONE: ' + task.responseName + ' on #' + task.incId + ' (+' + task.scorePts + ' pts)', 'lts');
-  }
+  var inc = incidents.find(function(i){ return i.id === task.incId; });
+  if (inc) { inc.activeTaskId = null; }
 }
 
 function updateTasks(dt) {
@@ -424,52 +559,176 @@ function updateTasks(dt) {
   tasks.forEach(function(task) {
     task.elapsed += dt;
     task.progress = Math.min(100, (task.elapsed / task.actualDur) * 100);
-    // Complication at 50%
-    if (!task.compApplied && task.progress >= 50 && Math.random() < 0.2) {
+    if (!task.compApplied && task.progress >= 50 && Math.random() < 0.18) {
       task.compApplied = true;
-      var extra = Math.round(task.actualDur * 0.25);
+      var extra = Math.round(task.actualDur * 0.22);
       task.actualDur += extra;
-      log('⚠ COMPLICATION on ' + task.responseName + ' — extended by ' + extra + 's', 'ltw');
+      log('⚠ Complication: ' + task.responseName + ' extended by ' + extra + 's', 'ltw');
     }
-    // Narrative
-    if (task.narrative.length && task.narrativeIdx < task.narrative.length) {
-      var interval = task.actualDur / task.narrative.length;
-      if (task.elapsed >= task.narrativeIdx * interval) {
-        log('  ' + task.narrative[task.narrativeIdx], 'ltnt');
-        task.narrativeIdx++;
-      }
+    var interval = task.narrative.length ? task.actualDur / task.narrative.length : 999;
+    if (task.narrativeIdx < task.narrative.length && task.elapsed >= task.narrativeIdx * interval) {
+      log('  ' + task.narrative[task.narrativeIdx], 'ltnt');
+      task.narrativeIdx++;
     }
     if (task.progress >= 100) done.push(task);
   });
   done.forEach(function(task) {
+    var team = TEAMS[task.team]; team.task = null;
+    var idx = tasks.indexOf(task); if (idx > -1) tasks.splice(idx, 1);
+    score += task.scorePts;
+    document.getElementById('sc-v').textContent = score;
+    log(team.icon + ' ' + team.name + ': ' + task.responseName + ' COMPLETE (+' + task.scorePts + 'pts)', 'lts');
     var inc = incidents.find(function(i){ return i.id === task.incId; });
-    completeOrPauseTask(task, true);
     if (inc && !inc.resolved) {
       inc.resolved = true; resolvedCount++;
-      updateResolved();
+      document.getElementById('rs-v').textContent = resolvedCount + '/' + spawnedCount;
       calcDefcon(); renderIncidents();
     }
   });
   if (done.length) renderTeams();
 }
 
-// ── INCIDENT SPAWN ──
-function spawnIncident() {
+// ── HORIZON SCANNER ──
+function tryAddToHorizon(type, sc, city) {
+  var delay = 15 + Math.random() * 22;
+  var item = {
+    id: horizonSeq++, type: type, sc: sc, city: city,
+    dropAt: simT + delay, delay: delay,
+    preempting: false, preemptTeam: null, preemptTask: null,
+    preemptDone: false
+  };
+  horizonItems.push(item);
+  log('📡 HORIZON: ' + sc.name + ' detected · ' + city.c + ' · drops in ~' + Math.round(delay) + 's', 'ltw');
+  renderHorizon();
+}
+
+window.preemptHorizon = function(hzId) {
+  var item = horizonItems.find(function(i){ return i.id === hzId; });
+  if (!item || item.preempting) return;
+  var netTeam = TEAMS.network;
+  if (netTeam.task) {
+    log('Network Team is busy — cannot pre-empt right now.', 'ltw');
+    return;
+  }
+  item.preempting = true;
+  var dur = 8 + Math.random() * 8;
+  var task = { id: taskSeq++, incId: null, hzId: hzId, team: 'network',
+    responseName: 'Pre-empt: ' + item.sc.name,
+    actualDur: dur, elapsed: 0, progress: 0, scorePts: 0,
+    narrative: ['Network Team investigating incoming threat...', 'Checking threat feeds and indicator databases...'],
+    narrativeIdx: 0, compApplied: false };
+  netTeam.task = task; tasks.push(task);
+  item.preemptTask = task;
+  log('🔍 Network Team pre-empting: ' + item.sc.name + ' at ' + item.city.c, 'lti');
+  renderTeams(); renderHorizon();
+};
+
+function checkHorizonPreempts() {
+  horizonItems.forEach(function(item) {
+    if (!item.preemptTask || item.preemptDone) return;
+    var task = item.preemptTask;
+    if (task.progress < 100) return;
+    item.preemptDone = true;
+    var team = TEAMS.network; team.task = null;
+    var idx = tasks.indexOf(task); if (idx > -1) tasks.splice(idx, 1);
+    var neutralised = Math.random() < 0.65;
+    if (neutralised) {
+      score += 75;
+      document.getElementById('sc-v').textContent = score;
+      log('✅ Pre-empt SUCCESS: ' + item.sc.name + ' at ' + item.city.c + ' neutralised (+75pts)', 'lts');
+      horizonItems = horizonItems.filter(function(i){ return i.id !== item.id; });
+      renderHorizon();
+    } else {
+      log('⚠ Pre-empt FAILED: ' + item.sc.name + ' at ' + item.city.c + ' dropping active NOW', 'lte');
+      doSpawnIncident(item.type, item.sc, item.city);
+      horizonItems = horizonItems.filter(function(i){ return i.id !== item.id; });
+      renderHorizon();
+    }
+    renderTeams();
+  });
+}
+
+function updateHorizon(dt) {
+  checkHorizonPreempts();
+  var dropped = [];
+  horizonItems.forEach(function(item) {
+    if (item.preemptDone || item.preemptTask) return; // being handled
+    var timeLeft = item.dropAt - simT;
+    if (timeLeft <= 0) dropped.push(item);
+  });
+  dropped.forEach(function(item) {
+    horizonItems = horizonItems.filter(function(i){ return i.id !== item.id; });
+    log('⬇ DROPPING ACTIVE: ' + item.sc.name + ' · ' + item.city.c, 'lte');
+    doSpawnIncident(item.type, item.sc, item.city);
+  });
+  if (dropped.length) renderHorizon();
+}
+
+function renderHorizon() {
+  var list = document.getElementById('hz-list');
+  document.getElementById('hz-ct').textContent = horizonItems.length + ' INCOMING';
+  if (!horizonItems.length) {
+    list.innerHTML = '<div class="hz-empty">No threats on radar</div>';
+    return;
+  }
+  list.innerHTML = horizonItems.map(function(item) {
+    var timeLeft = Math.max(0, item.dropAt - simT);
+    var pct = Math.min(100, ((item.delay - timeLeft) / item.delay) * 100);
+    var hot = timeLeft < 8;
+    var netFree = !TEAMS.network.task;
+    var timerStr = Math.round(timeLeft) + 's';
+    return '<div class="hz-item' + (hot ? ' hz-hot' : '') + '">' +
+      '<div class="hz-top">' +
+        '<span class="hz-ico">' + (MODULES[item.type] ? MODULES[item.type].icon : '?') + '</span>' +
+        '<span class="hz-nm">' + item.sc.name + '</span>' +
+        '<span class="hz-timer' + (hot ? ' hot' : '') + '">' + timerStr + '</span>' +
+      '</div>' +
+      '<div class="hz-city">' + item.city.c + ' · ' + (item.preempting ? 'Being investigated...' : 'Not yet active') + '</div>' +
+      '<div class="hz-drop-bar-wrap"><div class="hz-drop-bar" style="width:' + pct + '%"></div></div>' +
+      (!item.preempting ? '<div class="hz-actions">' +
+        (netFree ? '<button class="hz-btn-preempt" onclick="preemptHorizon(' + item.id + ')">🔍 PRE-EMPT</button>' : '') +
+        '</div>' : '<div class="hz-preempting">⏳ Network Team investigating...</div>') +
+      '</div>';
+  }).join('');
+}
+
+// ── SPAWN ──
+function spawnCycle() {
+  var allScenarios = [];
+  Object.keys(MODULES).forEach(function(type) {
+    var mod = MODULES[type];
+    mod.scenarios.forEach(function(sc) {
+      if (sc.responses && sc.responses.length) allScenarios.push({type: type, sc: sc});
+    });
+  });
+  if (!allScenarios.length) return;
+  var pick = allScenarios[Math.floor(Math.random() * allScenarios.length)];
   var used = incidents.filter(function(i){ return !i.resolved; }).map(function(i){ return i.city; });
   var cands = CITIES.filter(function(c){ return used.indexOf(c.c) === -1; });
   if (!cands.length) cands = CITIES;
   var city = cands[Math.floor(Math.random() * cands.length)];
-  var sc = MOD.scenarios[Math.floor(Math.random() * MOD.scenarios.length)];
+  var sc = pick.sc;
+  var hz = typeof sc.horizonChance === 'number' ? sc.horizonChance : 0.5;
+  if (Math.random() < hz) {
+    tryAddToHorizon(pick.type, sc, city);
+  } else {
+    log('⚡ BYPASS: ' + sc.name + ' at ' + city.c + ' — appeared without warning', 'lte');
+    doSpawnIncident(pick.type, sc, city);
+  }
+}
+
+function doSpawnIncident(type, sc, city) {
   var sev = Math.random() < 0.15 ? 2 : 1;
   var users = Math.floor(sc.uMin + Math.random() * (sc.uMax - sc.uMin));
   var inc = {
-    id: nextId++, type: 'Phishing', city: city.c, lat: city.la, lon: city.lo,
+    id: nextId++, type: type, city: city.c, lat: city.la, lon: city.lo,
     name: sc.name, sev: sev, users: users,
     escAge: 0, escRate: sc.escR * (0.7 + Math.random() * 0.6),
-    resolved: false, activeTaskId: null, _sc: sc
+    resolved: false, activeTaskId: null, pausedTasks: [], _sc: sc
   };
   incidents.push(inc); spawnedCount++;
-  log('⚠ #' + inc.id + ' ' + inc.name + ' · ' + city.c + ' · Sev ' + sev + ' · ~' + users.toLocaleString() + ' users', 'ltw');
+  document.getElementById('rs-v').textContent = resolvedCount + '/' + spawnedCount;
+  log('🚨 ACTIVE #' + inc.id + ': ' + sc.name + ' · ' + city.c + ' · Sev ' + sev + ' · ~' + users.toLocaleString() + ' users', 'ltw');
   calcDefcon(); renderIncidents();
 }
 
@@ -480,28 +739,30 @@ function doEscalation(dt) {
     inc.escAge += dt;
     if (inc.escAge >= inc.escRate && inc.sev < 3) {
       inc.sev++; inc.escAge = 0; changed = true;
-      log('🔴 #' + inc.id + ' escalated to Sev ' + inc.sev + ' — ' + inc._sc.escs[inc.sev - 1], 'lte');
+      log('🔴 #' + inc.id + ' escalated → Sev ' + inc.sev + ': ' + inc._sc.escs[inc.sev - 1], 'lte');
+      if (inc.sev === 3) score = Math.max(0, score - 30);
     }
   });
   if (changed) { calcDefcon(); renderIncidents(); }
 }
 
 function calcDefcon() {
-  var active = incidents.filter(function(i){ return !i.resolved; });
-  var s3 = active.filter(function(i){ return i.sev === 3; }).length;
+  var a = incidents.filter(function(i){ return !i.resolved; });
+  var s3 = a.filter(function(i){ return i.sev === 3; }).length;
   var d = 5;
-  if (active.length >= 1) d = 4;
-  if (active.length >= 3 || s3 >= 1) d = 3;
-  if (active.length >= 5 || s3 >= 2) d = 2;
-  if (s3 >= 3 || active.length >= 8) d = 1;
+  if (a.length >= 1) d = 4;
+  if (a.length >= 3 || s3 >= 1) d = 3;
+  if (a.length >= 5 || s3 >= 2) d = 2;
+  if (s3 >= 3 || a.length >= 8) d = 1;
   defcon = d;
   var cols = ['#00ffa3','#29e0ff','#ffe020','#ff8a20','#ff3b6b'];
-  var el = document.getElementById('dc-val');
-  el.textContent = d; el.style.color = cols[5 - d];
+  document.getElementById('dc-v').textContent = d;
+  document.getElementById('dc-v').style.color = cols[5 - d];
 }
 
-function updateResolved() {
-  document.getElementById('res-v').textContent = resolvedCount + '/' + spawnedCount;
+function schedNext(first) {
+  var gaps = first ? [6, 10] : simT < 60 ? [28, 42] : simT < 180 ? [16, 26] : [9, 16];
+  nextSpawnAt = simT + gaps[0] + Math.random() * (gaps[1] - gaps[0]);
 }
 
 // ── RENDER TEAMS ──
@@ -509,82 +770,199 @@ function renderTeams() {
   Object.values(TEAMS).forEach(function(team) {
     var el = document.getElementById('tr-' + team.id); if (!el) return;
     var t = team.task;
-    var html = '<div class="tr-h"><span class="tr-ico">' + team.icon + '</span><span class="tr-name">' + team.name + '</span>';
+    var col = tCol(team.id);
+    var html = '<div class="tr-h"><span class="tr-ico">' + team.icon + '</span>' +
+      '<span class="tr-name">' + team.name + '</span>';
     if (t) {
-      html += '<span class="tr-badge tb-busy">' + Math.round(t.progress) + '%</span></div>';
-      html += '<div class="tr-info">' + t.responseName + ' · #' + t.incId + '</div>';
-      html += '<div class="tr-bar-wrap"><div class="tr-bar" style="width:' + t.progress + '%;background:' + tCol(team.id) + '"></div></div>';
-      html += '<button class="sm-btn" onclick="pauseTeam(\'' + team.id + '\')">⏸ PAUSE</button>';
+      var eta = Math.max(0, t.actualDur - t.elapsed);
+      html += '<span class="tr-badge tb-busy">BUSY</span></div>';
+      html += '<div class="tr-task">' + t.responseName + (t.incId ? ' · #' + t.incId : '') + '</div>';
+      html += '<div class="tr-progress-row">';
+      html += '<div class="tr-bar-wrap"><div class="tr-bar" style="width:' + t.progress.toFixed(1) + '%;background:' + col + '"></div></div>';
+      html += '<span class="tr-pct">' + Math.round(t.progress) + '%</span>';
+      html += '<span class="tr-eta" style="color:' + col + '">~' + Math.round(eta) + 's</span></div>';
+      if (!t.hzId) html += '<button class="sm-btn sm-pause" onclick="pauseTask(\'' + team.id + '\')">⏸ pause</button>';
     } else {
       html += '<span class="tr-badge tb-free">FREE</span></div>';
+      // Show paused tasks
+      team.paused.forEach(function(pt) {
+        html += '<div style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,.04)">';
+        html += '<div class="tr-task" style="color:var(--warn)">⏸ ' + pt.responseName + ' · #' + pt.incId + ' · ' + Math.round(pt.progress) + '%</div>';
+        html += '<button class="sm-btn sm-resume" onclick="resumeTask(\'' + team.id + '\',' + pt.id + ')">▶ resume</button>';
+        html += '</div>';
+      });
     }
     el.innerHTML = html;
   });
 }
 
-window.pauseTeam = function(teamId) {
-  var team = TEAMS[teamId]; if (!team.task) return;
-  log('⏸ ' + team.name + ' paused at ' + Math.round(team.task.progress) + '%', 'ltw');
-  completeOrPauseTask(team.task, false);
-  renderTeams(); renderIncidents();
-};
-
 // ── RENDER INCIDENTS ──
 function renderIncidents() {
-  var list = document.getElementById('inc-list');
-  document.getElementById('ic-ct').textContent = incidents.filter(function(i){ return !i.resolved; }).length + ' ACTIVE';
+  var scroll = document.getElementById('inc-scroll');
+  var active = incidents.filter(function(i){ return !i.resolved; });
+  document.getElementById('ic-ct').textContent = active.length;
   if (!incidents.length) {
-    list.innerHTML = '<div style="padding:14px;font-size:11px;color:#3a5870;text-align:center">Monitoring...</div>';
+    scroll.innerHTML = '<div class="no-incs">No active incidents</div>';
     return;
   }
-  list.innerHTML = incidents.slice().reverse().map(function(inc) {
+  var sorted = active.slice().sort(function(a,b){
+    return (b.sev - a.sev) || (a.escAge/a.escRate - b.escAge/b.escRate);
+  }).concat(incidents.filter(function(i){ return i.resolved; }).slice(-3));
+
+  scroll.innerHTML = sorted.map(function(inc) {
+    if (!inc._sc) return '';
     var task = inc.activeTaskId ? tasks.find(function(t){ return t.id === inc.activeTaskId; }) : null;
+    var hasPaused = inc.pausedTasks && inc.pausedTasks.length > 0;
     var tte = !inc.resolved && inc.sev < 3 ? Math.max(0, inc.escRate - inc.escAge) : null;
-    var tteStr = inc.resolved ? '' : (inc.sev === 3 ? '<span style="color:#ff3b6b;font-weight:bold">⚠ SEV 3</span>' :
-      (tte !== null ? '<span style="color:' + (tte < 15 ? '#ff3b6b' : '#ffb020') + '">⏱ ' + Math.round(tte) + 's</span>' : ''));
-    var progHtml = task ? ('<div class="ic-prog-wrap"><div class="ic-prog" style="width:' + task.progress + '%;background:' + tCol(task.team) + '"></div></div>') : '';
-    var btn = (!inc.resolved && !task) ? '<div class="ic-resp-btn" onclick="openRP(' + inc.id + ')">◆ SEE RESPONSE OPTIONS</div>' : '';
-    return '<div class="ic ' + (inc.resolved ? 'done' : 's' + inc.sev) + '" onclick="if(!event.target.closest(\'.ic-resp-btn\'))openRP(' + inc.id + ')">' +
-      '<div class="ic-h"><span class="tr-ico">✉</span><span class="ic-nm">#' + inc.id + ' ' + inc.name + '</span><span class="ic-sev ' + (inc.resolved ? '' : 'sv' + inc.sev) + '">' + (inc.resolved ? '✓ DONE' : 'SEV ' + inc.sev) + '</span></div>' +
-      '<div class="ic-sub">' + inc.city + ' · ~' + inc.users.toLocaleString() + ' users</div>' +
-      (tteStr ? '<div class="ic-esc">' + tteStr + '</div>' : '') +
-      progHtml + btn + '</div>';
+    var escPct = !inc.resolved && inc.escRate ? Math.min(100, (inc.escAge / inc.escRate) * 100) : 0;
+    var escCol = escPct > 80 ? '#ff3b6b' : escPct > 55 ? '#ffb020' : '#00ffa3';
+
+    var html = '<div class="ic ' + (inc.resolved ? 'ic-done' : 's' + inc.sev) + '" id="ic-' + inc.id + '">';
+    // Header
+    html += '<div class="ic-h">' +
+      '<span style="font-size:13px">' + (MODULES[inc.type] ? MODULES[inc.type].icon : '?') + '</span>' +
+      '<span class="ic-nm">#' + inc.id + ' ' + inc.name + '</span>' +
+      '<span class="ic-sev ' + (inc.resolved ? 'svd' : 'sv' + inc.sev) + '">' +
+        (inc.resolved ? '✓ DONE' : 'SEV ' + inc.sev) + '</span></div>';
+    html += '<div class="ic-loc">' + inc.city + ' · ~' + inc.users.toLocaleString() + ' users</div>';
+
+    if (!inc.resolved) {
+      if (task) {
+        // IN PROGRESS strip
+        var eta2 = Math.max(0, task.actualDur - task.elapsed);
+        var col2 = tCol(task.team);
+        html += '<div class="ic-task-strip">';
+        html += '<div class="ic-task-row">';
+        html += '<span class="ic-task-t">' + TEAMS[task.team].icon + '</span>';
+        html += '<span class="ic-task-n">' + task.responseName + '</span>';
+        html += '<span class="ic-task-pct" style="color:' + col2 + '">' + Math.round(task.progress) + '%</span>';
+        html += '<span class="ic-task-eta">~' + Math.round(eta2) + 's</span>';
+        html += '</div>';
+        html += '<div class="ic-task-bar-wrap"><div class="ic-task-bar" style="width:' + task.progress.toFixed(1) + '%;background:' + col2 + '"></div></div>';
+        html += '</div>';
+      } else {
+        // UNASSIGNED indicator
+        html += '<div class="ic-unassigned">UNASSIGNED — needs response</div>';
+        // Paused tasks
+        if (hasPaused) {
+          inc.pausedTasks.forEach(function(pt) {
+            var ptCol = tCol(pt.team);
+            html += '<div class="ic-task-strip" style="border-top:1px solid rgba(255,176,32,.15)">';
+            html += '<div class="ic-task-row">';
+            html += '<span class="ic-task-t">⏸</span>';
+            html += '<span class="ic-task-n" style="color:#ffb020">' + pt.responseName + '</span>';
+            html += '<span class="ic-task-pct" style="color:#ffb020">' + Math.round(pt.progress) + '%</span>';
+            html += '</div>';
+            html += '<div class="ic-task-bar-wrap"><div class="ic-task-bar" style="width:' + pt.progress.toFixed(1) + '%;background:#ffb020"></div></div>';
+            html += '</div>';
+          });
+        }
+        // Response button
+        html += '<div class="ic-resp-btn" onclick="openRP(' + inc.id + ')">◆ SEE RESPONSE OPTIONS</div>';
+      }
+      // Escalation bar
+      if (inc.sev < 3) {
+        var escLabel = tte !== null ?
+          '<span style="color:' + (tte < 12 ? '#ff3b6b' : tte < 25 ? '#ffb020' : '#3a5870') + '">⏱ Sev ' + (inc.sev + 1) + ' in ~' + Math.round(tte) + 's</span>' : '';
+        html += '<div class="ic-esc-row">';
+        html += '<div class="ic-esc-bar-w"><div class="ic-esc-bar" style="width:' + escPct + '%;background:' + escCol + '"></div></div>';
+        html += '<div class="ic-esc-t">' + escLabel + '</div>';
+        html += '</div>';
+      }
+    }
+    html += '</div>';
+    return html;
   }).join('');
+
+  // Click listeners
+  scroll.querySelectorAll('.ic').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      if (e.target.closest('.ic-resp-btn') || e.target.closest('.sm-btn')) return;
+      var id = parseInt(el.id.replace('ic-', ''));
+      if (!isNaN(id)) openRP(id);
+    });
+  });
 }
 
 // ── RESPONSE PANEL ──
-var currentRPId = null;
+var rpOpen = false;
 window.openRP = function(incId) {
   var inc = incidents.find(function(i){ return i.id === incId; });
   if (!inc || inc.resolved) return;
-  currentRPId = incId;
-  document.getElementById('rp-tag').textContent = 'INCIDENT #' + inc.id + ' · PHISHING';
-  document.getElementById('rp-nm').textContent = '✉ ' + inc.name;
-  document.getElementById('rp-sub').textContent = inc.city + ' · Sev ' + inc.sev + ' · ~' + inc.users.toLocaleString() + ' users';
-  var html = '<div class="rp-sec"><div class="rp-sh">ATTACK OVERVIEW</div>' +
-    '<div style="font-size:12px;color:#3a5870;line-height:1.5">' + inc._sc.short + '</div></div>' +
+  var sc = inc._sc;
+  document.getElementById('rp-tag').textContent = 'INCIDENT #' + inc.id + ' · ' + inc.type.toUpperCase();
+  document.getElementById('rp-nm').textContent = (MODULES[inc.type] ? MODULES[inc.type].icon : '') + ' ' + inc.name;
+  document.getElementById('rp-sub').textContent = inc.city + ' · Sev ' + inc.sev + ' · ~' + inc.users.toLocaleString() + ' users at risk';
+
+  // Calculate impact data
+  var tte = inc.sev < 3 ? Math.max(0, inc.escRate - inc.escAge) : null;
+  var conHtml = '';
+  if (tte !== null && inc.sev < 3) {
+    conHtml = '<div class="rp-consequence">' +
+      '<div style="font-weight:bold;color:#ff8a20;margin-bottom:6px">⚠ IF YOU DO NOTHING:</div>' +
+      '<div class="rp-con-row"><span class="rp-con-ico">⏱</span><span>Escalates to Sev ' + (inc.sev+1) + ' in ~' + Math.round(tte) + 's</span></div>' +
+      (inc.sev === 2 ? '<div class="rp-con-row"><span class="rp-con-ico">⚡</span><span>Sev 3 incidents begin spreading to other cities (−50pts each)</span></div>' : '') +
+      '<div class="rp-con-row"><span class="rp-con-ico">📉</span><span>Escalation costs score and increases DEFCON</span></div>' +
+      '</div>';
+  } else if (inc.sev === 3) {
+    conHtml = '<div class="rp-consequence" style="border-color:rgba(255,59,107,.3)">' +
+      '<div style="font-weight:bold;color:#ff3b6b;margin-bottom:6px">🔴 SEV 3 — SPREADING NOW</div>' +
+      '<div class="rp-con-row"><span class="rp-con-ico">⚡</span><span>Spawning related incidents in other cities every ~15s (−50pts each)</span></div>' +
+      '<div class="rp-con-row"><span class="rp-con-ico">📡</span><span>Assign a team immediately to contain the spread</span></div>' +
+      '</div>';
+  }
+
+  var html = '<div class="rp-sec"><div class="rp-sh">SITUATION</div>' +
+    '<div style="font-size:12px;color:#3a5870;line-height:1.5;margin-bottom:8px">' + sc.short + '</div>' +
+    conHtml + '</div>' +
     '<div class="rp-sec"><div class="rp-sh">RESPONSE OPTIONS</div>';
-  inc._sc.responses.forEach(function(resp) {
+
+  sc.responses.forEach(function(resp) {
     var team = TEAMS[resp.team];
-    var busy = team.task !== null;
+    var busy = !!team.task;
+    var v = 0.65 + 0.75 / 2; // mid estimate for display
+    var estDur = Math.round(resp.baseDuration * v);
     html += '<div class="ro">' +
-      '<div class="ro-h"><span class="ro-t">' + team.icon + '</span><div style="flex:1"><div class="ro-nm">' + resp.name + '</div><div class="ro-tl">' + team.name + (busy ? ' — BUSY' : '') + '</div></div>' +
-      '<div class="ro-dur">~' + resp.baseDuration + 's</div></div>' +
+      '<div class="ro-h">' +
+        '<span class="ro-team-icon">' + team.icon + '</span>' +
+        '<div class="ro-info"><div class="ro-nm">' + resp.name + '</div>' +
+        '<div class="ro-tl">' + team.name + (busy ? ' — CURRENTLY BUSY' : ' — AVAILABLE') + '</div></div>' +
+        '<div class="ro-dur-block"><div class="ro-dur" style="color:' + tCol(resp.team) + '">~' + estDur + 's</div>' +
+        '<div class="ro-dur-lbl">EST TIME</div></div>' +
+      '</div>' +
       '<div class="ro-desc">' + resp.description + '</div>' +
-      '<div class="ro-ocr">OCR ' + resp.ocrRef + ' · ' + resp.effectiveness + '% effective</div>' +
-      '<button class="ro-go" onclick="assignTask(' + incId + ',\'' + resp.id + '\')">▸ ASSIGN TO ' + team.name.toUpperCase() + '</button></div>';
+      '<div class="ro-impact">' +
+        '<div class="ro-impact-row"><span>Effectiveness</span><span style="color:' + (resp.effectiveness>=90?'#00ffa3':'#ffb020') + '">' + resp.effectiveness + '%</span></div>' +
+        '<div class="ro-impact-row"><span>Score on completion</span><span style="color:#00ffa3">+' + resp.scorePts + ' pts</span></div>' +
+        '<div class="ro-impact-row"><span>Team locked for</span><span>~' + resp.baseDuration + '–' + Math.round(resp.baseDuration * 1.4) + 's</span></div>' +
+        '<div class="ro-impact-row"><span>Spec reference</span><span style="color:#9b6dff">' + resp.ocrRef + '</span></div>' +
+      '</div>' +
+      '<div class="ro-risk">⚠ During response: ' + resp.duringRisk + '</div>' +
+      '<div class="ro-tags">' +
+        '<span class="tag tag-ok">' + resp.effectiveness + '% effective</span>' +
+        '<span class="tag tag-ocr">' + resp.ocrRef + '</span>' +
+        (busy ? '<span class="tag tag-busy">⚠ TEAM BUSY</span>' : '') +
+      '</div>' +
+      '<button class="ro-go ' + (busy ? 'go-busy' : 'go-go') + '" onclick="assignTask(' + incId + ',\'' + resp.id + '\')">' +
+        (busy ? '⚠ STOP CURRENT TASK & REASSIGN' : '▸ ASSIGN TO ' + team.name.toUpperCase()) +
+      '</button></div>';
   });
   html += '</div>';
   document.getElementById('rp-opts').innerHTML = html;
   document.getElementById('rp').classList.add('open');
+  rpOpen = true;
+  if (demoWait === 'open_rp') { demoWait = null; setTimeout(advanceDemo, 500); }
 };
-window.closeRP = function() { document.getElementById('rp').classList.remove('open'); };
+window.closeRP = function() { document.getElementById('rp').classList.remove('open'); rpOpen = false; };
 
 // ── OPS LOG ──
 var logOut = document.getElementById('log-out');
 function log(msg, cls) {
-  var d = document.createElement('div'); d.className = cls || 'lti'; d.textContent = msg;
-  logOut.appendChild(d); logOut.scrollTop = logOut.scrollHeight;
+  var d = document.createElement('div');
+  d.className = cls || 'lti';
+  d.textContent = msg;
+  logOut.appendChild(d);
+  logOut.scrollTop = logOut.scrollHeight;
 }
 
 var lcmd = document.getElementById('lcmd');
@@ -593,42 +971,93 @@ lcmd.addEventListener('keydown', function(e) {
   var v = lcmd.value.trim(); if (!v) return;
   log('▸ ' + v, 'ltd'); lcmd.value = '';
   var cmd = v.toLowerCase();
-  if (cmd === 'help') { log('Commands: scan, triage, teams, status', 'lti'); return; }
+  if (cmd === 'help') { log('scan | triage | teams | status | horizon | clear', 'lti'); return; }
+  if (cmd === 'clear') { logOut.innerHTML = ''; return; }
+  if (cmd === 'horizon') {
+    if (!horizonItems.length) { log('Horizon scanner clear.', 'lti'); return; }
+    horizonItems.forEach(function(item) {
+      var tl = Math.max(0, item.dropAt - simT);
+      log('  ' + item.sc.name + ' · ' + item.city.c + ' · drops in ~' + Math.round(tl) + 's' + (item.preempting ? ' [investigating]' : ''), 'ltw');
+    });
+    return;
+  }
   if (cmd === 'scan') {
     var a = incidents.filter(function(i){ return !i.resolved; });
     if (!a.length) { log('No active incidents.', 'lti'); return; }
-    a.forEach(function(i){ log('  #' + i.id + ' ' + i.name + ' · ' + i.city + ' · Sev ' + i.sev, i.sev === 3 ? 'lte' : 'ltw'); });
+    a.forEach(function(i) {
+      var tsk = i.activeTaskId ? tasks.find(function(t){ return t.id === i.activeTaskId; }) : null;
+      var tte2 = i.sev < 3 ? Math.max(0, i.escRate - i.escAge) : null;
+      log('  #' + i.id + ' ' + i.name + ' · ' + i.city + ' · Sev ' + i.sev +
+        (tsk ? ' [' + TEAMS[tsk.team].icon + ' ' + Math.round(tsk.progress) + '%]' : ' [UNASSIGNED]') +
+        (tte2 !== null ? ' · esc in ~' + Math.round(tte2) + 's' : ''), i.sev === 3 ? 'lte' : 'ltw');
+    });
     return;
   }
   if (cmd === 'teams') {
-    Object.values(TEAMS).forEach(function(t){ log('  ' + t.icon + ' ' + t.name + ': ' + (t.task ? 'BUSY — ' + t.task.responseName + ' (' + Math.round(t.task.progress) + '%)' : 'AVAILABLE'), t.task ? 'ltw' : 'lti'); });
+    Object.values(TEAMS).forEach(function(t) {
+      if (t.task) {
+        var eta3 = Math.max(0, t.task.actualDur - t.task.elapsed);
+        log('  ' + t.icon + ' ' + t.name + ': BUSY — ' + t.task.responseName + ' (' + Math.round(t.task.progress) + '%, ~' + Math.round(eta3) + 's left)', 'ltw');
+      } else {
+        log('  ' + t.icon + ' ' + t.name + ': FREE', 'lti');
+      }
+    });
     return;
   }
-  if (cmd === 'status') { log('Score: ' + score + ' | Resolved: ' + resolvedCount + '/' + spawnedCount + ' | DEFCON: ' + defcon, 'lti'); return; }
-  log('Unknown command. Type help.', 'ltd');
+  if (cmd === 'status') {
+    log('Score: ' + score + ' | Resolved: ' + resolvedCount + '/' + spawnedCount + ' | DEFCON: ' + defcon, 'lti');
+    return;
+  }
+  if (cmd === 'triage') {
+    var ua = incidents.filter(function(i){ return !i.resolved && !i.activeTaskId; });
+    if (!ua.length) { log('All incidents assigned.', 'lts'); return; }
+    ua.sort(function(a,b){ return b.sev - a.sev || (b.escAge/b.escRate) - (a.escAge/a.escRate); });
+    log('Priority (unassigned):', 'lti');
+    ua.slice(0, 5).forEach(function(i, n) {
+      var tte3 = i.sev < 3 ? Math.max(0, i.escRate - i.escAge) : 0;
+      log('  ' + (n+1) + '. #' + i.id + ' ' + i.name + ' Sev' + i.sev + ' · ' + i.city + (tte3 ? ' · esc in ~' + Math.round(tte3) + 's' : ''), i.sev === 3 ? 'lte' : 'ltw');
+    });
+    return;
+  }
+  log('Unknown: ' + cmd + '. Type help.', 'ltd');
 });
 
-// ── SPAWN SCHEDULE ──
-function schedNext(first) {
-  var gaps = first ? [5, 8] : (simT < 60 ? [25, 40] : simT < 180 ? [14, 22] : [8, 15]);
-  nextSpawnAt = simT + gaps[0] + Math.random() * (gaps[1] - gaps[0]);
+// ── DEMO ──
+var demoStep = -1, demoWait = null;
+var demoSteps = [
+  { msg: 'An incident has appeared in the left panel. The orange bar shows escalation progress — when it fills, severity increases. Click SEE RESPONSE OPTIONS on the incident card now.', wait: 'open_rp' },
+  { msg: 'You can see response options. Notice: each shows the team needed, time, effectiveness, and — critically — what happens if you do NOT act. Pick one and assign it.', wait: 'assign' },
+  { msg: 'Your team is working. Watch the progress bar in the teams section and on the incident card. The ops log streams OCR theory as they work. Type "scan" in the terminal to see all active incidents.' }
+];
+function startDemo() {
+  demoStep = -1;
+  log('--- DEMO MODE --- Follow the prompts below.', 'lts');
+  advanceDemo();
+}
+function advanceDemo() {
+  demoStep++;
+  if (demoStep >= demoSteps.length) { log('Demo complete. Press DEPLOY to play.', 'lts'); return; }
+  var s = demoSteps[demoStep];
+  demoWait = s.wait || null;
+  log('DEMO: ' + s.msg, 'lti');
 }
 
-// ── START GAME ──
+// ── GAME CONTROLS ──
 function startGame() {
-  var mins = Math.max(10, Math.min(30, parseInt(document.getElementById('dur').value) || 10));
+  var mins = Math.max(10, Math.min(30, parseInt(document.getElementById('dur-input').value) || 10));
   simDur = mins * 60; simRunning = true; simPaused = false; simT = 0;
   score = 0; resolvedCount = 0; spawnedCount = 0; defcon = 5; nextId = 1;
-  incidents = []; tasks = []; taskSeq = 1;
-  Object.values(TEAMS).forEach(function(t){ t.task = null; });
-  document.getElementById('score-v').textContent = '0';
+  incidents = []; horizonItems = []; tasks = []; taskSeq = 1;
+  Object.values(TEAMS).forEach(function(t){ t.task = null; t.paused = []; });
+  document.getElementById('sc-v').textContent = '0';
+  document.getElementById('rs-v').textContent = '0/0';
   document.getElementById('btnPause').disabled = false;
   document.getElementById('btnAbort').disabled = false;
   document.getElementById('btnPause').textContent = '❚❚';
-  calcDefcon(); renderTeams(); renderIncidents(); updateResolved();
-  log('═══ CYBERWATCH ACTIVE ═══', 'lts');
-  log(mins + '-min mission · 1 module loaded · OCR H446 aligned', 'lti');
-  log('Click incident cards to respond. Type help for commands.', 'lti');
+  calcDefcon(); renderTeams(); renderIncidents(); renderHorizon();
+  log('═══ CYBERWATCH ACTIVE · ' + mins + ' min ═══', 'lts');
+  log('1 module: Phishing (OCR 1.3.3c). Horizon Scanner: ACTIVE.', 'lti');
+  log('Items appear on the Horizon Scanner before going active. Pre-empt early or respond when live.', 'ltd');
   schedNext(true); lastTick = performance.now();
 }
 
@@ -642,69 +1071,72 @@ document.getElementById('btnPause').addEventListener('click', function() {
 document.getElementById('btnAbort').addEventListener('click', function() {
   simRunning = false;
   document.getElementById('btnPause').disabled = true;
-  log('[ ABORTED ] Score: ' + score + ' | Resolved: ' + resolvedCount + '/' + spawnedCount, 'lte');
+  log('ABORTED. Score: ' + score + ' | ' + resolvedCount + '/' + spawnedCount + ' resolved | DEFCON ' + defcon, 'lte');
 });
 
 // ── MAIN LOOP ──
-var earthRot = 0;
+function fmt(s) {
+  s = Math.max(0, s);
+  var m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
 function animate() {
   requestAnimationFrame(animate);
   var now = performance.now();
   var dt = Math.min(0.05, (now - lastTick) / 1000);
   lastTick = now;
 
-  // Rotate globe
-  if (renderer && earthMesh) {
-    earthRot += dt * 0.08;
-    earthMesh.rotation.y = earthRot;
+  if (threeOK && renderer && earthMesh) {
+    globeRot += dt * 0.06;
+    earthMesh.rotation.y = globeRot;
     renderer.render(scene, camera);
   }
 
   if (!simRunning || simPaused) return;
 
   simT += dt;
-  var left = Math.max(0, simDur - simT);
-  var mm = Math.floor(left / 60), ss = Math.floor(left % 60);
-  document.getElementById('miss-v').textContent = (mm < 10 ? '0' : '') + mm + ':' + (ss < 10 ? '0' : '') + ss;
+  document.getElementById('ms-v').textContent = fmt(Math.max(0, simDur - simT));
 
-  if (nextSpawnAt !== null && simT >= nextSpawnAt) { spawnIncident(); schedNext(false); }
+  if (nextSpawnAt !== null && simT >= nextSpawnAt) { spawnCycle(); schedNext(false); }
 
   updateTasks(dt);
+  updateHorizon(dt);
   doEscalation(dt);
+  renderHorizon();
+  renderTeams();
 
   if (simT >= simDur) {
     simRunning = false;
     document.getElementById('btnPause').disabled = true;
-    log('═══ MISSION COMPLETE ═══ Score: ' + score + ' | Resolved: ' + resolvedCount + '/' + spawnedCount, 'lts');
+    log('═══ MISSION COMPLETE ═══', 'lts');
+    log('Score: ' + score + ' | Resolved: ' + resolvedCount + '/' + spawnedCount + ' | DEFCON reached: ' + defcon, 'lts');
   }
 }
 
 // ── INIT ──
-document.getElementById('ld-msg').textContent = 'Starting globe...';
 initGlobe();
+renderTeams();
+renderIncidents();
+renderHorizon();
 
 document.getElementById('ld-msg').textContent = 'Ready.';
 document.getElementById('loading').style.display = 'none';
-document.getElementById('app').style.display = 'block';
-
+document.getElementById('app').style.display = '';
 document.getElementById('btnStart').disabled = false;
 
-renderTeams();
-renderIncidents();
-
-log('CYBERWATCH 2026-06-10-001 ready.', 'lts');
-log('1 module loaded: Phishing (OCR 1.3.3c)', 'lti');
-if (typeof THREE === 'undefined') {
-  log('three.min.js not found — globe disabled. Place three.min.js next to this HTML file.', 'ltw');
-} else {
-  log('Three.js loaded. Globe active.', 'lti');
-}
-log('Press DEPLOY to start. Type help for commands.', 'ltd');
+log('CYBERWATCH 2026-06-10-002 ready.', 'lts');
+log('Module: Phishing | Globe: ' + (threeOK ? 'active' : 'disabled (three.min.js missing)'), 'lti');
+log('New: Horizon Scanner · Decision impact · Countdowns · Pause/resume', 'ltd');
+log('Press DEPLOY to start mission.', 'ltd');
 
 animate();
 
 } catch(err) {
-  showError(err);
+  document.getElementById('ld-err').style.display = 'block';
+  document.getElementById('ld-err').textContent = 'STARTUP ERROR:\n' + err.message + '\n\n' + (err.stack || '');
+  document.getElementById('ld-msg').style.color = '#ff3b6b';
+  document.getElementById('ld-msg').textContent = 'Failed — see error below';
 }
 </script>
 </body>
