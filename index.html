@@ -223,7 +223,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;back
   <div class="modal-sub" id="rep-sub">Threat forecast for today's operational window</div>
   <div class="modal-sec"><div class="modal-sh">EXPECTED THREAT MIX</div><div id="rep-mix"></div></div>
   <div class="modal-sec"><div class="modal-sh">RECOMMENDED TEAM ALLOCATIONS</div><div id="rep-rec"></div><div style="font-size:10px;color:#ff8a20;margin-top:8px">⚠ Intelligence is not always accurate. Actual threats may differ from this forecast.</div></div>
-  <button class="hbtn g" id="rep-ok" style="width:100%;padding:10px;margin-top:8px;font-size:12px">ACKNOWLEDGED — BEGIN MISSION</button>
+  <button class="hbtn g" id="rep-ok" data-action="rep-ok" style="width:100%;padding:10px;margin-top:8px;font-size:12px">ACKNOWLEDGED — BEGIN MISSION</button>
  </div>
 </div>
 
@@ -242,7 +242,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;back
  <div class="modal">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
    <div><div class="modal-h" id="det-title">Incident Detail</div><div class="modal-sub" id="det-sub"></div></div>
-   <button class="hbtn" id="det-close" style="flex-shrink:0;margin-left:10px">✕ Close</button>
+   <button class="hbtn" id="det-close" data-action="det-close" style="flex-shrink:0;margin-left:10px">✕ Close</button>
   </div>
   <div id="det-body"></div>
  </div>
@@ -592,6 +592,8 @@ function updateTeamTasks(dt){
   done.forEach(function(task){
    multiTasks[td.id]=multiTasks[td.id].filter(function(t){return t.id!==task.id;});
    if(task.onComplete)task.onComplete();
+   var doneInc=incidents.find(function(i){return i.id===task.incId;});
+   if(doneInc&&(doneInc.state==='closed'||doneInc.state==='lost'))doneInc.assignedTeam=null;
    // check queued_team items for this team
    var queued=incidents.filter(function(i){return i.assignedTeam===td.id&&i.state==='queued_team';});
    if(queued.length){var next=queued[0];startTeamTask(td.id,next,next._pendingDuration||30,next._pendingCallback);}
@@ -671,7 +673,9 @@ function processRDQueue(){
 function processMonitoring(inc){
  // Monitoring team handles it — may prevent it going live
  var dur=12+Math.random()*10;
- startTeamTask('monitor',inc,dur/teamAlloc.monitor,function(){
+ var actualDur=dur/teamAlloc.monitor;
+ inc._pendingDuration=actualDur;
+ inc._pendingCallback=function(){
   if(Math.random()<0.55){
    // Successfully monitored — resolved before going live!
    inc.state='closed'; score+=120;
@@ -683,7 +687,8 @@ function processMonitoring(inc){
    inc.assignedTeam=null;
    clog('📡 Monitor handed off #'+inc.id+' to live queue','cl-i');
   }
- });
+ };
+ startTeamTask('monitor',inc,actualDur,inc._pendingCallback);
 }
 
 // ══════════════════════════════════════
