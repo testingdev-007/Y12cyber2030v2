@@ -263,7 +263,7 @@ var KB={
   ocrRef:'OCR H446 1.3.3(c) — Network security and threats',
   questions:[
    {q:'What does phishing primarily exploit?',opts:['Software vulnerabilities','Network protocols','Human psychology','Encryption weaknesses'],correct:2},
-   {q:'Which OCR H446 spec section covers phishing?',opts:['1.3.1(c)','1.3.2(d)','1.3.3(c)','1.3.3(b)'],correct:2},
+   {q:'Why can a firewall not stop a phishing email reaching an inbox?',opts:['Firewalls only filter network traffic, not the content of legitimate-looking emails','Firewalls are outdated technology','Phishing always uses encrypted connections','Email servers ignore firewall rules'],correct:0},
    {q:'Which defence defeats phishing even when passwords are stolen?',opts:['Firewall','Antivirus','Proxy server','MFA (Multi-Factor Authentication)'],correct:3},
    {q:'What is "spear phishing"?',opts:['Phishing via phone calls','Phishing using personal data to target specific individuals','Mass phishing emails to thousands','Phishing via SMS'],correct:1},
    {q:'What email authentication standard publishes authorised sending servers in DNS?',opts:['TLS','HTTPS','SPF (Sender Policy Framework)','DKIM'],correct:2}
@@ -284,7 +284,7 @@ var KB={
    {q:'What is the OCR-specified fix for SQL injection?',opts:['Firewalls','Parameterised queries','Encryption','MFA'],correct:1},
    {q:'In a parameterised query, what symbol is used as a placeholder?',opts:['*','#','?','@'],correct:2},
    {q:'SQL injection works by...',opts:['Overloading the server with requests','Inserting SQL commands into input fields','Stealing passwords from memory','Intercepting network traffic'],correct:1},
-   {q:'Which OCR spec section covers SQL injection?',opts:['1.3.1(c)','1.3.2(d)','1.3.3(c)','1.3.3(b)'],correct:1}
+   {q:'What might an attacker type into a vulnerable login field to bypass authentication via SQL injection?',opts:['admin123','\\' OR 1=1--','SELECT * FROM users','<script>alert(1)</script>'],correct:1}
   ]},
  DDoS:{icon:'⚡',cat:'Network Attack',team:'netdef',rdTime:20,
   brief:'DDoS (Distributed Denial of Service) floods a server with traffic from a botnet, targeting AVAILABILITY — the A in the CIA triad. OCR 1.3.3(c): defences include null-routing (drop attack traffic before it reaches target), rate limiting, and working with ISPs.',
@@ -375,7 +375,7 @@ function teamForType(type){for(var i=0;i<TEAM_DEFS.length;i++){if(TEAM_DEFS[i].h
 var incidents=[], nextId=1, score=0, simT=0, simDur=0, simRunning=false, simPaused=false;
 var lastTick=performance.now(), ACCEL=720, START_H=6;
 var nextSpawnAt=null, defcon=5;
-var researchedTypes=new Set(), activeRD=null, rdQueue=[];
+var researchedTypes=new Set(), rdQueue=[];
 var monitorQueue=[], activeMonitor=[], triageQueue=[], activeTriage=[];
 var teamQueues={rd:[],monitor:[],triage:[],netdef:[],appsec:[],endpoint:[],identity:[]};
 var activeTeamTasks={rd:null,monitor:null,triage:null,netdef:null,appsec:null,endpoint:null,identity:null};
@@ -489,11 +489,16 @@ function renderTeams(){
   html+='<button class="spin-btn" data-action="inc-team" data-team="'+td.id+'">+</button>';
   html+='</div></div>';
   if(qCount>0)html+='<div class="trow-sub" style="color:#ffb020;margin-top:2px">'+qCount+' incident'+(qCount>1?'s':'')+' in queue</div>';
-  // R&D progress bar
-  if(td.id==='rd'&&activeRD){
-   var pct=Math.min(100,(activeRD.elapsed/activeRD.total)*100);
-   html+='<div class="t-prog-wrap"><div class="t-prog" style="width:'+pct+'%;background:#9b6dff"></div></div>';
-   html+='<div class="t-prog-lbl">Researching '+activeRD.type+' — ~'+Math.round(Math.max(0,activeRD.total-activeRD.elapsed))+'s</div>';
+  // R&D progress bars — one per parallel research line
+  if(td.id==='rd'&&multiTasks.rd.length){
+   multiTasks.rd.forEach(function(rt){
+    var pct=Math.min(100,(rt.elapsed/rt.total)*100);
+    html+='<div class="t-prog-wrap"><div class="t-prog" style="width:'+pct+'%;background:#9b6dff"></div></div>';
+    html+='<div class="t-prog-lbl">Researching '+rt.type+' — ~'+Math.round(Math.max(0,rt.total-rt.elapsed))+'s</div>';
+   });
+  }
+  if(td.id==='rd'&&rdQueue.length){
+   html+='<div class="trow-sub" style="color:#ffb020;margin-top:2px">⏳ Waiting for free slot: '+rdQueue.join(', ')+'</div>';
   }
   html+='</div>';
  });
@@ -582,6 +587,7 @@ function startTeamTask(teamId,inc,duration,onComplete){
 }
 function updateTeamTasks(dt){
  TEAM_DEFS.forEach(function(td){
+  if(td.id==='rd') return; // R&D handled separately below — research lines, not incident tasks
   var active=multiTasks[td.id];
   var done=[];
   active.forEach(function(task){
@@ -599,17 +605,21 @@ function updateTeamTasks(dt){
    if(queued.length){var next=queued[0];startTeamTask(td.id,next,next._pendingDuration||30,next._pendingCallback);}
   });
  });
- // R&D
- if(activeRD){
-  var speed=teamAlloc.rd;
-  activeRD.elapsed+=dt*speed;
-  if(activeRD.elapsed>=activeRD.total){
-   var type=activeRD.type; activeRD=null;
-   clog('R&D complete: '+type+' — launching quiz','cl-s');
-   showQuiz(type);
-   processRDQueue();
-  }
- }
+ // R&D — parallel research lines, one per allocated R&D team. Each line runs at normal
+ // speed; more teams means more types can be researched AT THE SAME TIME, not a faster
+ // single line. This matches how every other team's slot system works.
+ var rdDone=[];
+ multiTasks.rd.forEach(function(task){
+  task.elapsed+=dt;
+  task.progress=Math.min(100,(task.elapsed/task.total)*100);
+  if(task.progress>=100) rdDone.push(task);
+ });
+ rdDone.forEach(function(task){
+  multiTasks.rd=multiTasks.rd.filter(function(t){return t.id!==task.id;});
+  clog('R&D complete: '+task.type+' — launching quiz','cl-s');
+  showQuiz(task.type);
+  processRDQueue();
+ });
 }
 
 // ══════════════════════════════════════
@@ -642,8 +652,12 @@ function spawnIncident(){
  if(!researchedTypes.has(type)){
   inc.state='unresearched';
   // auto-queue R&D
-  queueRD(type);
-  clog('⚠ NEW type: '+type+' — queued for R&D research','cl-w');
+  var queued=queueRD(type);
+  if(queued){
+   clog('⚠ NEW type: '+type+' — R&D team now researching','cl-w');
+  } else {
+   clog('ℹ #'+inc.id+' '+type+' — R&D already in progress, will unlock when quiz passes','cl-d');
+  }
  } else if(Math.random()<0.6&&teamAlloc.monitor>0){
   inc.state='imminent'; // goes to monitoring
   setTimeout(function(){processMonitoring(inc);},100);
@@ -656,19 +670,24 @@ function spawnIncident(){
 }
 
 function queueRD(type){
- if(researchedTypes.has(type))return;
- if(activeRD&&activeRD.type===type)return;
- if(rdQueue.indexOf(type)>-1)return;
+ if(researchedTypes.has(type))return false;
+ if(multiTasks.rd.find(function(t){return t.type===type;}))return false; // actively being researched
+ if(quizState&&quizState.type===type)return false;  // quiz in progress for this type — don't re-queue
+ if(rdQueue.indexOf(type)>-1)return false;           // already waiting for a free slot
  rdQueue.push(type);
  processRDQueue();
+ return true;
 }
 function processRDQueue(){
- if(activeRD)return;
- if(!rdQueue.length)return;
- var type=rdQueue.shift();
- if(researchedTypes.has(type)){processRDQueue();return;}
- activeRD={type:type,elapsed:0,total:KB[type]?KB[type].rdTime:30};
- clog('🔬 R&D researching: '+type,'cl-i');
+ // Fill every free R&D slot. teamAlloc.rd teams = teamAlloc.rd parallel research lines.
+ while(multiTasks.rd.length<teamAlloc.rd && rdQueue.length){
+  var type=rdQueue.shift();
+  if(researchedTypes.has(type))continue;
+  if(multiTasks.rd.find(function(t){return t.type===type;}))continue;
+  var task={id:Math.random(),type:type,elapsed:0,total:KB[type]?KB[type].rdTime:30,progress:0};
+  multiTasks.rd.push(task);
+  clog('🔬 R&D researching: '+type+' ('+multiTasks.rd.length+'/'+teamAlloc.rd+' lines active)','cl-i');
+ }
 }
 function processMonitoring(inc){
  // Monitoring team handles it — may prevent it going live
@@ -937,7 +956,7 @@ function handleAction(action,el){
  try{
   if(action==='inc-team'){
    var tid=el.dataset.team;
-   if(totalAlloc()<MAX_TEAMS){teamAlloc[tid]++;renderTeams();}
+   if(totalAlloc()<MAX_TEAMS){teamAlloc[tid]++;if(tid==='rd')processRDQueue();renderTeams();}
    else clog('Max 10 teams total reached','cl-w');
   }
   else if(action==='dec-team'){
@@ -998,7 +1017,7 @@ function worldClock(){var tm=START_H*60+(simT*ACCEL/60);return{day:Math.floor(tm
 function startGame(){
  var mins=Math.max(10,Math.min(30,parseInt(document.getElementById('dur-in').value)||10));
  simDur=mins*60;simRunning=true;simPaused=false;simT=0;score=0;nextId=1;
- incidents=[];rdQueue=[];activeRD=null;researchedTypes=new Set();quizState=null;
+ incidents=[];rdQueue=[];researchedTypes=new Set();quizState=null;
  Object.keys(multiTasks).forEach(function(k){multiTasks[k]=[];});
  document.getElementById('sc-v').textContent='0';
  document.getElementById('btnPause').disabled=false;document.getElementById('btnAbort').disabled=false;
