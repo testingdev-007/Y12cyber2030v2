@@ -842,7 +842,7 @@ function handleQuizAnswer(qi){
 // ══════════════════════════════════════
 function openDetail(incId){
  var inc=incidents.find(function(i){return i.id===incId;});
- if(!inc)return;
+ if(!inc){clog('Detail: incident #'+incId+' not found','cl-w');return;}
  var kb=KB[inc.type], researched=researchedTypes.has(inc.type);
  document.getElementById('det-title').textContent=(kb?kb.icon:'?')+' #'+inc.id+' '+inc.type;
  document.getElementById('det-sub').textContent=inc.city+' · Sev '+inc.sev+' · ~'+inc.users.toLocaleString()+' users · '+inc.state.toUpperCase();
@@ -1034,6 +1034,18 @@ function startGame(){
 document.getElementById('btnStart').addEventListener('click',startGame);
 document.getElementById('btnPause').addEventListener('click',function(){if(!simRunning)return;simPaused=!simPaused;document.getElementById('btnPause').textContent=simPaused?'▶':'❚❚';if(!simPaused)lastTick=performance.now();});
 document.getElementById('btnAbort').addEventListener('click',function(){simRunning=false;document.getElementById('btnPause').disabled=true;clog('ABORTED. Score: '+score+' | '+incidents.filter(function(i){return i.state==='closed';}).length+' resolved','cl-e');});
+
+// Direct listener on #queue-list — persistent across innerHTML redraws.
+// The document-level delegation can miss clicks during the per-frame innerHTML
+// churn because the clicked node is already detached by the time the event
+// bubbles. This listener sits on the stable container and finds the card via
+// class rather than attribute traversal.
+document.getElementById('queue-list').addEventListener('click',function(e){
+ var card=e.target.closest('.qcard');
+ if(!card||card.classList.contains('lost'))return;
+ var id=parseInt(card.dataset.id);
+ if(!isNaN(id)) openDetail(id);
+});
 
 // ══════════════════════════════════════
 // MAIN LOOP
