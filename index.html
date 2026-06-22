@@ -284,7 +284,7 @@ var KB={
    {q:'What is the OCR-specified fix for SQL injection?',opts:['Firewalls','Parameterised queries','Encryption','MFA'],correct:1},
    {q:'In a parameterised query, what symbol is used as a placeholder?',opts:['*','#','?','@'],correct:2},
    {q:'SQL injection works by...',opts:['Overloading the server with requests','Inserting SQL commands into input fields','Stealing passwords from memory','Intercepting network traffic'],correct:1},
-   {q:'What might an attacker type into a vulnerable login field to bypass authentication via SQL injection?',opts:['admin123','\\' OR 1=1--','SELECT * FROM users','<script>alert(1)</script>'],correct:1}
+   {q:'What might an attacker type into a login field to bypass authentication via SQL injection?',opts:['admin123','1 OR 1=1 --','SELECT * FROM users','DROP TABLE users'],correct:1}
   ]},
  DDoS:{icon:'⚡',cat:'Network Attack',team:'netdef',rdTime:20,
   brief:'DDoS (Distributed Denial of Service) floods a server with traffic from a botnet, targeting AVAILABILITY — the A in the CIA triad. OCR 1.3.3(c): defences include null-routing (drop attack traffic before it reaches target), rate limiting, and working with ISPs.',
